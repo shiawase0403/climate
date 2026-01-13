@@ -46,7 +46,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ selectedLocation, onLocati
   const { t } = useLanguage();
 
   return (
-    <div className="w-full h-full min-h-[400px] z-0 relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+    <div className="w-full h-[500px] z-0 relative rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
       <MapContainer
         center={[20, 0]}
         zoom={2}

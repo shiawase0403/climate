@@ -26,7 +26,6 @@ const App: React.FC = () => {
       setClassification(null);
 
       try {
-        // Fetch both concurrently
         const [climateRes, classRes] = await Promise.all([
           fetchClimateData(selectedLocation.lat, selectedLocation.lng),
           fetchClassification(selectedLocation.lat, selectedLocation.lng)
@@ -50,7 +49,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-[1001]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-indigo-600 p-2 rounded-lg">
@@ -77,10 +76,10 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Map */}
-          <div className="lg:col-span-5 flex flex-col h-[500px] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24">
+          <div className="lg:col-span-5 lg:sticky lg:top-24">
             <div className="flex items-center space-x-2 mb-4">
               <MapIcon className="w-5 h-5 text-indigo-600" />
               <h2 className="text-lg font-semibold text-slate-800">{t.selectLocation}</h2>
@@ -97,7 +96,7 @@ const App: React.FC = () => {
           {/* Right Column: Data */}
           <div className="lg:col-span-7">
             {!selectedLocation ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50">
+              <div className="min-h-[500px] h-full flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50">
                 <div className="bg-indigo-50 p-4 rounded-full mb-4">
                   <MapIcon className="w-8 h-8 text-indigo-400" />
                 </div>
@@ -111,7 +110,7 @@ const App: React.FC = () => {
                 
                 {/* Loading State */}
                 {loading && (
-                  <div className="flex flex-col items-center justify-center py-20">
+                  <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-2xl border border-slate-100">
                     <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
                     <p className="text-slate-600 font-medium">{t.loading}</p>
                   </div>
