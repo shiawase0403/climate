@@ -1,0 +1,5 @@
+{
+  "name": "Global Climate Explorer",
+  "description": "Interactive tool to visualize climate data and Köppen-Geiger classifications for any location on Earth using Mapresso APIs.",
+  "requestFramePermissions": []
+}
