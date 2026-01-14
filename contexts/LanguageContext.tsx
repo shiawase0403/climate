@@ -47,6 +47,17 @@ export interface Translations {
     gaodeSat: string;
     gaodeEn: string;
   };
+  // Comparison Mode
+  modeSingle: string;
+  modeCompare: string;
+  compareTitle: string;
+  compareIntro: string;
+  addPoint: string;
+  maxPoints: string;
+  clearAll: string;
+  location: string;
+  compareTemp: string;
+  comparePrecip: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -94,7 +105,17 @@ export const translations: Record<Language, Translations> = {
       gaode: "GaoDe Map",
       gaodeSat: "GaoDe Satellite",
       gaodeEn: "GaoDe English/Chinese"
-    }
+    },
+    modeSingle: "Single Location",
+    modeCompare: "Compare Locations",
+    compareTitle: "Climate Comparison",
+    compareIntro: "Select up to 5 points on the map to compare their climate data side-by-side.",
+    addPoint: "Click map to add point",
+    maxPoints: "Max 5 points reached",
+    clearAll: "Clear All",
+    location: "Location",
+    compareTemp: "Temperature Comparison",
+    comparePrecip: "Precipitation Comparison"
   },
   zh: {
     appTitle: "全球气候探索",
@@ -140,7 +161,17 @@ export const translations: Record<Language, Translations> = {
       gaode: "高德地图",
       gaodeSat: "高德卫星地图",
       gaodeEn: "高德中英地图"
-    }
+    },
+    modeSingle: "单点模式",
+    modeCompare: "对比模式",
+    compareTitle: "气候对比",
+    compareIntro: "在地图上选择最多 5 个点以并排比较它们的气候数据。",
+    addPoint: "点击地图添加地点",
+    maxPoints: "已达最大数量 (5)",
+    clearAll: "全部清除",
+    location: "地点",
+    compareTemp: "温度对比",
+    comparePrecip: "降水量对比"
   }
 };
 
