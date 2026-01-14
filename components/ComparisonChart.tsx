@@ -8,6 +8,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer
 } from 'recharts';
 import { CloudRain, Thermometer } from 'lucide-react';
@@ -32,7 +33,23 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
     return null;
   }
 
-  // Calculate global domains for consistent comparison across all charts
+  // 1. Calculate Combined Data (For Mobile View)
+  const combinedData = Array.from({ length: 12 }, (_, i) => {
+    const monthIndex = i;
+    const monthData: any = {
+      name: t.monthsShort[monthIndex],
+    };
+    points.forEach((point) => {
+      const pData = point.data.data.find(d => d.month === monthIndex + 1);
+      if (pData) {
+        monthData[`temp_${point.id}`] = pData.temp;
+        monthData[`prec_${point.id}`] = pData.prec;
+      }
+    });
+    return monthData;
+  });
+
+  // 2. Calculate Global Domains (For Desktop View consistency)
   // Precipitation: Start at 0, go to max + 10%
   const allPrecip = points.flatMap(p => p.data.data.map(d => d.prec));
   const maxPrecip = Math.max(...allPrecip, 10); 
@@ -56,7 +73,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       
-      {/* Precipitation Section */}
+      {/* --- PRECIPITATION SECTION --- */}
       <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2.5 bg-blue-100 rounded-xl text-blue-600 shadow-sm">
@@ -65,7 +82,43 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
           <h3 className="text-xl font-bold text-slate-800 tracking-tight">{t.comparePrecip}</h3>
         </div>
         
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* MOBILE VIEW: Single Combined Chart */}
+        <div className="block xl:hidden w-full h-[400px] bg-white rounded-xl shadow-sm border border-slate-200 p-4 pb-8">
+           <ResponsiveContainer width="100%" height="90%">
+              <BarChart data={combinedData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                 <CartesianGrid stroke="#f1f5f9" vertical={false} />
+                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                 <YAxis 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    label={{ value: 'mm', angle: -90, position: 'insideLeft', offset: 10, style: {fill: '#64748b'} }} 
+                 />
+                 <Tooltip 
+                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                   cursor={{fill: '#f1f5f9'}}
+                   formatter={(value: number, name: string) => {
+                      const pointId = name.split('_')[1];
+                      const point = points.find(p => p.id === pointId);
+                      return [`${value.toFixed(1)}mm`, point ? `${Math.abs(point.location.lat).toFixed(1)}°` : ''];
+                   }}
+                 />
+                 <Legend verticalAlign="bottom" height={36} />
+                 {points.map(point => (
+                    <Bar 
+                      key={point.id}
+                      dataKey={`prec_${point.id}`}
+                      name={`${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`} 
+                      fill={point.color}
+                      radius={[4, 4, 0, 0]}
+                    />
+                 ))}
+              </BarChart>
+           </ResponsiveContainer>
+        </div>
+
+        {/* DESKTOP VIEW: Grid of Individual Charts */}
+        <div className="hidden xl:grid xl:grid-cols-2 gap-6">
           {points.map((point) => {
              const chartData = point.data.data.map((d) => ({
               ...d,
@@ -112,7 +165,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
         </div>
       </div>
 
-      {/* Temperature Section */}
+      {/* --- TEMPERATURE SECTION --- */}
       <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
            <div className="p-2.5 bg-red-100 rounded-xl text-red-600 shadow-sm">
@@ -121,7 +174,46 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
           <h3 className="text-xl font-bold text-slate-800 tracking-tight">{t.compareTemp}</h3>
         </div>
         
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* MOBILE VIEW: Single Combined Chart */}
+        <div className="block xl:hidden w-full h-[400px] bg-white rounded-xl shadow-sm border border-slate-200 p-4 pb-8">
+           <ResponsiveContainer width="100%" height="90%">
+              <LineChart data={combinedData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                 <CartesianGrid stroke="#f1f5f9" vertical={false} />
+                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                 <YAxis 
+                    domain={['auto', 'auto']} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    label={{ value: '°C', angle: -90, position: 'insideLeft', offset: 10, style: {fill: '#64748b'} }} 
+                 />
+                 <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                    formatter={(value: number, name: string) => {
+                      const pointId = name.split('_')[1];
+                      const point = points.find(p => p.id === pointId);
+                      return [`${value.toFixed(1)}°C`, point ? `${Math.abs(point.location.lat).toFixed(1)}°` : ''];
+                   }}
+                 />
+                 <Legend verticalAlign="bottom" height={36} />
+                 {points.map(point => (
+                    <Line 
+                      key={point.id}
+                      type="monotone"
+                      dataKey={`temp_${point.id}`}
+                      name={`${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`}
+                      stroke={point.color}
+                      strokeWidth={3}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 5 }}
+                    />
+                 ))}
+              </LineChart>
+           </ResponsiveContainer>
+        </div>
+
+        {/* DESKTOP VIEW: Grid of Individual Charts */}
+        <div className="hidden xl:grid xl:grid-cols-2 gap-6">
           {points.map((point) => {
             const chartData = point.data.data.map((d) => ({
               ...d,
