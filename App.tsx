@@ -8,7 +8,7 @@ import { ComparisonChart, ComparisonPoint } from './components/ComparisonChart';
 import { fetchClimateData, fetchClassification } from './services/climateService';
 import { generatePDF } from './services/pdfService';
 import { GeoLocation, ClimateDataResponse, ClassificationResponse } from './types';
-import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2 } from 'lucide-react';
+import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2, BookOpen } from 'lucide-react';
 import { useLanguage } from './contexts/LanguageContext';
 
 type AppMode = 'single' | 'compare';
@@ -20,6 +20,68 @@ const PALETTE = [
   '#f59e0b', // Amber
   '#8b5cf6', // Violet
 ];
+
+// Footer Notice Component
+const NoticeFooter: React.FC = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="mt-16 bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 border-l-4 border-l-amber-500">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
+        <div className="p-3 bg-amber-100 text-amber-600 rounded-full flex-shrink-0 mt-1">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div className="flex-1 w-full">
+          <h3 className="text-lg font-bold text-slate-800 mb-2">{t.notice.title}</h3>
+          <p className="text-slate-600 mb-6 text-sm leading-relaxed max-w-4xl">
+            {t.notice.description}
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-slate-100 pt-6">
+            {/* Major Types */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{t.notice.groupMajor}</h4>
+              <ul className="space-y-2.5">
+                {(['A', 'B', 'C', 'D', 'E'] as const).map(code => (
+                   <li key={code} className="flex items-start text-sm">
+                     <span className="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded text-center mr-3 min-w-[32px]">{code}</span>
+                     <span className="text-slate-700 pt-0.5">{t.notice.keys[code]}</span>
+                   </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Precipitation */}
+            <div>
+               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{t.notice.groupPrecip}</h4>
+               <ul className="space-y-2.5">
+                 {(['f', 'w', 's'] as const).map(code => (
+                   <li key={code} className="flex items-start text-sm">
+                     <span className="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded text-center mr-3 min-w-[32px]">{code}</span>
+                     <span className="text-slate-700 pt-0.5">{t.notice.keys[code]}</span>
+                   </li>
+                 ))}
+               </ul>
+            </div>
+            
+            {/* Temperature */}
+            <div>
+               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{t.notice.groupTemp}</h4>
+               <ul className="space-y-2.5">
+                 {(['a', 'b', 'c'] as const).map(code => (
+                   <li key={code} className="flex items-start text-sm">
+                     <span className="font-mono font-bold text-orange-700 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded text-center mr-3 min-w-[32px]">{code}</span>
+                     <span className="text-slate-700 pt-0.5">{t.notice.keys[code]}</span>
+                   </li>
+                 ))}
+               </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -192,8 +254,8 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-auto">
           
           {/* Left Column: Input & Map */}
           <div className="lg:col-span-5 lg:sticky lg:top-24">
@@ -374,6 +436,10 @@ const App: React.FC = () => {
 
           </div>
         </div>
+        
+        {/* Footer Notice */}
+        <NoticeFooter />
+
       </main>
     </div>
   );

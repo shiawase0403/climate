@@ -58,6 +58,27 @@ export interface Translations {
   location: string;
   compareTemp: string;
   comparePrecip: string;
+  // Footer Notice
+  notice: {
+    title: string;
+    description: string;
+    groupMajor: string;
+    groupPrecip: string;
+    groupTemp: string;
+    keys: {
+      A: string;
+      B: string;
+      C: string;
+      D: string;
+      E: string;
+      f: string;
+      w: string;
+      s: string;
+      a: string;
+      b: string;
+      c: string;
+    }
+  }
 }
 
 export const translations: Record<Language, Translations> = {
@@ -115,7 +136,27 @@ export const translations: Record<Language, Translations> = {
     clearAll: "Clear All",
     location: "Location",
     compareTemp: "Temperature Comparison",
-    comparePrecip: "Precipitation Comparison"
+    comparePrecip: "Precipitation Comparison",
+    notice: {
+      title: "About Climate Classification",
+      description: "This site uses the Köppen climate classification system. Please note there may be differences compared to standard geography curricula due to data sources. Below is a key to the classification codes:",
+      groupMajor: "Major Climate Types",
+      groupPrecip: "Precipitation Patterns",
+      groupTemp: "Temperature Patterns",
+      keys: {
+        A: "Tropical",
+        B: "Arid / Semi-Arid",
+        C: "Temperate / Subtropical",
+        D: "Continental / Subarctic",
+        E: "Polar",
+        f: "Fully Humid (No Dry Season)",
+        w: "Winter Dry (Summer Rain)",
+        s: "Summer Dry (Winter Rain)",
+        a: "Hot Summer",
+        b: "Warm Summer",
+        c: "Cold Summer"
+      }
+    }
   },
   zh: {
     appTitle: "全球气候探索",
@@ -171,7 +212,27 @@ export const translations: Record<Language, Translations> = {
     clearAll: "全部清除",
     location: "地点",
     compareTemp: "温度对比",
-    comparePrecip: "降水量对比"
+    comparePrecip: "降水量对比",
+    notice: {
+      title: "关于气候分类的说明",
+      description: "由于数据源限制，本站采用柯本气候分类法，我们已经尽可能将其与课内所学对应，但是仍有较大出入，下面是柯本气候分类法的一些字母代号含义：",
+      groupMajor: "气候带",
+      groupPrecip: "降水特征",
+      groupTemp: "温度特征",
+      keys: {
+        A: "热带气候",
+        B: "干旱半干旱气候",
+        C: "亚热带/温带气候",
+        D: "温带亚寒带气候",
+        E: "极地气候",
+        f: "全年多雨",
+        w: "夏季多雨",
+        s: "冬季多雨",
+        a: "热夏",
+        b: "凉夏",
+        c: "冷夏"
+      }
+    }
   }
 };
 
