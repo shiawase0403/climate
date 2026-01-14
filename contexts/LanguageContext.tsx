@@ -30,6 +30,23 @@ export interface Translations {
   clickMapHint: string;
   months: string[];
   monthsShort: string[];
+  downloadReport: string;
+  generating: string;
+  reportTitle: string;
+  generatedOn: string;
+  coords: string;
+  latitude: string;
+  longitude: string;
+  searchLocation: string;
+  invalidLat: string;
+  invalidLng: string;
+  manualInputTitle: string;
+  mapLayers: {
+    osm: string;
+    gaode: string;
+    gaodeSat: string;
+    gaodeEn: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -60,7 +77,24 @@ export const translations: Record<Language, Translations> = {
     unknownClimate: "Unknown Climate",
     clickMapHint: "Click anywhere on the map",
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    downloadReport: "Download PDF Report",
+    generating: "Generating...",
+    reportTitle: "Climate Analysis Report",
+    generatedOn: "Generated on",
+    coords: "Coordinates",
+    latitude: "Latitude",
+    longitude: "Longitude",
+    searchLocation: "Get Climate Data",
+    invalidLat: "Invalid latitude (-90 to 90)",
+    invalidLng: "Invalid longitude (-180 to 180)",
+    manualInputTitle: "Manual Input",
+    mapLayers: {
+      osm: "OpenStreetMap",
+      gaode: "GaoDe Map",
+      gaodeSat: "GaoDe Satellite",
+      gaodeEn: "GaoDe English/Chinese"
+    }
   },
   zh: {
     appTitle: "全球气候探索",
@@ -89,7 +123,24 @@ export const translations: Record<Language, Translations> = {
     unknownClimate: "未知气候",
     clickMapHint: "点击地图任意位置",
     months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
-    monthsShort: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+    monthsShort: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+    downloadReport: "下载 PDF 报告",
+    generating: "正在生成...",
+    reportTitle: "气候分析报告",
+    generatedOn: "生成时间",
+    coords: "坐标",
+    latitude: "纬度",
+    longitude: "经度",
+    searchLocation: "获取气候数据",
+    invalidLat: "无效纬度 (-90 到 90)",
+    invalidLng: "无效经度 (-180 到 180)",
+    manualInputTitle: "手动输入",
+    mapLayers: {
+      osm: "OpenStreetMap",
+      gaode: "高德地图",
+      gaodeSat: "高德卫星地图",
+      gaodeEn: "高德中英地图"
+    }
   }
 };
 

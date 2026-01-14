@@ -14,7 +14,10 @@
     "lucide-react": "0.344.0",
     "react-leaflet": "4.2.1",
     "recharts": "2.12.2",
-    "leaflet": "1.9.4"
+    "leaflet": "1.9.4",
+    "jspdf": "2.5.1",
+    "html2canvas": "1.4.1",
+    "jspdf-autotable": "3.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -38,9 +38,9 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({ data }) => {
   const yAxisTempDomain = [Math.floor(minTemp - 5), Math.ceil(maxTemp + 5)];
   
   return (
-    <div className="w-full h-[400px] bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <div id="climate-chart-container" className="w-full h-[450px] bg-white rounded-xl shadow-sm border border-slate-200 p-4 pb-8">
       <h3 className="text-lg font-semibold text-slate-800 mb-4 pl-2">{t.climateGraph}</h3>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="90%">
         <ComposedChart
           data={chartData}
           margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
@@ -85,7 +85,7 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({ data }) => {
             }}
             labelFormatter={(label) => `${t.month}: ${label}`}
           />
-          <Legend wrapperStyle={{ paddingTop: '10px' }} />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} verticalAlign="bottom" height={36}/>
           
           <Bar 
             yAxisId="left" 

@@ -2,6 +2,7 @@ import React from 'react';
 import { ClassificationEntry } from '../types';
 import { Info, MapPin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getChineseClimateClassification } from '../services/climateService';
 
 interface ClassificationCardProps {
   classificationData: ClassificationEntry[];
@@ -29,22 +30,22 @@ const getClimateGradient = (code: string | undefined): string => {
   }
 };
 
-const getDisplayText = (originalText: string | undefined, lang: string): string => {
-  // Return the original text from the API (e.g., "Tropical monsoon climate")
-  // regardless of the selected language, as requested.
-  if (originalText) return originalText;
-  
-  // Only translate the fallback "Unknown" message
-  return lang === 'zh' ? '未知气候' : 'Unknown Climate';
-};
-
 export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classificationData, lat, lng }) => {
   const { t, language } = useLanguage();
   // Find the main Köppen-Geiger entry (usually the first one or one with text)
   const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
   
   const gradientClass = getClimateGradient(mainClass?.code);
-  const displayText = getDisplayText(mainClass?.text, language);
+  
+  // Determine display text
+  let displayText = mainClass?.text;
+  
+  if (language === 'zh' && mainClass?.code) {
+    const cnText = getChineseClimateClassification(mainClass.code);
+    if (cnText) displayText = cnText;
+  }
+
+  displayText = displayText || (language === 'zh' ? '未知气候' : 'Unknown Climate');
 
   return (
     <div className={`bg-gradient-to-br ${gradientClass} rounded-xl shadow-lg text-white p-6 mb-6 transition-all duration-500`}>

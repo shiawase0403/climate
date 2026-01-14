@@ -3,9 +3,11 @@ import { MapPicker } from './components/MapPicker';
 import { ClimateChart } from './components/ClimateChart';
 import { ClimateTable } from './components/ClimateTable';
 import { ClassificationCard } from './components/ClassificationCard';
+import { LocationInput } from './components/LocationInput';
 import { fetchClimateData, fetchClassification } from './services/climateService';
+import { generatePDF } from './services/pdfService';
 import { GeoLocation, ClimateDataResponse, ClassificationResponse } from './types';
-import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages } from 'lucide-react';
+import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, FileText } from 'lucide-react';
 import { useLanguage } from './contexts/LanguageContext';
 
 const App: React.FC = () => {
@@ -13,6 +15,7 @@ const App: React.FC = () => {
   const [climateData, setClimateData] = useState<ClimateDataResponse | null>(null);
   const [classification, setClassification] = useState<ClassificationResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [generatingPdf, setGeneratingPdf] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { t, language, setLanguage } = useLanguage();
 
@@ -43,6 +46,21 @@ const App: React.FC = () => {
 
     loadData();
   }, [selectedLocation, t]);
+
+  const handleDownloadReport = async () => {
+    if (!selectedLocation || !climateData || !classification) return;
+    
+    setGeneratingPdf(true);
+    try {
+      // Small delay to allow UI to update state if needed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await generatePDF(selectedLocation, climateData, classification, language, t);
+    } catch (e) {
+      console.error("PDF generation failed", e);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   const hasData = climateData && climateData.data && climateData.data.length > 0;
 
@@ -78,8 +96,13 @@ const App: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column: Map */}
+          {/* Left Column: Input & Map */}
           <div className="lg:col-span-5 lg:sticky lg:top-24">
+            <LocationInput 
+              onLocationSelect={setSelectedLocation} 
+              selectedLocation={selectedLocation} 
+            />
+
             <div className="flex items-center space-x-2 mb-4">
               <MapIcon className="w-5 h-5 text-indigo-600" />
               <h2 className="text-lg font-semibold text-slate-800">{t.selectLocation}</h2>
@@ -106,7 +129,7 @@ const App: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
                 {/* Loading State */}
                 {loading && (
@@ -141,6 +164,21 @@ const App: React.FC = () => {
                 {/* Data Display */}
                 {!loading && !error && hasData && climateData && classification && (
                   <>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleDownloadReport}
+                        disabled={generatingPdf}
+                        className="flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      >
+                        {generatingPdf ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        <span>{generatingPdf ? t.generating : t.downloadReport}</span>
+                      </button>
+                    </div>
+
                     <ClassificationCard 
                       classificationData={classification.data} 
                       lat={selectedLocation.lat} 
