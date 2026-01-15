@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import { GeoLocation } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -61,95 +61,91 @@ const MapFlyTo: React.FC<{ location: GeoLocation | null }> = ({ location }) => {
   const map = useMap();
   useEffect(() => {
     if (location) {
-      map.flyTo([location.lat, location.lng], map.getZoom(), {
-        duration: 1.5
-      });
+      map.flyTo([location.lat, location.lng], 6, { duration: 1.5 });
     }
   }, [location, map]);
   return null;
 };
 
-export const MapPicker: React.FC<MapPickerProps> = ({ 
-  mode, 
-  selectedLocation, 
-  comparisonPoints = [], 
-  onLocationSelect 
-}) => {
+export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, onLocationSelect }) => {
   const { t } = useLanguage();
 
   return (
-    <div className="w-full h-[500px] z-0 relative rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
+    <div className="h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 relative z-0">
       <MapContainer
         center={[20, 0]}
         zoom={2}
+        minZoom={2}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
-        worldCopyJump={true}
+        maxBounds={[[-90, -180], [90, 180]]}
+        maxBoundsViscosity={1.0}
+        attributionControl={false}
       >
+        <AttributionControl position="bottomright" prefix={false} />
+        
         <LayersControl position="topright">
-          <LayersControl.BaseLayer name={t.mapLayers.osm}>
+          <LayersControl.BaseLayer checked name={t.mapLayers.osm}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </LayersControl.BaseLayer>
-          
           <LayersControl.BaseLayer name={t.mapLayers.gaode}>
             <TileLayer
-              attribution='&copy; <a href="https://www.amap.com">GaoDe</a>'
-              url="https://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7"
+              attribution='&copy; AutoNavi'
+              url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+              subdomains={["1", "2", "3", "4"]}
             />
           </LayersControl.BaseLayer>
-
+          <LayersControl.BaseLayer name={t.mapLayers.gaodeEn}>
+            <TileLayer
+              attribution='&copy; AutoNavi'
+              url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=en&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+              subdomains={["1", "2", "3", "4"]}
+            />
+          </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name={t.mapLayers.gaodeSat}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.amap.com">GaoDe</a>'
-              url="https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
-            />
-          </LayersControl.BaseLayer>
-
-          <LayersControl.BaseLayer checked name={t.mapLayers.gaodeEn}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.amap.com">GaoDe</a>'
-              url="https://webrd02.is.autonavi.com/appmaptile?lang=zh_en&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+             <TileLayer
+              attribution='&copy; AutoNavi'
+              url="https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
+              subdomains={["1", "2", "3", "4"]}
             />
           </LayersControl.BaseLayer>
         </LayersControl>
 
         <ScaleControl position="bottomleft" />
+        
         <MapController onSelect={onLocationSelect} />
         
-        {/* In single mode, fly to the selected location */}
-        {mode === 'single' && <MapFlyTo location={selectedLocation} />}
-        
-        {/* Render markers */}
+        {/* Single Mode Marker */}
         {mode === 'single' && selectedLocation && (
-          <Marker 
-            position={[selectedLocation.lat, selectedLocation.lng]} 
-            icon={defaultIcon}
-          />
+          <>
+            <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={defaultIcon} />
+            <MapFlyTo location={selectedLocation} />
+          </>
         )}
 
-        {mode === 'compare' && comparisonPoints.map((point) => (
-          <Marker
-            key={point.id}
-            position={[point.location.lat, point.location.lng]}
-            icon={createColoredIcon(point.color)}
-            title={`Lat: ${point.location.lat.toFixed(2)}, Lng: ${point.location.lng.toFixed(2)}`}
-          />
+        {/* Compare Mode Markers */}
+        {mode === 'compare' && comparisonPoints && comparisonPoints.map((point) => (
+           <Marker 
+             key={point.id} 
+             position={[point.location.lat, point.location.lng]} 
+             icon={createColoredIcon(point.color)}
+           >
+              <Popup closeButton={false} offset={[0, -28]}>
+                <div className="font-semibold text-xs">
+                  {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
+                </div>
+              </Popup>
+           </Marker>
         ))}
       </MapContainer>
       
-      {!selectedLocation && mode === 'single' && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-slate-200 text-sm font-medium text-slate-700 animate-pulse pointer-events-none">
-          {t.clickMapHint}
-        </div>
-      )}
-      {mode === 'compare' && comparisonPoints.length < 5 && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-slate-200 text-sm font-medium text-slate-700 pointer-events-none">
-          {t.addPoint} ({comparisonPoints.length}/5)
-        </div>
-      )}
+      {/* Hint Overlay */}
+      <div className="absolute bottom-6 right-14 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 pointer-events-none z-[400] hidden sm:block border border-slate-200">
+        {t.clickMapHint}
+      </div>
     </div>
   );
 };

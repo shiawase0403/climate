@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { ClimateDataResponse, ClassificationResponse, GeoLocation } from '../types';
+import { ClimateDataResponse, ClassificationResponse, GeoLocation, ComparisonPoint } from '../types';
 import { getChineseClimateClassification } from './climateService';
 
 // Helper to render HTML string to an image via canvas
@@ -167,4 +167,145 @@ export const generatePDF = async (
 
   // Save
   doc.save(`Climate_Report_${location.lat.toFixed(2)}_${location.lng.toFixed(2)}.pdf`);
+};
+
+export const generateComparisonPDF = async (
+  points: ComparisonPoint[],
+  lang: string,
+  t: any
+) => {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth(); 
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - (margin * 2);
+  let currentY = 15;
+
+  // --- 1. Header ---
+  const headerHtml = `
+    <div style="padding: 20px; font-family: sans-serif;">
+      <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px;">
+        ${t.comparisonReportTitle}
+      </h1>
+      <div style="font-size: 14px; line-height: 1.6;">
+        <p style="margin: 5px 0;"><strong>${t.generatedOn}:</strong> ${new Date().toLocaleDateString()}</p>
+        <p style="margin: 5px 0;"><strong>${t.location}s:</strong> ${points.length}</p>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+          ${points.map(p => {
+             const latStr = `${Math.abs(p.location.lat).toFixed(2)}°${p.location.lat >= 0 ? 'N' : 'S'}`;
+             const lngStr = `${Math.abs(p.location.lng).toFixed(2)}°${p.location.lng >= 0 ? 'E' : 'W'}`;
+             return `<li>${latStr}, ${lngStr}</li>`;
+          }).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+
+  try {
+    const headerImg = await renderHtmlToImage(headerHtml);
+    const headerPdfHeight = (headerImg.height / headerImg.width) * contentWidth;
+    doc.addImage(headerImg.dataUrl, 'PNG', margin, currentY, contentWidth, headerPdfHeight);
+    currentY += headerPdfHeight + 5;
+  } catch (e) {
+    console.error("Header failed", e);
+  }
+
+  // --- 2. Chart Sections (Precipitation & Temperature) ---
+  const sections = ['comparison-precip-section', 'comparison-temp-section'];
+  
+  for (const sectionId of sections) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height / canvas.width) * contentWidth;
+
+        if (currentY + imgHeight > pageHeight - margin) {
+          doc.addPage();
+          currentY = margin;
+        }
+
+        doc.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+        currentY += imgHeight + 10;
+      } catch (e) {
+        console.error(`Section ${sectionId} capture failed`, e);
+      }
+    }
+  }
+
+  // --- 3. Data Tables ---
+  const generateTableHtml = (title: string, dataKey: 'temp' | 'prec', unit: string) => {
+    // Header Row
+    const headers = points.map(p => {
+      const latStr = `${Math.abs(p.location.lat).toFixed(1)}°${p.location.lat >= 0 ? 'N' : 'S'}`;
+      return `<th style="padding: 6px; text-align: right; border-bottom: 2px solid #000; font-size: 10px; width: ${80 / points.length}%;">${latStr}</th>`;
+    }).join('');
+
+    // Body Rows
+    const rows = t.months.map((month: string, idx: number) => {
+       const cols = points.map(p => {
+         const val = p.data.data[idx][dataKey];
+         return `<td style="padding: 6px; text-align: right; font-size: 11px;">${val.toFixed(1)}</td>`;
+       }).join('');
+       
+       return `
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 6px; text-align: left; font-size: 11px; font-weight: bold;">${t.monthsShort[idx]}</td>
+          ${cols}
+        </tr>
+       `;
+    }).join('');
+
+    return `
+      <div style="padding: 20px; font-family: sans-serif;">
+        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">${title}</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+          <thead style="background-color: #f0f0f0;">
+             <tr>
+               <th style="padding: 6px; text-align: left; border-bottom: 2px solid #000; width: 10%;">${t.month}</th>
+               ${headers}
+             </tr>
+          </thead>
+          <tbody>
+             ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  // Temperature Table
+  if (currentY > pageHeight - 80) { // Approx height check
+      doc.addPage();
+      currentY = margin;
+  }
+  
+  try {
+    const tempTableHtml = generateTableHtml(t.tempComparisonTable, 'temp', '°C');
+    const tempTableImg = await renderHtmlToImage(tempTableHtml);
+    const h = (tempTableImg.height / tempTableImg.width) * contentWidth;
+    doc.addImage(tempTableImg.dataUrl, 'PNG', margin, currentY, contentWidth, h);
+    currentY += h + 10;
+  } catch(e) { console.error(e); }
+
+  // Precip Table
+  if (currentY > pageHeight - 80) {
+      doc.addPage();
+      currentY = margin;
+  }
+
+  try {
+    const precTableHtml = generateTableHtml(t.precipComparisonTable, 'prec', 'mm');
+    const precTableImg = await renderHtmlToImage(precTableHtml);
+    const h = (precTableImg.height / precTableImg.width) * contentWidth;
+    doc.addImage(precTableImg.dataUrl, 'PNG', margin, currentY, contentWidth, h);
+  } catch(e) { console.error(e); }
+
+  doc.save(`Climate_Comparison_Report.pdf`);
 };

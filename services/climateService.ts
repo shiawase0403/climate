@@ -83,6 +83,7 @@ export const getChineseClimateClassification = (code: string): string | undefine
     'Am': '热带季风气候',
     'As': '热带稀树草原气候',
     'Aw': '热带稀树草原气候',
+    'As/Aw': '热带稀树草原气候',
     'BSh': '热带半干旱气候',
     'BSk': '温带半干旱气候',
     'BWh': '热带沙漠气候',

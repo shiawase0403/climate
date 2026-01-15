@@ -31,8 +31,10 @@ export interface Translations {
   months: string[];
   monthsShort: string[];
   downloadReport: string;
+  downloadComparison: string;
   generating: string;
   reportTitle: string;
+  comparisonReportTitle: string;
   generatedOn: string;
   coords: string;
   latitude: string;
@@ -58,6 +60,16 @@ export interface Translations {
   location: string;
   compareTemp: string;
   comparePrecip: string;
+  tempComparisonTable: string;
+  precipComparisonTable: string;
+  // Explore Mode
+  exploreCities: string;
+  climateExplorer: string;
+  exploreInstruction: string;
+  exploreDataCredit: string;
+  climateDynamicsAnalysis: string;
+  // Specific Descriptions
+  climateDescriptions: Record<string, string>;
   // Footer Notice
   notice: {
     title: string;
@@ -77,7 +89,7 @@ export interface Translations {
       a: string;
       b: string;
       c: string;
-    }
+    };
   }
 }
 
@@ -111,8 +123,10 @@ export const translations: Record<Language, Translations> = {
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     downloadReport: "Download PDF Report",
+    downloadComparison: "Download Comparison PDF",
     generating: "Generating...",
     reportTitle: "Climate Analysis Report",
+    comparisonReportTitle: "Climate Comparison Report",
     generatedOn: "Generated on",
     coords: "Coordinates",
     latitude: "Latitude",
@@ -137,6 +151,14 @@ export const translations: Record<Language, Translations> = {
     location: "Location",
     compareTemp: "Temperature Comparison",
     comparePrecip: "Precipitation Comparison",
+    tempComparisonTable: "Temperature Comparison Data (°C)",
+    precipComparisonTable: "Precipitation Comparison Data (mm)",
+    exploreCities: "Explore Cities",
+    climateExplorer: "Climate Explorer",
+    exploreInstruction: "Select a climate classification code to view classic city examples and their deep climate analysis.",
+    exploreDataCredit: "Data provided by Detailed Analysis Report of Global Classic Urban Geo-Climatology",
+    climateDynamicsAnalysis: "Climate Dynamics Depth Analysis",
+    climateDescriptions: {}, // Empty for English
     notice: {
       title: "About Climate Classification",
       description: "This site uses the Köppen climate classification system. Please note there may be differences compared to standard geography curricula due to data sources. Below is a key to the classification codes:",
@@ -187,8 +209,10 @@ export const translations: Record<Language, Translations> = {
     months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
     monthsShort: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
     downloadReport: "下载 PDF 报告",
+    downloadComparison: "下载对比报告 PDF",
     generating: "正在生成...",
     reportTitle: "气候分析报告",
+    comparisonReportTitle: "气候对比报告",
     generatedOn: "生成时间",
     coords: "坐标",
     latitude: "纬度",
@@ -213,6 +237,33 @@ export const translations: Record<Language, Translations> = {
     location: "地点",
     compareTemp: "温度对比",
     comparePrecip: "降水量对比",
+    tempComparisonTable: "温度对比数据 (°C)",
+    precipComparisonTable: "降水量对比数据 (mm)",
+    exploreCities: "探索城市",
+    climateExplorer: "气候探索",
+    exploreInstruction: "选择一个气候分类代码以查看经典城市案例及其深度气候分析。",
+    exploreDataCredit: "数据来源：《全球经典城市地理气候详细分析报告》",
+    climateDynamicsAnalysis: "气候动力学深度分析",
+    climateDescriptions: {
+      "Af": "分布于赤道两侧，以及海洋信风的迎风坡",
+      "Am": "在柯本气候分类法中位于热带雨林两侧，属于过渡型，与课内定义不同。",
+      "BWh": "沙漠气候，自然植被为荒漠",
+      "BWk": "沙漠气候，自然植被为荒漠",
+      "BSh": "半干旱气候，自然植被为灌丛、草原",
+      "BSk": "半干旱气候，自然植被为灌丛、草原",
+      "Cfa": "亚热带季风和亚热带湿润气候，降水较为均匀",
+      "Cwa": "亚热带季风气候，降水分配不均匀",
+      "Cfb": "温带海洋性气候，广泛分布于大陆西岸中纬度和海岛",
+      "Cfc": "（亚寒带）温带海洋性气候，分布于副极地低气压带控制且有暖流影响的地区，典型的如冰岛",
+      "Cwb": "亚热带高原季风气候，如昆明",
+      "Cwc": "亚热带高原季风气候，如昆明",
+      "Csa": "热夏型地中海气候，多分布于地中海周围，如伊斯坦布尔，罗马",
+      "Csb": "凉夏型地中海气候，多分布于寒流影响的大陆西岸，如珀斯（澳大利亚），旧金山，波尔图（葡萄牙）",
+      "Dfa": "温带大陆性湿润气候，如芝加哥",
+      "Dfb": "温带大陆性湿润气候，如芝加哥",
+      "Dwa": "温带季风气候，大陆性较强，广泛分布于东亚中纬度",
+      "Dwb": "温带季风气候，大陆性较强，广泛分布于东亚中纬度"
+    },
     notice: {
       title: "关于气候分类的说明",
       description: "由于数据源限制，本站采用柯本气候分类法，我们已经尽可能将其与课内所学对应，但是仍有较大出入，下面是柯本气候分类法的一些字母代号含义：",

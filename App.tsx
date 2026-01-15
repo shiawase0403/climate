@@ -4,10 +4,12 @@ import { ClimateChart } from './components/ClimateChart';
 import { ClimateTable } from './components/ClimateTable';
 import { ClassificationCard } from './components/ClassificationCard';
 import { LocationInput } from './components/LocationInput';
-import { ComparisonChart, ComparisonPoint } from './components/ComparisonChart';
+import { ComparisonChart } from './components/ComparisonChart';
+import { ExploreMenu } from './components/ExploreMenu';
+import { CityAnalysisCard } from './components/CityAnalysisCard';
 import { fetchClimateData, fetchClassification } from './services/climateService';
-import { generatePDF } from './services/pdfService';
-import { GeoLocation, ClimateDataResponse, ClassificationResponse } from './types';
+import { generatePDF, generateComparisonPDF } from './services/pdfService';
+import { GeoLocation, ClimateDataResponse, ClassificationResponse, ComparisonPoint, CityDefinition } from './types';
 import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2, BookOpen } from 'lucide-react';
 import { useLanguage } from './contexts/LanguageContext';
 
@@ -93,6 +95,7 @@ const App: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
   const [climateData, setClimateData] = useState<ClimateDataResponse | null>(null);
   const [classification, setClassification] = useState<ClassificationResponse | null>(null);
+  const [selectedCity, setSelectedCity] = useState<CityDefinition | null>(null);
   
   // Comparison Mode State
   const [comparePoints, setComparePoints] = useState<ComparisonPoint[]>([]);
@@ -131,6 +134,17 @@ const App: React.FC = () => {
     loadData();
   }, [selectedLocation, mode, t]);
 
+  const handleManualLocationSelect = (location: GeoLocation) => {
+    setSelectedLocation(location);
+    setSelectedCity(null); // Clear city analysis if manual pick
+  };
+
+  const handleExploreCitySelect = (city: CityDefinition) => {
+    const location = { lat: city.lat, lng: city.lng };
+    setSelectedLocation(location);
+    setSelectedCity(city);
+  };
+
   // --- Comparison Mode Logic ---
   const handleComparisonLocationSelect = async (location: GeoLocation) => {
     if (comparePoints.length >= 5) {
@@ -151,11 +165,15 @@ const App: React.FC = () => {
          return;
       }
 
+      // Find the first available color
+      const usedColors = new Set(comparePoints.map(p => p.color));
+      const nextColor = PALETTE.find(c => !usedColors.has(c)) || PALETTE[0];
+
       const newPoint: ComparisonPoint = {
         id: Date.now().toString(),
         location: location,
         data: climateRes,
-        color: PALETTE[comparePoints.length % PALETTE.length]
+        color: nextColor
       };
 
       setComparePoints(prev => [...prev, newPoint]);
@@ -168,11 +186,7 @@ const App: React.FC = () => {
   };
 
   const removeComparePoint = (id: string) => {
-    setComparePoints(prev => {
-      const filtered = prev.filter(p => p.id !== id);
-      // Re-assign colors to maintain order if desired, or keep original colors
-      return filtered.map((p, i) => ({ ...p, color: PALETTE[i % PALETTE.length] }));
-    });
+    setComparePoints(prev => prev.filter(p => p.id !== id));
   };
 
   const clearComparePoints = () => {
@@ -190,6 +204,20 @@ const App: React.FC = () => {
       await generatePDF(selectedLocation, climateData, classification, language, t);
     } catch (e) {
       console.error("PDF generation failed", e);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+
+  const handleDownloadComparisonReport = async () => {
+    if (comparePoints.length === 0) return;
+
+    setGeneratingPdf(true);
+    try {
+       await new Promise(resolve => setTimeout(resolve, 100));
+       await generateComparisonPDF(comparePoints, language, t);
+    } catch (e) {
+      console.error("Comparison PDF generation failed", e);
     } finally {
       setGeneratingPdf(false);
     }
@@ -274,10 +302,13 @@ const App: React.FC = () => {
             </div>
 
             {mode === 'single' && (
-              <LocationInput 
-                onLocationSelect={setSelectedLocation} 
-                selectedLocation={selectedLocation} 
-              />
+              <>
+                <ExploreMenu onSelectCity={handleExploreCitySelect} />
+                <LocationInput 
+                  onLocationSelect={handleManualLocationSelect} 
+                  selectedLocation={selectedLocation} 
+                />
+              </>
             )}
 
             {/* Compare Mode List */}
@@ -326,7 +357,7 @@ const App: React.FC = () => {
               mode={mode}
               selectedLocation={selectedLocation}
               comparisonPoints={mapPoints}
-              onLocationSelect={mode === 'single' ? setSelectedLocation : handleComparisonLocationSelect} 
+              onLocationSelect={mode === 'single' ? handleManualLocationSelect : handleComparisonLocationSelect} 
             />
           </div>
 
@@ -396,6 +427,9 @@ const App: React.FC = () => {
                             <span>{generatingPdf ? t.generating : t.downloadReport}</span>
                           </button>
                         </div>
+                        
+                        {/* Display City Analysis Card if a city is selected via Explore Menu */}
+                        {selectedCity && <CityAnalysisCard city={selectedCity} />}
 
                         <ClassificationCard 
                           classificationData={classification.data} 
@@ -429,7 +463,23 @@ const App: React.FC = () => {
                  )}
 
                  {comparePoints.length > 0 && !loading && (
-                    <ComparisonChart points={comparePoints} />
+                    <>
+                      <div className="flex justify-end mb-4">
+                        <button
+                          onClick={handleDownloadComparisonReport}
+                          disabled={generatingPdf}
+                          className="flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                        >
+                          {generatingPdf ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                          <span>{generatingPdf ? t.generating : t.downloadComparison}</span>
+                        </button>
+                      </div>
+                      <ComparisonChart points={comparePoints} />
+                    </>
                  )}
               </>
             )}

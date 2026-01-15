@@ -38,3 +38,26 @@ export interface GeoLocation {
   lat: number;
   lng: number;
 }
+
+// Comparison Types
+export interface ComparisonPoint {
+  id: string;
+  location: GeoLocation;
+  data: ClimateDataResponse;
+  color: string;
+}
+
+// Explore Feature Types
+export interface CityDefinition {
+  name: string;
+  country: string;
+  lat: number;
+  lng: number;
+  description: string;
+}
+
+export interface ClimateCategory {
+  code: string;
+  title: string;
+  cities: CityDefinition[];
+}

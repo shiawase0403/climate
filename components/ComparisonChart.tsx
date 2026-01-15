@@ -12,15 +12,8 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { CloudRain, Thermometer } from 'lucide-react';
-import { ClimateDataResponse, GeoLocation } from '../types';
+import { ComparisonPoint } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
-
-export interface ComparisonPoint {
-  id: string;
-  location: GeoLocation;
-  data: ClimateDataResponse;
-  color: string;
-}
 
 interface ComparisonChartProps {
   points: ComparisonPoint[];
@@ -74,7 +67,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
     <div className="space-y-12 animate-in fade-in duration-500">
       
       {/* --- PRECIPITATION SECTION --- */}
-      <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+      <div id="comparison-precip-section" className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2.5 bg-blue-100 rounded-xl text-blue-600 shadow-sm">
             <CloudRain className="w-5 h-5" />
@@ -166,7 +159,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
       </div>
 
       {/* --- TEMPERATURE SECTION --- */}
-      <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+      <div id="comparison-temp-section" className="bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
            <div className="p-2.5 bg-red-100 rounded-xl text-red-600 shadow-sm">
             <Thermometer className="w-5 h-5" />

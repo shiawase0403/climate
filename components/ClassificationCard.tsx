@@ -1,6 +1,6 @@
 import React from 'react';
 import { ClassificationEntry } from '../types';
-import { Info, MapPin } from 'lucide-react';
+import { Info, MapPin, BookOpen } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getChineseClimateClassification } from '../services/climateService';
 
@@ -47,6 +47,9 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
 
   displayText = displayText || (language === 'zh' ? '未知气候' : 'Unknown Climate');
 
+  // Specific description if available
+  const description = mainClass?.code ? t.climateDescriptions[mainClass.code] : null;
+
   return (
     <div className={`bg-gradient-to-br ${gradientClass} rounded-xl shadow-lg text-white p-6 mb-6 transition-all duration-500`}>
       <div className="flex items-start justify-between">
@@ -66,7 +69,7 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
       </div>
       
       <div className="mt-4 pt-4 border-t border-white/20">
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start space-x-3 mb-3">
           <Info className="w-5 h-5 text-white/80 mt-1 flex-shrink-0" />
           <div>
             <h3 className="text-lg font-semibold text-white">
@@ -77,6 +80,16 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
             </p>
           </div>
         </div>
+
+        {/* Dynamic Description if available */}
+        {description && (
+           <div className="mt-4 bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10 flex items-start space-x-3 animate-in fade-in slide-in-from-top-2 duration-300">
+             <BookOpen className="w-4 h-4 text-white/90 mt-0.5 flex-shrink-0" />
+             <p className="text-sm text-white/90 leading-relaxed font-medium">
+               {description}
+             </p>
+           </div>
+        )}
       </div>
     </div>
   );
