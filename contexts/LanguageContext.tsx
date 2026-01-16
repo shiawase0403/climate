@@ -90,6 +90,13 @@ export interface Translations {
       b: string;
       c: string;
     };
+  };
+  // About Us
+  aboutUs: {
+    title: string;
+    design: string;
+    geo: string;
+    server: string;
   }
 }
 
@@ -178,6 +185,12 @@ export const translations: Record<Language, Translations> = {
         b: "Warm Summer",
         c: "Cold Summer"
       }
+    },
+    aboutUs: {
+      title: "About Us",
+      design: "Web Design & Production: shiawase.",
+      geo: "Geography Consultant: 台风来了专家",
+      server: "Server Support: Ericnth"
     }
   },
   zh: {
@@ -283,6 +296,12 @@ export const translations: Record<Language, Translations> = {
         b: "凉夏",
         c: "冷夏"
       }
+    },
+    aboutUs: {
+      title: "关于我们",
+      design: "网页设计&制作：shiawase.",
+      geo: "地理顾问：台风来了专家",
+      server: "服务器支持：Ericnth"
     }
   }
 };

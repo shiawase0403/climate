@@ -1,48 +1,293 @@
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import autoTable from 'jspdf-autotable';
 import { ClimateDataResponse, ClassificationResponse, GeoLocation, ComparisonPoint } from '../types';
-import { getChineseClimateClassification } from './climateService';
 
-// Helper to render HTML string to an image via canvas
-const renderHtmlToImage = async (html: string, width: number = 794): Promise<{ dataUrl: string; height: number; width: number }> => {
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.width = `${width}px`;
-  container.style.zIndex = '-1000'; // Behind everything but rendered
-  container.style.backgroundColor = '#ffffff';
-  container.style.fontFamily = '"Microsoft YaHei", "Heiti SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-  container.style.color = '#000000'; // Strict black
-  container.innerHTML = html;
+// Colors for Charts
+const COLORS = {
+  precip: [59, 130, 246], // #3b82f6 (Blue)
+  temp: [239, 68, 68],    // #ef4444 (Red)
+  grid: [203, 213, 225],  // #cbd5e1 (Slate 300)
+  text: [71, 85, 105],    // #475569 (Slate 600)
+  title: [15, 23, 42],    // #0f172a (Slate 900)
+};
+
+// Static English labels for PDF
+const PDF_LABELS = {
+  reportTitle: "Climate Analysis Report",
+  compTitle: "Climate Comparison Report",
+  generated: "Generated on",
+  location: "Location",
+  code: "Classification Code",
+  temp: "Temperature",
+  precip: "Precipitation",
+  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  monthsFull: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+  monthHeader: "Month",
+  tempHeader: "Temp (C)",
+  precipHeader: "Precip (mm)"
+};
+
+// Helper to parse hex
+const hexToRgb = (hex: string) => {
+  const cleanHex = hex.replace('#', '');
+  return {
+    r: parseInt(cleanHex.substring(0, 2), 16),
+    g: parseInt(cleanHex.substring(2, 4), 16),
+    b: parseInt(cleanHex.substring(4, 6), 16)
+  };
+};
+
+/**
+ * Draw a single location climate chart (Bar + Line)
+ */
+const drawClimateChartPDF = (
+  doc: jsPDF,
+  data: any[],
+  startX: number,
+  startY: number,
+  width: number,
+  height: number
+) => {
+  const margin = { top: 10, right: 15, bottom: 20, left: 15 };
+  const chartW = width - margin.left - margin.right;
+  const chartH = height - margin.top - margin.bottom;
+  const x0 = startX + margin.left;
+  const y0 = startY + margin.top;
+  const yBottom = y0 + chartH;
+
+  const temps = data.map(d => d.temp);
+  const precips = data.map(d => d.prec);
   
-  document.body.appendChild(container);
+  const minTemp = Math.min(...temps);
+  const maxTemp = Math.max(...temps);
+  const maxPrecip = Math.max(...precips) || 100;
 
-  // Small delay to ensure rendering
-  await new Promise(resolve => setTimeout(resolve, 50));
+  const tempRange = maxTemp - minTemp || 10;
+  const tempMinDomain = Math.floor(minTemp - (tempRange * 0.1));
+  const tempMaxDomain = Math.ceil(maxTemp + (tempRange * 0.1));
+  const precMaxDomain = Math.ceil(maxPrecip * 1.1);
 
-  try {
-    const canvas = await html2canvas(container, {
-      scale: 2, // 2x scale for sharpness
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
+  // Grid
+  doc.setFontSize(8);
+  doc.setLineWidth(0.1);
+  doc.setDrawColor(COLORS.grid[0], COLORS.grid[1], COLORS.grid[2]);
+
+  for (let i = 0; i <= 5; i++) {
+    const y = yBottom - (chartH * (i / 5));
+    doc.line(x0, y, x0 + chartW, y);
     
-    document.body.removeChild(container);
-    return {
-      dataUrl: canvas.toDataURL('image/png'),
-      width: canvas.width,
-      height: canvas.height
-    };
-  } catch (e) {
-    if (document.body.contains(container)) {
-      document.body.removeChild(container);
-    }
-    throw e;
+    const pVal = Math.round(precMaxDomain * (i / 5));
+    doc.setTextColor(COLORS.precip[0], COLORS.precip[1], COLORS.precip[2]);
+    doc.text(pVal.toString(), x0 - 2, y + 1, { align: 'right' });
+
+    const tVal = (tempMinDomain + (tempMaxDomain - tempMinDomain) * (i / 5)).toFixed(1);
+    doc.setTextColor(COLORS.temp[0], COLORS.temp[1], COLORS.temp[2]);
+    doc.text(tVal.toString(), x0 + chartW + 2, y + 1, { align: 'left' });
+  }
+
+  // X Axis
+  const stepX = chartW / 12;
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  data.forEach((d, i) => {
+    const x = x0 + (i * stepX) + (stepX / 2);
+    doc.text(PDF_LABELS.months[d.month - 1], x, yBottom + 5, { align: 'center' });
+  });
+
+  // Bars
+  doc.setFillColor(COLORS.precip[0], COLORS.precip[1], COLORS.precip[2]);
+  const barWidth = stepX * 0.6;
+  const barOffset = (stepX - barWidth) / 2;
+
+  data.forEach((d, i) => {
+    const barHeight = (d.prec / precMaxDomain) * chartH;
+    const x = x0 + (i * stepX) + barOffset;
+    const y = yBottom - barHeight;
+    const h = Math.max(barHeight, 0.2); 
+    doc.rect(x, y, barWidth, h, 'F');
+  });
+
+  // Line
+  doc.setDrawColor(COLORS.temp[0], COLORS.temp[1], COLORS.temp[2]);
+  doc.setLineWidth(0.8);
+  
+  const getTempY = (val: number) => {
+    const pct = (val - tempMinDomain) / (tempMaxDomain - tempMinDomain);
+    return yBottom - (pct * chartH);
+  };
+
+  let prevX = 0;
+  let prevY = 0;
+
+  data.forEach((d, i) => {
+    const x = x0 + (i * stepX) + (stepX / 2);
+    const y = getTempY(d.temp);
+    if (i > 0) doc.line(prevX, prevY, x, y);
+    prevX = x;
+    prevY = y;
+  });
+
+  doc.setFillColor(COLORS.temp[0], COLORS.temp[1], COLORS.temp[2]);
+  data.forEach((d, i) => {
+    const x = x0 + (i * stepX) + (stepX / 2);
+    const y = getTempY(d.temp);
+    doc.circle(x, y, 1.0, 'F');
+  });
+  
+  if (tempMinDomain < 0 && tempMaxDomain > 0) {
+    const yZero = getTempY(0);
+    doc.setDrawColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+    doc.setLineWidth(0.2);
+    doc.setLineDash([1, 1], 0);
+    doc.line(x0, yZero, x0 + chartW, yZero);
+    doc.setLineDash([], 0);
   }
 };
 
+/**
+ * Draw Comparison Line Chart (Temperature)
+ */
+const drawComparisonLines = (
+  doc: jsPDF,
+  points: ComparisonPoint[],
+  startX: number,
+  startY: number,
+  width: number,
+  height: number
+) => {
+  const margin = { top: 15, right: 10, bottom: 20, left: 15 };
+  const chartW = width - margin.left - margin.right;
+  const chartH = height - margin.top - margin.bottom;
+  const x0 = startX + margin.left;
+  const y0 = startY + margin.top;
+  const yBottom = y0 + chartH;
+
+  const allValues = points.flatMap(p => p.data.data.map(d => d.temp));
+  const minVal = Math.min(...allValues);
+  const maxVal = Math.max(...allValues);
+
+  const range = maxVal - minVal || 10;
+  const minDomain = Math.floor(minVal - (range * 0.1));
+  const maxDomain = Math.ceil(maxVal + (range * 0.1));
+
+  // Grid & Axis
+  doc.setFontSize(8);
+  doc.setLineWidth(0.1);
+  doc.setDrawColor(COLORS.grid[0], COLORS.grid[1], COLORS.grid[2]);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+
+  doc.setFontSize(10);
+  doc.text(PDF_LABELS.temp, startX, startY + 5);
+  doc.setFontSize(8);
+
+  for (let i = 0; i <= 5; i++) {
+    const y = yBottom - (chartH * (i / 5));
+    doc.line(x0, y, x0 + chartW, y);
+    const val = (minDomain + (maxDomain - minDomain) * (i / 5)).toFixed(1);
+    doc.text(val, x0 - 2, y + 1, { align: 'right' });
+  }
+
+  const stepX = chartW / 12;
+  points[0].data.data.forEach((_, i) => {
+    const x = x0 + (i * stepX) + (stepX / 2);
+    doc.text(PDF_LABELS.months[i], x, yBottom + 5, { align: 'center' });
+  });
+
+  // Lines
+  points.forEach((p) => {
+    const { r, g, b } = hexToRgb(p.color);
+    doc.setDrawColor(r, g, b);
+    doc.setLineWidth(0.5);
+
+    let prevX = 0, prevY = 0;
+    p.data.data.forEach((d, i) => {
+      const val = d.temp;
+      const x = x0 + (i * stepX) + (stepX / 2);
+      const pct = (val - minDomain) / (maxDomain - minDomain);
+      const y = yBottom - (pct * chartH);
+
+      if (i > 0) doc.line(prevX, prevY, x, y);
+      
+      doc.setFillColor(r, g, b);
+      doc.circle(x, y, 0.6, 'F');
+      
+      prevX = x;
+      prevY = y;
+    });
+  });
+};
+
+/**
+ * Draw Comparison Bar Chart (Precipitation)
+ */
+const drawComparisonBars = (
+  doc: jsPDF,
+  points: ComparisonPoint[],
+  startX: number,
+  startY: number,
+  width: number,
+  height: number
+) => {
+  const margin = { top: 15, right: 10, bottom: 20, left: 15 };
+  const chartW = width - margin.left - margin.right;
+  const chartH = height - margin.top - margin.bottom;
+  const x0 = startX + margin.left;
+  const y0 = startY + margin.top;
+  const yBottom = y0 + chartH;
+
+  const allValues = points.flatMap(p => p.data.data.map(d => d.prec));
+  const maxVal = Math.max(...allValues);
+  const maxDomain = Math.ceil(maxVal * 1.1) || 100;
+
+  // Grid & Axis
+  doc.setFontSize(8);
+  doc.setLineWidth(0.1);
+  doc.setDrawColor(COLORS.grid[0], COLORS.grid[1], COLORS.grid[2]);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+
+  doc.setFontSize(10);
+  doc.text(PDF_LABELS.precip, startX, startY + 5);
+  doc.setFontSize(8);
+
+  for (let i = 0; i <= 5; i++) {
+    const y = yBottom - (chartH * (i / 5));
+    doc.line(x0, y, x0 + chartW, y);
+    const val = Math.round(maxDomain * (i / 5));
+    doc.text(val.toString(), x0 - 2, y + 1, { align: 'right' });
+  }
+
+  const stepX = chartW / 12;
+  points[0].data.data.forEach((_, i) => {
+    const x = x0 + (i * stepX) + (stepX / 2);
+    doc.text(PDF_LABELS.months[i], x, yBottom + 5, { align: 'center' });
+  });
+
+  // Side-by-side Bars
+  const numPoints = points.length;
+  // Use 85% of the step width for the group of bars
+  const groupWidth = stepX * 0.85;
+  const barWidth = groupWidth / numPoints;
+  const groupOffset = (stepX - groupWidth) / 2;
+
+  points.forEach((p, pIndex) => {
+    const { r, g, b } = hexToRgb(p.color);
+    doc.setFillColor(r, g, b);
+
+    p.data.data.forEach((d, mIndex) => {
+      const barHeight = (d.prec / maxDomain) * chartH;
+      if (barHeight > 0) {
+        // Minimum height of 0.2 to show "something" if data exists but is small
+        const h = Math.max(barHeight, 0.2); 
+        const x = x0 + (mIndex * stepX) + groupOffset + (pIndex * barWidth);
+        const y = yBottom - h;
+        doc.rect(x, y, barWidth, h, 'F');
+      }
+    });
+  });
+};
+
+/**
+ * Generate PDF for Single Location
+ */
 export const generatePDF = async (
   location: GeoLocation,
   climateData: ClimateDataResponse,
@@ -50,262 +295,167 @@ export const generatePDF = async (
   lang: string,
   t: any
 ) => {
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = doc.internal.pageSize.getWidth(); // ~210mm
-  const pageHeight = doc.internal.pageSize.getHeight(); // ~297mm
-  const margin = 15;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
   const contentWidth = pageWidth - (margin * 2);
-  
-  let currentY = 15;
+  let cursorY = 20;
 
-  // --- 1. Header Section ---
-  const latStr = `${Math.abs(location.lat).toFixed(4)}°${location.lat >= 0 ? 'N' : 'S'}`;
-  const lngStr = `${Math.abs(location.lng).toFixed(4)}°${location.lng >= 0 ? 'E' : 'W'}`;
+  // Header
+  doc.setFontSize(22);
+  doc.setTextColor(COLORS.title[0], COLORS.title[1], COLORS.title[2]);
+  doc.text(PDF_LABELS.reportTitle, margin, cursorY);
+  cursorY += 10;
+
+  // Metadata
+  doc.setFontSize(10);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  
+  const dateStr = new Date().toLocaleDateString();
+  const latStr = `${Math.abs(location.lat).toFixed(4)} ${location.lat >= 0 ? 'N' : 'S'}`;
+  const lngStr = `${Math.abs(location.lng).toFixed(4)} ${location.lng >= 0 ? 'E' : 'W'}`;
+  
   const mainClass = classification.data.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classification.data[0];
+  const code = mainClass?.code || 'N/A';
   
-  let classText = mainClass?.text;
-  if (lang === 'zh' && mainClass?.code) {
-    const cnText = getChineseClimateClassification(mainClass.code);
-    if (cnText) classText = cnText;
-  }
-  classText = classText || (lang === 'zh' ? '未知气候' : 'Unknown');
+  doc.text(`${PDF_LABELS.generated}: ${dateStr}`, margin, cursorY);
+  cursorY += 6;
+  doc.text(`${PDF_LABELS.location}: ${latStr}, ${lngStr}`, margin, cursorY);
+  cursorY += 6;
+  doc.text(`${PDF_LABELS.code}: ${code}`, margin, cursorY);
+  cursorY += 15;
 
-  const headerHtml = `
-    <div style="padding: 20px; font-family: sans-serif;">
-      <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px;">
-        ${t.reportTitle}
-      </h1>
-      <div style="font-size: 14px; line-height: 1.6;">
-        <p style="margin: 5px 0;"><strong>${t.generatedOn}:</strong> ${new Date().toLocaleDateString()}</p>
-        <p style="margin: 5px 0;"><strong>${t.selectedLocation}:</strong> ${latStr}, ${lngStr}</p>
-        <p style="margin: 5px 0;"><strong>${t.code}:</strong> ${mainClass?.code || 'N/A'}</p>
-        <p style="margin: 5px 0;"><strong>${t.basedOn}:</strong> ${classText}</p>
-      </div>
-    </div>
-  `;
+  // Draw Chart
+  doc.setFontSize(14);
+  doc.setTextColor(COLORS.title[0], COLORS.title[1], COLORS.title[2]);
+  doc.text("Climate Chart", margin, cursorY);
+  cursorY += 5;
+  
+  drawClimateChartPDF(doc, climateData.data, margin, cursorY, contentWidth, 90);
+  cursorY += 100;
 
-  try {
-    const headerImg = await renderHtmlToImage(headerHtml);
-    const headerPdfHeight = (headerImg.height / headerImg.width) * contentWidth; // Maintain aspect ratio
-    
-    doc.addImage(headerImg.dataUrl, 'PNG', margin, currentY, contentWidth, headerPdfHeight);
-    currentY += headerPdfHeight + 5;
-  } catch (e) {
-    console.error("Header generation failed", e);
-  }
+  // Draw Table
+  doc.setFontSize(14);
+  doc.text("Monthly Data", margin, cursorY);
+  cursorY += 5;
 
-  // --- 2. Chart Section ---
-  const chartElement = document.getElementById('climate-chart-container');
-  if (chartElement) {
-    try {
-      // Capture chart with specific options to handle transparency/colors
-      const chartCanvas = await html2canvas(chartElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff' // Force white bg
-      });
-      
-      const chartImgData = chartCanvas.toDataURL('image/png');
-      const chartPdfHeight = (chartCanvas.height / chartCanvas.width) * contentWidth;
-      
-      // Check for page break
-      if (currentY + chartPdfHeight > pageHeight - margin) {
-        doc.addPage();
-        currentY = margin;
-      }
+  const tableBody = climateData.data.map(d => [
+    PDF_LABELS.monthsFull[d.month - 1],
+    d.temp.toFixed(1),
+    d.prec.toFixed(1)
+  ]);
 
-      doc.addImage(chartImgData, 'PNG', margin, currentY, contentWidth, chartPdfHeight);
-      currentY += chartPdfHeight + 10;
-    } catch (e) {
-      console.error("Chart capture failed", e);
-    }
-  }
+  autoTable(doc, {
+    startY: cursorY,
+    head: [[PDF_LABELS.monthHeader, PDF_LABELS.tempHeader, PDF_LABELS.precipHeader]],
+    body: tableBody,
+    theme: 'grid',
+    headStyles: { fillColor: [15, 23, 42] },
+    styles: { font: 'helvetica', fontSize: 10 },
+    margin: { left: margin, right: margin }
+  });
 
-  // --- 3. Table Section ---
-  // Reconstruct table HTML to be clean and B&W
-  const tableRows = climateData.data.map((d) => `
-    <tr style="border-bottom: 1px solid #000;">
-      <td style="padding: 8px; text-align: left;">${t.months[d.month - 1]}</td>
-      <td style="padding: 8px; text-align: right;">${d.temp.toFixed(1)}</td>
-      <td style="padding: 8px; text-align: right;">${d.prec.toFixed(1)}</td>
-    </tr>
-  `).join('');
-
-  const tableHtml = `
-    <div style="padding: 20px; font-family: sans-serif;">
-      <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">${t.monthlyBreakdown}</h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #000;">
-        <thead style="background-color: #f0f0f0;">
-          <tr>
-            <th style="padding: 8px; text-align: left; border-bottom: 2px solid #000;">${t.month}</th>
-            <th style="padding: 8px; text-align: right; border-bottom: 2px solid #000;">${t.temp} (°C)</th>
-            <th style="padding: 8px; text-align: right; border-bottom: 2px solid #000;">${t.precip} (mm)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tableRows}
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  try {
-    const tableImg = await renderHtmlToImage(tableHtml);
-    const tablePdfHeight = (tableImg.height / tableImg.width) * contentWidth;
-
-    // Check for page break
-    if (currentY + tablePdfHeight > pageHeight - margin) {
-      doc.addPage();
-      currentY = margin;
-    }
-
-    doc.addImage(tableImg.dataUrl, 'PNG', margin, currentY, contentWidth, tablePdfHeight);
-  } catch (e) {
-    console.error("Table generation failed", e);
-  }
-
-  // Save
   doc.save(`Climate_Report_${location.lat.toFixed(2)}_${location.lng.toFixed(2)}.pdf`);
 };
 
+/**
+ * Generate PDF for Comparison
+ */
 export const generateComparisonPDF = async (
   points: ComparisonPoint[],
   lang: string,
   t: any
 ) => {
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = doc.internal.pageSize.getWidth(); 
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
   const contentWidth = pageWidth - (margin * 2);
-  let currentY = 15;
+  let cursorY = 20;
 
-  // --- 1. Header ---
-  const headerHtml = `
-    <div style="padding: 20px; font-family: sans-serif;">
-      <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px;">
-        ${t.comparisonReportTitle}
-      </h1>
-      <div style="font-size: 14px; line-height: 1.6;">
-        <p style="margin: 5px 0;"><strong>${t.generatedOn}:</strong> ${new Date().toLocaleDateString()}</p>
-        <p style="margin: 5px 0;"><strong>${t.location}s:</strong> ${points.length}</p>
-        <ul style="margin: 5px 0; padding-left: 20px;">
-          ${points.map(p => {
-             const latStr = `${Math.abs(p.location.lat).toFixed(2)}°${p.location.lat >= 0 ? 'N' : 'S'}`;
-             const lngStr = `${Math.abs(p.location.lng).toFixed(2)}°${p.location.lng >= 0 ? 'E' : 'W'}`;
-             return `<li>${latStr}, ${lngStr}</li>`;
-          }).join('')}
-        </ul>
-      </div>
-    </div>
-  `;
-
-  try {
-    const headerImg = await renderHtmlToImage(headerHtml);
-    const headerPdfHeight = (headerImg.height / headerImg.width) * contentWidth;
-    doc.addImage(headerImg.dataUrl, 'PNG', margin, currentY, contentWidth, headerPdfHeight);
-    currentY += headerPdfHeight + 5;
-  } catch (e) {
-    console.error("Header failed", e);
-  }
-
-  // --- 2. Chart Sections (Precipitation & Temperature) ---
-  const sections = ['comparison-precip-section', 'comparison-temp-section'];
+  // Header
+  doc.setFontSize(22);
+  doc.setTextColor(COLORS.title[0], COLORS.title[1], COLORS.title[2]);
+  doc.text(PDF_LABELS.compTitle, margin, cursorY);
+  cursorY += 10;
   
-  for (const sectionId of sections) {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      try {
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height / canvas.width) * contentWidth;
+  doc.setFontSize(10);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.text(`${PDF_LABELS.generated}: ${new Date().toLocaleDateString()}`, margin, cursorY);
+  cursorY += 10;
 
-        if (currentY + imgHeight > pageHeight - margin) {
-          doc.addPage();
-          currentY = margin;
-        }
-
-        doc.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
-        currentY += imgHeight + 10;
-      } catch (e) {
-        console.error(`Section ${sectionId} capture failed`, e);
-      }
-    }
-  }
-
-  // --- 3. Data Tables ---
-  const generateTableHtml = (title: string, dataKey: 'temp' | 'prec', unit: string) => {
-    // Header Row
-    const headers = points.map(p => {
-      const latStr = `${Math.abs(p.location.lat).toFixed(1)}°${p.location.lat >= 0 ? 'N' : 'S'}`;
-      return `<th style="padding: 6px; text-align: right; border-bottom: 2px solid #000; font-size: 10px; width: ${80 / points.length}%;">${latStr}</th>`;
-    }).join('');
-
-    // Body Rows
-    const rows = t.months.map((month: string, idx: number) => {
-       const cols = points.map(p => {
-         const val = p.data.data[idx][dataKey];
-         return `<td style="padding: 6px; text-align: right; font-size: 11px;">${val.toFixed(1)}</td>`;
-       }).join('');
-       
-       return `
-        <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 6px; text-align: left; font-size: 11px; font-weight: bold;">${t.monthsShort[idx]}</td>
-          ${cols}
-        </tr>
-       `;
-    }).join('');
-
-    return `
-      <div style="padding: 20px; font-family: sans-serif;">
-        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">${title}</h3>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
-          <thead style="background-color: #f0f0f0;">
-             <tr>
-               <th style="padding: 6px; text-align: left; border-bottom: 2px solid #000; width: 10%;">${t.month}</th>
-               ${headers}
-             </tr>
-          </thead>
-          <tbody>
-             ${rows}
-          </tbody>
-        </table>
-      </div>
-    `;
-  };
-
-  // Temperature Table
-  if (currentY > pageHeight - 80) { // Approx height check
-      doc.addPage();
-      currentY = margin;
-  }
+  // Legend
+  doc.setFontSize(11);
+  doc.text("Locations:", margin, cursorY);
+  cursorY += 6;
+  doc.setFontSize(9);
   
-  try {
-    const tempTableHtml = generateTableHtml(t.tempComparisonTable, 'temp', '°C');
-    const tempTableImg = await renderHtmlToImage(tempTableHtml);
-    const h = (tempTableImg.height / tempTableImg.width) * contentWidth;
-    doc.addImage(tempTableImg.dataUrl, 'PNG', margin, currentY, contentWidth, h);
-    currentY += h + 10;
-  } catch(e) { console.error(e); }
+  points.forEach(p => {
+    const { r, g, b } = hexToRgb(p.color);
+    doc.setFillColor(r, g, b);
+    doc.rect(margin, cursorY - 3, 3, 3, 'F');
+    
+    const label = `${Math.abs(p.location.lat).toFixed(2)} ${p.location.lat>=0?'N':'S'}, ${Math.abs(p.location.lng).toFixed(2)} ${p.location.lng>=0?'E':'W'}`;
+    doc.text(label, margin + 5, cursorY);
+    cursorY += 5;
+  });
+  cursorY += 5;
+
+  // Charts
+  const chartHeight = 70;
+  
+  // Temperature Line Chart
+  drawComparisonLines(doc, points, margin, cursorY, contentWidth, chartHeight);
+  cursorY += chartHeight + 15;
+  
+  // Precipitation Bar Chart (New)
+  drawComparisonBars(doc, points, margin, cursorY, contentWidth, chartHeight);
+  cursorY += chartHeight + 15;
+
+  // Data Tables
+  doc.addPage();
+  cursorY = 20;
+
+  // Temp Table
+  doc.setFontSize(14);
+  doc.setTextColor(COLORS.title[0], COLORS.title[1], COLORS.title[2]);
+  doc.text("Temperature Comparison (°C)", margin, cursorY);
+  cursorY += 5;
+
+  const tempHeaders = [PDF_LABELS.monthHeader, ...points.map((_, i) => `Loc ${i+1}`)];
+  const tempBody = PDF_LABELS.monthsFull.map((m, i) => {
+    return [m, ...points.map(p => p.data.data[i].temp.toFixed(1))];
+  });
+
+  autoTable(doc, {
+    startY: cursorY,
+    head: [tempHeaders],
+    body: tempBody,
+    theme: 'striped',
+    headStyles: { fillColor: [239, 68, 68] },
+    styles: { font: 'helvetica', fontSize: 9 },
+    margin: { left: margin, right: margin }
+  });
 
   // Precip Table
-  if (currentY > pageHeight - 80) {
-      doc.addPage();
-      currentY = margin;
-  }
+  cursorY = (doc as any).lastAutoTable.finalY + 15;
 
-  try {
-    const precTableHtml = generateTableHtml(t.precipComparisonTable, 'prec', 'mm');
-    const precTableImg = await renderHtmlToImage(precTableHtml);
-    const h = (precTableImg.height / precTableImg.width) * contentWidth;
-    doc.addImage(precTableImg.dataUrl, 'PNG', margin, currentY, contentWidth, h);
-  } catch(e) { console.error(e); }
+  doc.text("Precipitation Comparison (mm)", margin, cursorY);
+  cursorY += 5;
 
-  doc.save(`Climate_Comparison_Report.pdf`);
+  const precipHeaders = [PDF_LABELS.monthHeader, ...points.map((_, i) => `Loc ${i+1}`)];
+  const precipBody = PDF_LABELS.monthsFull.map((m, i) => {
+    return [m, ...points.map(p => p.data.data[i].prec.toFixed(1))];
+  });
+
+  autoTable(doc, {
+    startY: cursorY,
+    head: [precipHeaders],
+    body: precipBody,
+    theme: 'striped',
+    headStyles: { fillColor: [59, 130, 246] },
+    styles: { font: 'helvetica', fontSize: 9 },
+    margin: { left: margin, right: margin }
+  });
+
+  doc.save(`Climate_Comparison.pdf`);
 };

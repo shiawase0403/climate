@@ -32,10 +32,13 @@ export const ExploreMenu: React.FC<ExploreMenuProps> = ({ onSelectCity }) => {
         <span>{t.exploreCities}</span>
       </button>
 
-      {/* Modal/Drawer Overlay */}
+      {/* Modal/Drawer Overlay - Using z-[9999] to be above Leaflet (z-1000) and other UI */}
       {isOpen && (
-        <div className="fixed inset-0 z-[2000] bg-slate-900/50 backdrop-blur-sm flex justify-end transition-opacity">
-          <div className="w-full max-w-md bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col">
+        <div className="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex justify-end transition-opacity">
+          {/* Clickable background to close */}
+          <div className="absolute inset-0" onClick={() => setIsOpen(false)} />
+          
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col">
             
             {/* Header */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">

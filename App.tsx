@@ -85,6 +85,30 @@ const NoticeFooter: React.FC = () => {
   );
 };
 
+// About Footer Component
+const AboutFooter: React.FC = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="mt-8 py-6 border-t border-slate-200 text-center">
+      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.aboutUs.title}</h3>
+      <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-8 text-sm text-slate-500 font-medium">
+        <span className="flex items-center">
+          <span className="w-2 h-2 rounded-full bg-indigo-400 mr-2"></span>
+          {t.aboutUs.design}
+        </span>
+        <span className="flex items-center">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+          {t.aboutUs.geo}
+        </span>
+        <span className="flex items-center">
+          <span className="w-2 h-2 rounded-full bg-amber-400 mr-2"></span>
+          {t.aboutUs.server}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
   
@@ -489,6 +513,9 @@ const App: React.FC = () => {
         
         {/* Footer Notice */}
         <NoticeFooter />
+        
+        {/* About Footer */}
+        <AboutFooter />
 
       </main>
     </div>

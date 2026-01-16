@@ -49,10 +49,50 @@ const defaultIcon = L.icon({
 const MapController: React.FC<{ onSelect: (loc: GeoLocation) => void }> = ({ onSelect }) => {
   useMapEvents({
     click(e) {
+      // wrap() ensures longitude is always normalized to -180 to 180
       const wrappedLatLng = e.latlng.wrap();
       onSelect({ lat: wrappedLatLng.lat, lng: wrappedLatLng.lng });
     },
   });
+  return null;
+};
+
+// Component to handle map resizing and invalidation to prevent blank tiles
+const MapInvalidator: React.FC = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Handler to invalidate size
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    // Use ResizeObserver to detect container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      // Wrap in requestAnimationFrame to prevent "ResizeObserver loop completed with undelivered notifications"
+      requestAnimationFrame(() => {
+        handleResize();
+      });
+    });
+    
+    // Observe the map container
+    const container = map.getContainer();
+    if (container) {
+      resizeObserver.observe(container);
+    }
+
+    // Also trigger immediately and after a short delay to catch initial render issues
+    handleResize();
+    const timer = setTimeout(handleResize, 200);
+    const timer2 = setTimeout(handleResize, 1000); // Safety check
+
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
+  }, [map]);
+
   return null;
 };
 
@@ -61,6 +101,8 @@ const MapFlyTo: React.FC<{ location: GeoLocation | null }> = ({ location }) => {
   const map = useMap();
   useEffect(() => {
     if (location) {
+      // We use noMoveStart: true to avoid interrupting user interaction if they are dragging
+      // But typically we want to center. 
       map.flyTo([location.lat, location.lng], 6, { duration: 1.5 });
     }
   }, [location, map]);
@@ -78,8 +120,9 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
         minZoom={2}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
-        maxBounds={[[-90, -180], [90, 180]]}
-        maxBoundsViscosity={1.0}
+        // Removed maxBounds to allow infinite horizontal scrolling
+        // Added worldCopyJump to keep markers in view when panning across worlds
+        worldCopyJump={true}
         attributionControl={false}
       >
         <AttributionControl position="bottomright" prefix={false} />
@@ -89,6 +132,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              noWrap={false}
             />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name={t.mapLayers.gaode}>
@@ -117,6 +161,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
         <ScaleControl position="bottomleft" />
         
         <MapController onSelect={onLocationSelect} />
+        <MapInvalidator />
         
         {/* Single Mode Marker */}
         {mode === 'single' && selectedLocation && (
