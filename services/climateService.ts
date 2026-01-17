@@ -103,11 +103,11 @@ export const getChineseClimateClassification = (code: string): string | undefine
     'Dfa': '温带大陆性湿润气候',
     'Dfb': '温带大陆性湿润气候',
     'Dfc': '亚寒带针叶林气候',
-    'Dfd': '极冷型亚寒带针叶林气候',
+    'Dfd': '亚寒带针叶林气候（冬季极寒型）',
     'Dwa': '温带季风气候',
     'Dwb': '温带季风气候',
     'Dwc': '亚寒带针叶林气候',
-    'Dwd': '极冷型亚寒带针叶林气候',
+    'Dwd': '亚寒带针叶林气候（冬季极寒型）',
     'EF': '冰原气候',
     'ET': '苔原气候'
   };

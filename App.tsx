@@ -70,7 +70,7 @@ const NoticeFooter: React.FC = () => {
             <div>
                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{t.notice.groupTemp}</h4>
                <ul className="space-y-2.5">
-                 {(['a', 'b', 'c'] as const).map(code => (
+                 {(['a', 'b', 'c', 'd'] as const).map(code => (
                    <li key={code} className="flex items-start text-sm">
                      <span className="font-mono font-bold text-orange-700 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded text-center mr-3 min-w-[32px]">{code}</span>
                      <span className="text-slate-700 pt-0.5">{t.notice.keys[code]}</span>

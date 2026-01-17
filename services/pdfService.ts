@@ -137,9 +137,10 @@ const drawClimateChartPDF = (
     const yZero = getTempY(0);
     doc.setDrawColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
     doc.setLineWidth(0.2);
-    doc.setLineDash([1, 1], 0);
+    // Fix TS error for setLineDash
+    (doc as any).setLineDash([1, 1], 0);
     doc.line(x0, yZero, x0 + chartW, yZero);
-    doc.setLineDash([], 0);
+    (doc as any).setLineDash([], 0);
   }
 };
 

@@ -89,6 +89,7 @@ export interface Translations {
       a: string;
       b: string;
       c: string;
+      d: string;
     };
   };
   // About Us
@@ -183,7 +184,8 @@ export const translations: Record<Language, Translations> = {
         s: "Summer Dry (Winter Rain)",
         a: "Hot Summer",
         b: "Warm Summer",
-        c: "Cold Summer"
+        c: "Cold Summer",
+        d: "Extremely Cold Winter"
       }
     },
     aboutUs: {
@@ -294,7 +296,8 @@ export const translations: Record<Language, Translations> = {
         s: "冬季多雨",
         a: "热夏",
         b: "凉夏",
-        c: "冷夏"
+        c: "冷夏",
+        d: "冬季极寒"
       }
     },
     aboutUs: {
@@ -326,7 +329,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
