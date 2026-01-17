@@ -8,6 +8,7 @@ interface ClassificationCardProps {
   classificationData: ClassificationEntry[];
   lat: number;
   lng: number;
+  locationName?: string | null;
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -15,7 +16,7 @@ const CLIMATE_COLORS: Record<string, string> = {
   'Am': '#0077FF',
   'Aw': '#46A9FA',
   'As': '#46A9FA',
-  'Aw/As': '#46A9FA',
+  'As/Aw': '#46A9FA',
   'BWh': '#FF0000',
   'BWk': '#FF9696',
   'BSh': '#F5A500',
@@ -77,7 +78,7 @@ const adjustBrightness = (hex: string, percent: number): string => {
 // Specifically: Csa (Yellow), Cfa (Light Green), Cwa (Light Green), Dfa (Cyan)
 const BRIGHT_CLIMATE_CODES = ['Csa', 'Cfa', 'Cwa', 'Dfa'];
 
-export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classificationData, lat, lng }) => {
+export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classificationData, lat, lng, locationName }) => {
   const { t, language } = useLanguage();
   // Find the main Köppen-Geiger entry (usually the first one or one with text)
   const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
@@ -139,8 +140,13 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
             <span className="text-sm font-medium">{t.selectedLocation}</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight mb-4">
-             {Math.abs(lat).toFixed(2)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(2)}°{lng >= 0 ? 'E' : 'W'}
+             {locationName ? locationName : `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`}
           </h2>
+          {locationName && (
+             <p className={`text-sm ${subTextClass} -mt-2 mb-4`}>
+                {Math.abs(lat).toFixed(2)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(2)}°{lng >= 0 ? 'E' : 'W'}
+             </p>
+          )}
         </div>
         <div className={`${badgeBgClass} p-3 rounded-lg border`}>
              <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>

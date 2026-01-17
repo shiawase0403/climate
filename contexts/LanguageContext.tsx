@@ -49,6 +49,10 @@ export interface Translations {
     gaodeSat: string;
     gaodeEn: string;
   };
+  // City Search
+  searchCity: string;
+  searchCityPlaceholder: string;
+  noResults: string;
   // Comparison Mode
   modeSingle: string;
   modeCompare: string;
@@ -149,6 +153,9 @@ export const translations: Record<Language, Translations> = {
       gaodeSat: "GaoDe Satellite",
       gaodeEn: "GaoDe English/Chinese"
     },
+    searchCity: "City Search",
+    searchCityPlaceholder: "Enter city name...",
+    noResults: "No cities found",
     modeSingle: "Single Location",
     modeCompare: "Compare Locations",
     compareTitle: "Climate Comparison",
@@ -242,6 +249,9 @@ export const translations: Record<Language, Translations> = {
       gaodeSat: "高德卫星地图",
       gaodeEn: "高德中英地图"
     },
+    searchCity: "城市搜索",
+    searchCityPlaceholder: "输入城市名称...",
+    noResults: "未找到城市",
     modeSingle: "单点模式",
     modeCompare: "对比模式",
     compareTitle: "气候对比",
@@ -269,15 +279,16 @@ export const translations: Record<Language, Translations> = {
       "Cfa": "亚热带季风和亚热带湿润气候，降水较为均匀",
       "Cwa": "亚热带季风气候，降水分配不均匀",
       "Cfb": "温带海洋性气候，广泛分布于大陆西岸中纬度和海岛",
-      "Cfc": "（亚寒带）温带海洋性气候，分布于副极地低气压带控制且有暖流影响的地区，典型的如冰岛",
+      "Cfc": "温带海洋性气候向极地的延伸",
       "Cwb": "亚热带高原季风气候，如昆明",
       "Cwc": "亚热带高原季风气候，如昆明",
       "Csa": "热夏型地中海气候，多分布于地中海周围，如伊斯坦布尔，罗马",
       "Csb": "凉夏型地中海气候，多分布于寒流影响的大陆西岸，如珀斯（澳大利亚），旧金山，波尔图（葡萄牙）",
-      "Dfa": "温带大陆性湿润气候，如芝加哥",
-      "Dfb": "温带大陆性湿润气候，如芝加哥",
-      "Dwa": "温带季风气候，大陆性较强，广泛分布于东亚中纬度",
-      "Dwb": "温带季风气候，大陆性较强，广泛分布于东亚中纬度"
+      "Dfa": "主要分布在北美大陆东岸",
+      "Dfb": "主要分布在温带海洋性气候向大陆延伸的一侧以及大陆东岸中纬度",
+      "Dwa": "广泛分布于亚洲受季风影响的区域",
+      "Dwb": "广泛分布于亚洲受季风影响的区域",
+      "Dwc": "广泛分布于亚洲受季风影响的区域"
     },
     notice: {
       title: "关于气候分类的说明",

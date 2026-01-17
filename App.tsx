@@ -4,6 +4,7 @@ import { ClimateChart } from './components/ClimateChart';
 import { ClimateTable } from './components/ClimateTable';
 import { ClassificationCard } from './components/ClassificationCard';
 import { LocationInput } from './components/LocationInput';
+import { CitySearchBox } from './components/CitySearchBox';
 import { ComparisonChart } from './components/ComparisonChart';
 import { ExploreMenu } from './components/ExploreMenu';
 import { CityAnalysisCard } from './components/CityAnalysisCard';
@@ -117,6 +118,7 @@ const App: React.FC = () => {
   
   // Single Mode State
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
+  const [locationName, setLocationName] = useState<string | null>(null);
   const [climateData, setClimateData] = useState<ClimateDataResponse | null>(null);
   const [classification, setClassification] = useState<ClassificationResponse | null>(null);
   const [selectedCity, setSelectedCity] = useState<CityDefinition | null>(null);
@@ -161,12 +163,20 @@ const App: React.FC = () => {
   const handleManualLocationSelect = (location: GeoLocation) => {
     setSelectedLocation(location);
     setSelectedCity(null); // Clear city analysis if manual pick
+    
+    // Set location name if provided (e.g. from search), otherwise clear it
+    if (location.name) {
+      setLocationName(location.name);
+    } else {
+      setLocationName(null);
+    }
   };
 
   const handleExploreCitySelect = (city: CityDefinition) => {
     const location = { lat: city.lat, lng: city.lng };
     setSelectedLocation(location);
     setSelectedCity(city);
+    setLocationName(city.name);
   };
 
   // --- Comparison Mode Logic ---
@@ -196,6 +206,7 @@ const App: React.FC = () => {
       const newPoint: ComparisonPoint = {
         id: Date.now().toString(),
         location: location,
+        name: location.name, // Store the name if available
         data: climateRes,
         color: nextColor
       };
@@ -225,7 +236,7 @@ const App: React.FC = () => {
     setGeneratingPdf(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      await generatePDF(selectedLocation, climateData, classification, language, t);
+      await generatePDF(selectedLocation, climateData, classification, language, t, locationName);
     } catch (e) {
       console.error("PDF generation failed", e);
     } finally {
@@ -328,6 +339,7 @@ const App: React.FC = () => {
             {mode === 'single' && (
               <>
                 <ExploreMenu onSelectCity={handleExploreCitySelect} />
+                <CitySearchBox onLocationSelect={handleManualLocationSelect} />
                 <LocationInput 
                   onLocationSelect={handleManualLocationSelect} 
                   selectedLocation={selectedLocation} 
@@ -356,7 +368,7 @@ const App: React.FC = () => {
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }}></div>
                           <span className="text-sm text-slate-700 font-medium">
-                            {Math.abs(p.location.lat).toFixed(2)}°{p.location.lat >= 0 ? 'N' : 'S'}, {Math.abs(p.location.lng).toFixed(2)}°{p.location.lng >= 0 ? 'E' : 'W'}
+                            {p.name ? p.name : `${Math.abs(p.location.lat).toFixed(2)}°${p.location.lat >= 0 ? 'N' : 'S'}, ${Math.abs(p.location.lng).toFixed(2)}°${p.location.lng >= 0 ? 'E' : 'W'}`}
                           </span>
                         </div>
                         <button 
@@ -374,6 +386,9 @@ const App: React.FC = () => {
                     <AlertCircle className="w-3 h-3 mr-1.5" /> {t.maxPoints}
                   </div>
                 )}
+                <div className="mt-4 border-t border-slate-100 pt-3">
+                  <CitySearchBox onLocationSelect={handleComparisonLocationSelect} />
+                </div>
               </div>
             )}
 
@@ -458,7 +473,8 @@ const App: React.FC = () => {
                         <ClassificationCard 
                           classificationData={classification.data} 
                           lat={selectedLocation.lat} 
-                          lng={selectedLocation.lng} 
+                          lng={selectedLocation.lng}
+                          locationName={locationName} 
                         />
                         
                         <ClimateChart data={climateData.data} />

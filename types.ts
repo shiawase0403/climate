@@ -38,12 +38,14 @@ export interface ClassificationResponse {
 export interface GeoLocation {
   lat: number;
   lng: number;
+  name?: string;
 }
 
 // Comparison Types
 export interface ComparisonPoint {
   id: string;
   location: GeoLocation;
+  name?: string;
   data: ClimateDataResponse;
   color: string;
 }
@@ -61,4 +63,13 @@ export interface ClimateCategory {
   code: string;
   title: string;
   cities: CityDefinition[];
+}
+
+// Search Types
+export interface CitySearchResult {
+  city: string;
+  city_ascii: string;
+  lat: number;
+  lng: number;
+  country: string;
 }

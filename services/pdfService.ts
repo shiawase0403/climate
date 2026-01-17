@@ -294,7 +294,8 @@ export const generatePDF = async (
   climateData: ClimateDataResponse,
   classification: ClassificationResponse,
   lang: string,
-  t: any
+  t: any,
+  locationName?: string | null
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -315,13 +316,14 @@ export const generatePDF = async (
   const dateStr = new Date().toLocaleDateString();
   const latStr = `${Math.abs(location.lat).toFixed(4)} ${location.lat >= 0 ? 'N' : 'S'}`;
   const lngStr = `${Math.abs(location.lng).toFixed(4)} ${location.lng >= 0 ? 'E' : 'W'}`;
+  const displayLocation = locationName ? `${locationName} (${latStr}, ${lngStr})` : `${latStr}, ${lngStr}`;
   
   const mainClass = classification.data.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classification.data[0];
   const code = mainClass?.code || 'N/A';
   
   doc.text(`${PDF_LABELS.generated}: ${dateStr}`, margin, cursorY);
   cursorY += 6;
-  doc.text(`${PDF_LABELS.location}: ${latStr}, ${lngStr}`, margin, cursorY);
+  doc.text(`${PDF_LABELS.location}: ${displayLocation}`, margin, cursorY);
   cursorY += 6;
   doc.text(`${PDF_LABELS.code}: ${code}`, margin, cursorY);
   cursorY += 15;
@@ -356,7 +358,7 @@ export const generatePDF = async (
     margin: { left: margin, right: margin }
   });
 
-  doc.save(`Climate_Report_${location.lat.toFixed(2)}_${location.lng.toFixed(2)}.pdf`);
+  doc.save(`Climate_Report_${locationName || ''}_${location.lat.toFixed(2)}_${location.lng.toFixed(2)}.pdf`);
 };
 
 /**
@@ -395,7 +397,9 @@ export const generateComparisonPDF = async (
     doc.setFillColor(r, g, b);
     doc.rect(margin, cursorY - 3, 3, 3, 'F');
     
-    const label = `${Math.abs(p.location.lat).toFixed(2)} ${p.location.lat>=0?'N':'S'}, ${Math.abs(p.location.lng).toFixed(2)} ${p.location.lng>=0?'E':'W'}`;
+    const coordLabel = `${Math.abs(p.location.lat).toFixed(2)} ${p.location.lat>=0?'N':'S'}, ${Math.abs(p.location.lng).toFixed(2)} ${p.location.lng>=0?'E':'W'}`;
+    const label = p.name ? `${p.name} (${coordLabel})` : coordLabel;
+    
     doc.text(label, margin + 5, cursorY);
     cursorY += 5;
   });
@@ -422,7 +426,7 @@ export const generateComparisonPDF = async (
   doc.text("Temperature Comparison (°C)", margin, cursorY);
   cursorY += 5;
 
-  const tempHeaders = [PDF_LABELS.monthHeader, ...points.map((_, i) => `Loc ${i+1}`)];
+  const tempHeaders = [PDF_LABELS.monthHeader, ...points.map((p, i) => p.name || `Loc ${i+1}`)];
   const tempBody = PDF_LABELS.monthsFull.map((m, i) => {
     return [m, ...points.map(p => p.data.data[i].temp.toFixed(1))];
   });
@@ -443,7 +447,7 @@ export const generateComparisonPDF = async (
   doc.text("Precipitation Comparison (mm)", margin, cursorY);
   cursorY += 5;
 
-  const precipHeaders = [PDF_LABELS.monthHeader, ...points.map((_, i) => `Loc ${i+1}`)];
+  const precipHeaders = [PDF_LABELS.monthHeader, ...points.map((p, i) => p.name || `Loc ${i+1}`)];
   const precipBody = PDF_LABELS.monthsFull.map((m, i) => {
     return [m, ...points.map(p => p.data.data[i].prec.toFixed(1))];
   });

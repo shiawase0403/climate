@@ -58,7 +58,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
     <div className="flex items-center space-x-2 mb-4 pl-1">
       <div className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: point.color }}></div>
       <h3 className="text-sm font-semibold text-slate-800 truncate" title={`${point.location.lat}, ${point.location.lng}`}>
-        {Math.abs(point.location.lat).toFixed(2)}°{point.location.lat >= 0 ? 'N' : 'S'}, {Math.abs(point.location.lng).toFixed(2)}°{point.location.lng >= 0 ? 'E' : 'W'}
+        {point.name ? point.name : `${Math.abs(point.location.lat).toFixed(2)}°${point.location.lat >= 0 ? 'N' : 'S'}, ${Math.abs(point.location.lng).toFixed(2)}°${point.location.lng >= 0 ? 'E' : 'W'}`}
       </h3>
     </div>
   );
@@ -93,7 +93,8 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
                    formatter={(value: number, name: string) => {
                       const pointId = name.split('_')[1];
                       const point = points.find(p => p.id === pointId);
-                      return [`${value.toFixed(1)}mm`, point ? `${Math.abs(point.location.lat).toFixed(1)}°` : ''];
+                      const displayName = point?.name || (point ? `${Math.abs(point.location.lat).toFixed(1)}°` : '');
+                      return [`${value.toFixed(1)}mm`, displayName];
                    }}
                  />
                  <Legend verticalAlign="bottom" height={36} />
@@ -101,7 +102,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
                     <Bar 
                       key={point.id}
                       dataKey={`prec_${point.id}`}
-                      name={`${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`} 
+                      name={point.name ? point.name : `${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`}
                       fill={point.color}
                       radius={[4, 4, 0, 0]}
                     />
@@ -185,7 +186,8 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
                     formatter={(value: number, name: string) => {
                       const pointId = name.split('_')[1];
                       const point = points.find(p => p.id === pointId);
-                      return [`${value.toFixed(1)}°C`, point ? `${Math.abs(point.location.lat).toFixed(1)}°` : ''];
+                      const displayName = point?.name || (point ? `${Math.abs(point.location.lat).toFixed(1)}°` : '');
+                      return [`${value.toFixed(1)}°C`, displayName];
                    }}
                  />
                  <Legend verticalAlign="bottom" height={36} />
@@ -194,7 +196,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ points }) => {
                       key={point.id}
                       type="monotone"
                       dataKey={`temp_${point.id}`}
-                      name={`${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`}
+                      name={point.name ? point.name : `${Math.abs(point.location.lat).toFixed(1)}°${point.location.lat >= 0 ? 'N' : 'S'}`}
                       stroke={point.color}
                       strokeWidth={3}
                       dot={{ r: 3 }}

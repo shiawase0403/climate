@@ -279,13 +279,6 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 33.5000,
         lng: 36.3000,
         description: '位于安替黎巴嫩山脉的雨影区。地中海的水汽被山脉阻隔，造就了这一古老的绿洲城市。其海拔（约700米）导致冬季气温较低，偶见降雪。'
-      },
-      {
-        name: 'El Paso (埃尔帕索)',
-        country: 'United States',
-        lat: 31.7500,
-        lng: -106.4833,
-        description: '位于奇瓦瓦沙漠（Chihuahuan Desert）北端。高海拔（1140米）是其被划分为冷沙漠（或温带沙漠）的主要原因。冬季夜间气温常降至冰点以下。'
       }
     ]
   },
@@ -471,13 +464,6 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 37.7667,
         lng: -122.4167,
         description: '全球最著名的Csb城市。加利福尼亚寒流与内陆热低压共同作用形成了著名的夏季海雾（Advection Fog）。这使得旧金山的夏季异常寒冷（“马克·吐温最冷的冬天是旧金山的夏天”），气温常徘徊在15-20°C，完全不同于仅百公里外的萨克拉门托。'
-      },
-      {
-        name: 'Pasto (帕斯托)',
-        country: 'Colombia',
-        lat: 1.2000,
-        lng: -77.2667,
-        description: '赤道高山型Csb。这是文献1中最为独特的一个案例。位于赤道附近，本应是Af，但海拔2527米将其年均温降至13°C左右（符合C类定义）。由于安第斯山脉的双峰降水模式和地形遮蔽，其降水分布呈现出类似地中海气候的季节性（尽管成因完全不同，与西风带无关），被称为“等温地中海气候”。'
       }
     ]
   },
@@ -633,7 +619,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Iceland',
         lat: 64.1333,
         lng: -21.9333,
-        description: '北大西洋暖流维持冬季不冻，冰岛低压驱动气旋活动带来频繁风暴。维度高，低太阳高度角导致凉夏。'
+        description: '北大西洋暖流维持冬季不冻，冰岛低压驱动气旋活动带来频繁风暴。纬度高，低太阳高度角导致凉夏。'
       }
     ]
   },
@@ -657,8 +643,8 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       {
         name: 'Balmaceda (巴尔马赛达)',
         country: 'Chile',
-        lat: -45.9000,
-        lng: -71.7000,
+        lat: -45.9754,
+        lng: -71.6988,
         description: '位于安第斯背风坡，阻挡西风水汽。夏季副高南移抑制降水，形成冷干夏；冬季西风强劲，渗透带来降雪。'
       }
     ]

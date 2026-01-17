@@ -6,7 +6,7 @@ const BASE_URL = 'https://climate.mapresso.com/api';
  * Tries to fetch a URL using multiple CORS proxies.
  * If the first one fails, it tries the next one.
  */
-const fetchWithFallback = async (targetUrl: string) => {
+export const fetchWithFallback = async (targetUrl: string) => {
   // List of proxies to try in order
   const proxies = [
     // Primary: corsproxy.io (usually fast and reliable)
