@@ -190,9 +190,9 @@ export const translations: Record<Language, Translations> = {
     },
     aboutUs: {
       title: "About Us",
-      design: "Web Design & Production: shiawase.",
-      geo: "Geography Consultant: 台风来了专家",
-      server: "Server Support: Ericnth"
+      design: "Project Design & Production: shiawase.",
+      geo: "Geography Consultant: 台风来了砖家",
+      server: "Technical Support: nth_element"
     }
   },
   zh: {
@@ -302,9 +302,9 @@ export const translations: Record<Language, Translations> = {
     },
     aboutUs: {
       title: "关于我们",
-      design: "网页设计&制作：shiawase.",
-      geo: "地理顾问：台风来了专家",
-      server: "服务器支持：Ericnth"
+      design: "项目设计与制作：shiawase.",
+      geo: "地理顾问：台风来了砖家",
+      server: "技术支持：nth_element"
     }
   }
 };
@@ -318,7 +318,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('zh');
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: translations[language] }}>

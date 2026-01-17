@@ -1,3 +1,4 @@
+
 // Raw Climate Data Types
 export interface MonthlyClimateData {
   month: number;

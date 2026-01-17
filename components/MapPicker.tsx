@@ -128,7 +128,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
         <AttributionControl position="bottomright" prefix={false} />
         
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name={t.mapLayers.osm}>
+          <LayersControl.BaseLayer name={t.mapLayers.osm}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -142,7 +142,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
               subdomains={["1", "2", "3", "4"]}
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name={t.mapLayers.gaodeEn}>
+          <LayersControl.BaseLayer checked name={t.mapLayers.gaodeEn}>
             <TileLayer
               attribution='&copy; AutoNavi'
               url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=en&size=1&scale=1&style=8&x={x}&y={y}&z={z}"

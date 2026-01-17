@@ -294,11 +294,11 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带半干旱气候 (Hot Steppe)',
     cities: [
       {
-        name: 'Jodhpur (焦特布尔)',
+        name: 'New Delhi (新德里)',
         country: 'India',
-        lat: 26.2833,
-        lng: 73.0167,
-        description: '“蓝色之城”，位于塔尔沙漠边缘。降水完全集中在夏季风爆发的短短几周内，其余时间极度干燥。'
+        lat: 28.5893,
+        lng: 77.2119,
+        description: '降水非常集中，雨季多暴雨，干季很长，在暖湿的西南季风到来前会形成热季，气温极易上升至45℃左右，导致其成为地球上最不宜居的城市之一。'
       },
       {
         name: 'Alicante (阿利坎特)',
@@ -478,6 +478,188 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 1.2000,
         lng: -77.2667,
         description: '赤道高山型Csb。这是文献1中最为独特的一个案例。位于赤道附近，本应是Af，但海拔2527米将其年均温降至13°C左右（符合C类定义）。由于安第斯山脉的双峰降水模式和地形遮蔽，其降水分布呈现出类似地中海气候的季节性（尽管成因完全不同，与西风带无关），被称为“等温地中海气候”。'
+      }
+    ]
+  },
+  {
+    code: 'Cfa',
+    title: '亚热带湿润气候 (Humid Subtropical)',
+    cities: [
+      {
+        name: 'Changsha (长沙)',
+        country: 'China',
+        lat: 28.1833,
+        lng: 112.9667,
+        description: '南支槽与地形锋面： 冬季受西风在青藏高原分流的南支西风槽引导，印度洋暖湿气流与西伯利亚冷空气在湘江流域形成准静止锋，导致持续阴雨和冻雨。夏季受副高控制。'
+      },
+      {
+        name: 'Buenos Aires (布宜诺斯艾利斯)',
+        country: 'Argentina',
+        lat: -34.6000,
+        lng: -58.3667,
+        description: '南大西洋高压与沿岸低压形成强气压梯度，驱动东南风，夏季受大陆热低压吸引，大西洋水汽深入形成对流雨。'
+      },
+      {
+        name: 'Sochi (索契)',
+        country: 'Russia',
+        lat: 43.5833,
+        lng: 39.7167,
+        description: '俄罗斯气候最为暖湿的地区，大高加索山脉阻挡寒潮南下，黑海提供冬季热源和水汽，西风控制，地形抬升造成高纬度罕见的暖湿多雨气候。'
+      },
+      {
+        name: 'Atlanta (亚特兰大)',
+        country: 'United States',
+        lat: 33.7500,
+        lng: -84.3833,
+        description: '典型的亚热带季风性湿润气候，夏季墨西哥湾暖湿气流北上提供不稳定能量，冬季受锋面气旋影响。'
+      }
+    ]
+  },
+  {
+    code: 'Cwa',
+    title: '亚热带季风气候 (Monsoon-influenced Humid Subtropical)',
+    cities: [
+      {
+        name: 'Hong Kong (香港)',
+        country: 'China',
+        lat: 22.2833,
+        lng: 114.1667,
+        description: '东亚季风： 冬季受西伯利亚高压控制，盛行干冷季风；夏季受副高及季风槽影响，盛行东南与西南季风，台风叠加增强降水。'
+      },
+      {
+        name: 'Islamabad (伊斯兰堡)',
+        country: 'Pakistan',
+        lat: 33.7000,
+        lng: 73.0667,
+        description: '双重降水机制： 夏季受南亚季风迎坡抬升影响致洪；冬季受西风带中的西方扰动（Western Disturbances）影响，从阿拉伯海输送水汽产生降雨。'
+      },
+      {
+        name: 'Pretoria (比勒陀利亚)',
+        country: 'South Africa',
+        lat: -25.7500,
+        lng: 28.1833,
+        description: '副热带高压带摆动： 冬季卡拉哈里高压控制导致强下沉逆温，天气晴干；夏季高压南移，印度洋湿空气流入形成热雷雨。'
+      },
+      {
+        name: 'Córdoba (科尔多瓦)',
+        country: 'Argentina',
+        lat: -31.4167,
+        lng: -64.1833,
+        description: '季风边缘与雨影： 夏季南美低空急流输送亚马逊水汽；冬季受西风控制，处于安第斯山脉背风坡，形成干季。'
+      }
+    ]
+  },
+  {
+    code: 'Cfb',
+    title: '温带海洋性气候 (Oceanic)',
+    cities: [
+      {
+        name: 'London (伦敦)',
+        country: 'United Kingdom',
+        lat: 51.5000,
+        lng: -0.1333,
+        description: '典型北大西洋暖流与西风： 洋流释放热量，温暖西风长驱直入，锋面气旋路径维持常年降水。'
+      },
+      {
+        name: 'Melbourne (墨尔本)',
+        country: 'Australia',
+        lat: -37.8167,
+        lng: 144.9667,
+        description: '南大洋西风带： 处于极地冷锋与大陆热气团交界处。西风带冷锋扫过带来降水降温，内陆高压带来干热，天气极度多变。'
+      },
+      {
+        name: 'Vancouver (温哥华)',
+        country: 'Canada',
+        lat: 49.2500,
+        lng: -123.1167,
+        description: '阿留申低压与地形： 冬季阿留申低压引导气旋向东移动撞击海岸山脉，地形抬升致暴雨；夏季北太平洋高压北扩阻挡风暴轴，形成相对干季，但是仍有西风带来的阵性降水。'
+      },
+      {
+        name: 'Wellington (惠灵顿)',
+        country: 'New Zealand',
+        lat: -41.2833,
+        lng: 174.7667,
+        description: '西风带与狭管效应： 位于40°S-50°S西风带核心，库克海峡地形加速西风，带来持续强风和地形雨。'
+      },
+      {
+        name: 'Bogotá (波哥大)',
+        country: 'Colombia',
+        lat: 4.6000,
+        lng: -74.0833,
+        description: '垂直地带性与赤道低压： 高海拔（2640m）抵消赤道高温。降水随赤道低气压带摆动，双重过境呈双峰型分布，日变化（对流）主导。'
+      }
+    ]
+  },
+  {
+    code: 'Cwb',
+    title: '亚热带高原季风气候 (Subtropical Highland)',
+    cities: [
+      {
+        name: 'Kunming (昆明)',
+        country: 'China',
+        lat: 25.0333,
+        lng: 102.7167,
+        description: '著名“春城”，冬季位于昆明准静止锋暖区，晴暖干燥；夏季受西南季风影响多雨。高海拔调节夏季气温。'
+      },
+      {
+        name: 'Mexico City (墨西哥城)',
+        country: 'Mexico',
+        lat: 19.4333,
+        lng: -99.1333,
+        description: '北美季风与盆地效应： 夏季热低压吸引海湾水汽，地形抬升致雷雨；冬季副高控制，盆地地形导致冷空气沉积和逆温，阻碍降水产生。'
+      },
+      {
+        name: 'Addis Ababa (亚的斯亚贝巴)',
+        country: 'Ethiopia',
+        lat: 9.0333,
+        lng: 38.7333,
+        description: '赤道低气压季节性迁移： 赤道低气压带北移，叠加海拔较高，带来大雨季，高原地形冷却热带气团。'
+      },
+      {
+        name: 'Salta (萨尔塔)',
+        country: 'Argentina',
+        lat: -24.7833,
+        lng: -65.4167,
+        description: '位于安第斯东麓，拦截来自亚马逊的低空急流形成夏雨；冬季受西风雨影效应影响极干。'
+      }
+    ]
+  },
+  {
+    code: 'Cfc',
+    title: '亚寒带海洋性气候 (Subpolar Oceanic)',
+    cities: [
+      {
+        name: 'Reykjavík (雷克雅未克)',
+        country: 'Iceland',
+        lat: 64.1333,
+        lng: -21.9333,
+        description: '北大西洋暖流维持冬季不冻，冰岛低压驱动气旋活动带来频繁风暴。维度高，低太阳高度角导致凉夏。'
+      }
+    ]
+  },
+  {
+    code: 'Cwc',
+    title: '寒带高原季风气候 (Cold Subtropical Highland)',
+    cities: [
+      {
+        name: 'Puno (普诺)',
+        country: 'Peru',
+        lat: -15.8333,
+        lng: -70.0167,
+        description: '玻利维亚高压与的的喀喀湖： 极高海拔（3800m+）。夏季玻利维亚高压引导东风输送水汽；冬季受干燥高空西风控制。湖体调节微气候。'
+      }
+    ]
+  },
+  {
+    code: 'Csc',
+    title: '冷夏型地中海气候 (Cool-summer Mediterranean)',
+    cities: [
+      {
+        name: 'Balmaceda (巴尔马赛达)',
+        country: 'Chile',
+        lat: -45.9000,
+        lng: -71.7000,
+        description: '位于安第斯背风坡，阻挡西风水汽。夏季副高南移抑制降水，形成冷干夏；冬季西风强劲，渗透带来降雪。'
       }
     ]
   },
@@ -796,11 +978,11 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '低纬度高海拔地区的高山冰原。'
       },
       {
-        name: 'Great Wall Station (长城站)',
+        name: 'Kunlun Station (昆仑站)',
         country: 'China',
-        lat: -62.2169,
-        lng: -58.9619,
-        description: '中国极地研究中心在南极建立的第一个科学考察站，位于南极洲西南，乔治王岛南部（不在南极圈内）。'
+        lat: -80.4172,
+        lng: 77.1164,
+        description: '中国极地研究中心在南极建立的第三个科学考察站，名称公布于2008年10月18日，位于南极大陆内部冰穹A最高点西南方向约7.3公里处，海拔4087米，是中国第一座、世界第六座南极内陆科考站，也是人类在南极地区建立的海拔最高的科考站。'
       }
     ]
   }
