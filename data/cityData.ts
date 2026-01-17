@@ -473,5 +473,427 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '赤道高山型Csb。这是文献1中最为独特的一个案例。位于赤道附近，本应是Af，但海拔2527米将其年均温降至13°C左右（符合C类定义）。由于安第斯山脉的双峰降水模式和地形遮蔽，其降水分布呈现出类似地中海气候的季节性（尽管成因完全不同，与西风带无关），被称为“等温地中海气候”。'
       }
     ]
+  },
+  {
+    code: 'Dfa',
+    title: '夏季炎热型温带大陆性气候 (Hot-summer Humid Continental)',
+    cities: [
+      {
+        name: 'Sapporo (札幌)',
+        country: 'Japan',
+        lat: 43.075,
+        lng: 141.340,
+        description: '札幌位于日本北海道岛西部，是Dfa气候在海洋性较强区域的一个特例。虽然日本通常被认为海洋性强，但北海道纬度较高且靠近西伯利亚冷源。冬季深受“海效应降雪”影响，来自西伯利亚的干冷空气经过相对温暖的日本海时携带大量水汽，在北海道西侧形成巨量降雪。'
+      },
+      {
+        name: 'Almaty (阿拉木图)',
+        country: 'Kazakhstan',
+        lat: 43.2333,
+        lng: 76.9500,
+        description: '阿拉木图位于中亚腹地，天山山脉北麓。作为内陆城市，阿拉木图的大陆性极强。夏季受大陆热低压控制，炎热干燥。冬季则受蒙古高压延伸部分影响，虽有山脉阻挡部分寒流，但气温仍低于0℃。其降水主要来自西风带受地形抬升形成的降水，分布相对均匀。'
+      },
+      {
+        name: 'Volgograd (伏尔加格勒)',
+        country: 'Russia',
+        lat: 48.7086,
+        lng: 44.5147,
+        description: '伏尔加格勒位于东欧平原东南部，伏尔加河下游。这里是典型的温带草原带向半荒漠过渡区。夏季受副热带高压北移和大陆加热影响，极其炎热。冬季则完全暴露在来自北极和西伯利亚的冷空气之下。'
+      },
+      {
+        name: 'Bucharest (布加勒斯特)',
+        country: 'Romania',
+        lat: 44.4325,
+        lng: 26.1039,
+        description: '罗马尼亚首都，位于多瑙河下游平原。布加勒斯特属于Dfa气候，拥有炎热的大陆性夏季和寒冷的冬季。喀尔巴阡山脉在一定程度上阻挡了西风的深入，加强了大陆性特征。夏季频繁的雷暴贡献了降水，冬季则多降雪。'
+      },
+      {
+        name: 'Minneapolis (明尼阿波利斯)',
+        country: 'United States',
+        lat: 44.9820,
+        lng: -93.2692,
+        description: '明尼阿波利斯是Dfa气候中温差最大的城市之一。由于深居北美大陆腹地，缺乏水体调节（除了众多小湖泊），它直面来自加拿大的极地涡旋。冬季严寒，但夏季来自墨西哥湾的暖湿气流又能使其变得炎热潮湿。'
+      },
+      {
+        name: 'Chicago (芝加哥)',
+        country: 'United States',
+        lat: 41.8820,
+        lng: -87.6278,
+        description: '芝加哥的Dfa气候深受五大湖影响。虽然夏季炎热，但湖风（Lake Breeze）常在下午调节气温。冬季寒冷，且常伴随大风。降水全年丰富且均匀，来自气旋系统带来的锋面雨。'
+      },
+      {
+        name: 'Toronto (多伦多)',
+        country: 'Canada',
+        lat: 43.700,
+        lng: -79.420,
+        description: '多伦多处于Dfa与Dfb的边缘，但由于城市热岛效应和安大略湖的调节，其市中心及南部区域夏季均温往往超过22℃，且冬季均温略低于0℃（符合D类标准），因此常被归为Dfa。这里的降水全部分布均匀，冬季偶有雨夹雪。'
+      }
+    ]
+  },
+  {
+    code: 'Dfb',
+    title: '夏季温和型温带大陆性气候 (Warm-summer Humid Continental)',
+    cities: [
+      {
+        name: 'Kushiro (钏路)',
+        country: 'Japan',
+        lat: 42.9850,
+        lng: 144.3817,
+        description: '位于北海道东南部太平洋沿岸。与同纬度的札幌（Dfa）不同，钏路受寒流（亲潮）影响显著。夏季海雾弥漫，气温凉爽，最热月均温常年在20℃以下，因此属于Dfb。冬季则寒冷干燥。'
+      },
+      {
+        name: 'Novosibirsk (新西伯利亚)',
+        country: 'Russia',
+        lat: 55.0500,
+        lng: 82.9500,
+        description: '俄罗斯西伯利亚地区最大的城市。深居亚欧大陆腹地，新西伯利亚展现了极端的Dfb特征。冬季受西伯利亚高压控制，严寒漫长；夏季虽然较短，但大陆性加热使得白天气温较高，暖季长度刚满足4个月以上10℃的标准。'
+      },
+      {
+        name: 'Moscow (莫斯科)',
+        country: 'Russia',
+        lat: 55.7558,
+        lng: 37.6173,
+        description: '莫斯科是Dfb气候的教科书式代表。受大西洋暖湿气流的影响比西伯利亚强，因此冬季虽冷但极端低温较少。夏季温暖舒适，降水分布均匀，夏季略多。'
+      },
+      {
+        name: 'Saint Petersburg (圣彼得堡)',
+        country: 'Russia',
+        lat: 59.9375,
+        lng: 30.3086,
+        description: '俄罗斯第二大城市，波罗的海沿岸。纬度接近60°N，属于高纬度Dfb。受波罗的海调节，冬季比同纬度内陆温暖，夏季凉爽湿润。'
+      },
+      {
+        name: 'Kyiv (基辅)',
+        country: 'Ukraine',
+        lat: 50.4500,
+        lng: 30.5233,
+        description: '基辅位于Dfb与Dfa的过渡带，近年来随着气候变暖有向Dfa转变的趋势，但传统上归为Dfb。夏季温暖，冬季积雪期长，降水适中且全年有雨/雪。'
+      },
+      {
+        name: 'Oslo (奥斯陆)',
+        country: 'Norway',
+        lat: 59.9133,
+        lng: 10.7389,
+        description: '挪威首都，位于奥斯陆峡湾深处。虽然斯堪的纳维亚半岛沿岸多为Cfb（温带海洋性气候），但奥斯陆因地形阻挡，冬季气温较低，属于Dfb。夏季温和宜人，拥有超长的日照时间。'
+      },
+      {
+        name: 'Edmonton (埃德蒙顿)',
+        country: 'Canada',
+        lat: 53.546,
+        lng: -113.490,
+        description: '加拿大阿尔伯塔省省会，北美最北的主要城市之一。典型的草原省份Dfb气候。夏季温暖干燥，日温差大。'
+      },
+      {
+        name: 'Worcester (伍斯特)',
+        country: 'United States',
+        lat: 42.2714,
+        lng: -71.7989,
+        description: '马萨诸塞州中部城市。虽然距离波士顿不远，但由于海拔较高，伍斯特的夏季气温比沿海低，冬季降雪量显著增加，使其稳固地处于Dfb气候区。'
+      }
+    ]
+  },
+  {
+    code: 'Dwa',
+    title: '季风炎热型温带气候 (Monsoon-influenced Hot-summer Continental)',
+    cities: [
+      {
+        name: 'Beijing (北京)',
+        country: 'China',
+        lat: 39.9000,
+        lng: 116.4000,
+        description: '中国首都，华北平原北端。北京是Dwa气候的典型代表。夏季受东南季风控制，高温多雨；冬季受西北季风控制，寒冷干燥多风。'
+      },
+      {
+        name: 'Harbin (哈尔滨)',
+        country: 'China',
+        lat: 45.7575,
+        lng: 126.6408,
+        description: '黑龙江省省会，被称为“冰城”。哈尔滨的冬季极其漫长寒冷，但夏季却短暂而炎热，满足Dwa标准。降水极度集中在夏季，符合季风指标。'
+      },
+      {
+        name: 'Pyongyang (平壤)',
+        country: 'North Korea',
+        lat: 39.0167,
+        lng: 125.7475,
+        description: '朝鲜首都，大同江畔。平壤位于朝鲜半岛西北部，季风特征显著。夏季高温多雨，冬季寒冷干燥，属于标准的Dwa气候。'
+      },
+      {
+        name: 'Seoul (首尔)',
+        country: 'South Korea',
+        lat: 37.5600,
+        lng: 126.9900,
+        description: '韩国首都，汉江流域。首尔的气候处于Dwa与Cwa的边缘。依据0℃标准，首尔1月均温低于0℃，且夏季炎热多雨，故归为Dwa。城市热岛效应进一步增强了其夏季的高温。'
+      }
+    ]
+  },
+  {
+    code: 'Dwb',
+    title: '季风温和型温带气候 (Monsoon-influenced Warm-summer Continental)',
+    cities: [
+      {
+        name: 'Heihe (黑河)',
+        country: 'China',
+        lat: 50.2400,
+        lng: 127.5211,
+        description: '位于中俄边境，黑龙江畔。纬度高达50度，夏季凉爽，最热月均温难以达到22℃，且夏季降水丰沛；冬季严寒干燥，完全符合Dwb特征。'
+      },
+      {
+        name: 'Vladivostok (海参崴)',
+        country: 'Russia',
+        lat: 43.1150,
+        lng: 131.8853,
+        description: '俄罗斯远东最大港口城市。位于日本海西北岸，受海洋调节，冬季比同纬度内陆温和但仍寒冷，且受季风影响干燥多风。夏季受海洋冷湿气流和季风降水影响，凉爽湿润，多雾。'
+      },
+      {
+        name: 'Chongjin (清津)',
+        country: 'North Korea',
+        lat: 41.7833,
+        lng: 129.7667,
+        description: '朝鲜东北部重要港口工业城市。夏季雨季明显，8月降水是冬季的10倍以上。5-10月均温>10℃，满足Dwb的4个月要求。'
+      },
+      {
+        name: 'Calgary (卡尔加里)',
+        country: 'Canada',
+        lat: 51.083,
+        lng: -114.080,
+        description: '加拿大阿尔伯塔省南部城市，落基山脉东麓。由于落基山脉的雨影效应和夏季对流雨的主导，其冬季降水（雪）相对较少，而夏季降水较多。这里冬季常受“钦诺克风（Chinook）”影响，气温波动剧烈。'
+      }
+    ]
+  },
+  {
+    code: 'Dsa',
+    title: '高地炎热型温带夏干气候 (Hot-summer Mediterranean Continental)',
+    cities: [
+      {
+        name: 'Bishkek (比什凯克)',
+        country: 'Kyrgyzstan',
+        lat: 42.8747,
+        lng: 74.6122,
+        description: '吉尔吉斯斯坦首都，楚河谷地，天山北麓。夏季受大陆干热气团控制，炎热干燥；冬季受西风带波动影响，降水（雪）相对较多。'
+      },
+      {
+        name: 'Hakkâri (哈卡里)',
+        country: 'Turkey',
+        lat: 37.577,
+        lng: 43.739,
+        description: '土耳其东南部多山地区。位于安纳托利亚高原东部，海拔高。冬季严寒多雪，夏季炎热干燥，典型的Dsa气候。'
+      },
+      {
+        name: 'Salt Lake City (盐湖城)',
+        country: 'United States',
+        lat: 40.7608,
+        lng: -111.8910,
+        description: '美国犹他州首府，大盆地边缘。受大盆地干旱气候影响，夏季炎热干燥。冬季受高海拔和西风带影响，降雪丰富（著名的“大盐湖效应”降雪）。这种夏干冬湿的模式使其符合Dsa标准。'
+      }
+    ]
+  },
+  {
+    code: 'Dsb',
+    title: '高地温和型温带夏干气候 (Warm-summer Mediterranean Continental)',
+    cities: [
+      {
+        name: 'Sivas (锡瓦斯)',
+        country: 'Turkey',
+        lat: 39.7505,
+        lng: 37.0150,
+        description: '土耳其安纳托利亚高原中部城市。海拔约1200米，使得其夏季比周边低地凉爽，冬季寒冷。降水呈夏干冬湿特征，符合Dsb。'
+      },
+      {
+        name: 'Dras (德拉斯)',
+        country: 'India',
+        lat: 34.430,
+        lng: 75.753,
+        description: '位于印度拉达克地区，被称为“印度的寒极”。位于喜马拉雅山脉雨影区，海拔极高（约3300米）。夏季受季风阻挡降水极少且凉爽，冬季受西风扰动降雪丰富。全年极其寒冷，但夏季仍有4个月均温超过10℃。'
+      }
+    ]
+  },
+  {
+    code: 'Dfc',
+    title: '亚寒带大陆性湿润气候 (Subarctic)',
+    cities: [
+      {
+        name: 'Arkhangelsk (阿尔汉格尔斯克)',
+        country: 'Russia',
+        lat: 64.5431,
+        lng: 40.5375,
+        description: '白海港口，受海洋微弱调节。这是分布最广的亚寒带气候，覆盖了大部分加拿大和俄罗斯西伯利亚。'
+      },
+      {
+        name: 'Tromsø (特罗姆瑟)',
+        country: 'Norway',
+        lat: 69.6500,
+        lng: 18.9500,
+        description: '位于北极圈内，受北大西洋暖流影响，冬季相对温和但夏季凉爽。'
+      },
+      {
+        name: 'Samedan (萨梅丹)',
+        country: 'Switzerland',
+        lat: 46.5333,
+        lng: 9.8667,
+        description: '阿尔卑斯山高海拔谷地，夏季凉爽。'
+      },
+      {
+        name: 'Saint Pierre and Miquelon (圣皮埃尔和密克隆)',
+        country: 'France',
+        lat: 46.966,
+        lng: -56.337,
+        description: '法国海外领地，纽芬兰附近，冷海流影响显著。'
+      },
+      {
+        name: 'Fairbanks (法尔班克斯)',
+        country: 'United States',
+        lat: 64.8436,
+        lng: -147.7231,
+        description: '阿拉斯加内陆中心，温差极大。'
+      },
+      {
+        name: 'Labrador City (拉布拉多城)',
+        country: 'Canada',
+        lat: 52.9500,
+        lng: -66.9167,
+        description: '加拿大纽芬兰与拉布拉多省西部矿业城市。'
+      }
+    ]
+  },
+  {
+    code: 'Dfd',
+    title: '极寒湿润气候 (Extremely Cold Subarctic)',
+    cities: [
+      {
+        name: 'Yakutsk (雅库茨克)',
+        country: 'Russia',
+        lat: 62.0300,
+        lng: 129.7300,
+        description: '建在永久冻土上的最大城市，冬夏温差极大。最冷月气温极低。'
+      },
+      {
+        name: 'Verkhoyansk (上扬斯克)',
+        country: 'Russia',
+        lat: 67.5500,
+        lng: 133.3833,
+        description: '北半球著名的“寒极”之一。'
+      }
+    ]
+  },
+  {
+    code: 'Dwc',
+    title: '亚寒带季风气候 (Monsoon-influenced Subarctic)',
+    cities: [
+      {
+        name: 'Mohe (漠河)',
+        country: 'China',
+        lat: 52.9719,
+        lng: 122.5389,
+        description: '中国最北端的县级市，不仅有极光，还有严酷的寒冬。'
+      },
+      {
+        name: 'Yushu (玉树)',
+        country: 'China',
+        lat: 33.0000,
+        lng: 97.0000,
+        description: '青藏高原腹地，海拔造就了低纬度的亚寒带气候。'
+      },
+      {
+        name: 'Chita (赤塔)',
+        country: 'Russia',
+        lat: 52.0500,
+        lng: 113.4667,
+        description: '俄罗斯外贝加尔边疆区首府，日照充足但冬季干冷。'
+      }
+    ]
+  },
+  {
+    code: 'Dwd',
+    title: '极寒季风气候 (Extremely Cold Monsoon Subarctic)',
+    cities: [
+      {
+        name: 'Oymyakon (奥伊米亚康)',
+        country: 'Russia',
+        lat: 63.4608,
+        lng: 142.7858,
+        description: '与其说城市，不如说是村庄，记录到人类定居点的最低温。这是地球上人类居住的最冷气候区。'
+      },
+      {
+        name: 'Delyankir (德莱扬克尔)',
+        country: 'Russia',
+        lat: 63.8311,
+        lng: 145.6031,
+        description: '邻近奥伊米亚康的极寒点。'
+      }
+    ]
+  },
+  {
+    code: 'Dsc',
+    title: '亚寒带夏干气候 (Dry-summer Subarctic)',
+    cities: [
+      {
+        name: 'Anadyr (阿纳德尔)',
+        country: 'Russia',
+        lat: 64.7333,
+        lng: 177.5167,
+        description: '楚科奇自治区首府，白令海峡西岸。'
+      },
+      {
+        name: 'Anchorage (安克雷奇)',
+        country: 'United States',
+        lat: 61.2167,
+        lng: -149.8936,
+        description: '阿拉斯加最大城市，受沿海山脉雨影影响，降水呈夏末秋初多、春夏少的模式，有时归入Dsc。'
+      },
+      {
+        name: 'Whitehorse (白马城)',
+        country: 'Canada',
+        lat: 60.7333,
+        lng: -135.0667,
+        description: '育空地区首府，位于海岸山脉雨影区，干燥。'
+      }
+    ]
+  },
+  {
+    code: 'ET',
+    title: '寒带苔原气候 (Tundra)',
+    cities: [
+      {
+        name: 'Ushuaia (乌斯怀亚)',
+        country: 'Argentina',
+        lat: -54.8000,
+        lng: -68.3167,
+        description: '火地岛首府，南半球海洋性苔原的代表，夏季极其凉爽。'
+      },
+      {
+        name: 'Stanley (斯坦利港)',
+        country: 'Falkland Islands',
+        lat: -51.6950,
+        lng: -57.8506,
+        description: '受西风带强烈影响，多大风，无树。'
+      },
+      {
+        name: 'Macquarie Island (麦夸里岛)',
+        country: 'Australia',
+        lat: -54.5000,
+        lng: 158.9333,
+        description: '南大洋上的孤岛，典型的海洋性极地气候。'
+      },
+      {
+        name: 'Mt. Fuji (富士山顶)',
+        country: 'Japan',
+        lat: 35.3608,
+        lng: 138.7275,
+        description: '低纬度高海拔地区的高山苔原。'
+      },
+      {
+        name: 'Ben Nevis (本尼维斯山顶)',
+        country: 'UK',
+        lat: 56.7969,
+        lng: -5.0036,
+        description: '低纬度高海拔地区的高山苔原。'
+      },
+      {
+        name: 'Mt. Rainier (瑞尼尔山顶)',
+        country: 'United States',
+        lat: 46.8517,
+        lng: -121.7603,
+        description: '低纬度高海拔地区的高山苔原。'
+      }
+    ]
   }
 ];
