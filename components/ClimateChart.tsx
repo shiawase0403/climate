@@ -16,9 +16,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface ClimateChartProps {
   data: MonthlyClimateData[];
+  locationName?: string | null;
 }
 
-export const ClimateChart: React.FC<ClimateChartProps> = ({ data }) => {
+export const ClimateChart: React.FC<ClimateChartProps> = ({ data, locationName }) => {
   const { t } = useLanguage();
 
   if (!data || data.length === 0) {
@@ -39,7 +40,9 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({ data }) => {
   
   return (
     <div id="climate-chart-container" className="w-full h-[450px] bg-white rounded-xl shadow-sm border border-slate-200 p-4 pb-8">
-      <h3 className="text-lg font-semibold text-slate-800 mb-4 pl-2">{t.climateGraph}</h3>
+      <h3 className="text-lg font-semibold text-slate-800 mb-4 pl-2">
+        {locationName ? `${locationName} - ` : ''}{t.climateGraph}
+      </h3>
       <ResponsiveContainer width="100%" height="90%">
         <ComposedChart
           data={chartData}

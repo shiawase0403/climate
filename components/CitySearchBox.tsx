@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Loader2, X } from 'lucide-react';
+import { Search, MapPin, Loader2, X, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { CitySearchResult, GeoLocation } from '../types';
 import { searchCities } from '../services/csvService';
@@ -104,10 +104,18 @@ export const CitySearchBox: React.FC<CitySearchBoxProps> = ({ onLocationSelect }
                 className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 transition-colors flex items-center group border-b border-slate-50 last:border-0"
               >
                 <MapPin className="w-4 h-4 text-slate-400 mr-3 group-hover:text-indigo-500 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                    {city.city_ascii}
-                  </span>
+                <div className="flex flex-col flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      {city.city_ascii}
+                    </span>
+                    {city.count !== undefined && city.count > 0 && (
+                      <div className="flex items-center text-xs text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full border border-orange-100" title="Search Popularity">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        <span>{city.count}</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center text-xs text-slate-500 gap-1">
                      {city.country && <span>{city.country}</span>}
                      {city.country && <span className="text-slate-300">•</span>}

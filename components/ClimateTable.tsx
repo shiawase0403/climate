@@ -4,9 +4,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface ClimateTableProps {
   data: MonthlyClimateData[];
+  locationName?: string | null;
 }
 
-export const ClimateTable: React.FC<ClimateTableProps> = ({ data }) => {
+export const ClimateTable: React.FC<ClimateTableProps> = ({ data, locationName }) => {
   const { t } = useLanguage();
 
   if (!data || data.length === 0) {
@@ -20,7 +21,9 @@ export const ClimateTable: React.FC<ClimateTableProps> = ({ data }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
-        <h3 className="text-lg font-semibold text-slate-800">{t.monthlyBreakdown}</h3>
+        <h3 className="text-lg font-semibold text-slate-800">
+          {locationName ? `${locationName} - ` : ''}{t.monthlyBreakdown}
+        </h3>
         <div className="text-xs font-medium text-slate-500 flex space-x-4">
             <span>{t.avgTemp}: <strong className="text-slate-800">{avgTemp.toFixed(1)}°C</strong></span>
             <span>{t.totalPrecip}: <strong className="text-slate-800">{Math.round(totalPrecip)}mm</strong></span>

@@ -31,7 +31,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Uganda',
         lat: 0.3000,
         lng: 32.5667,
-        description: '坎帕拉代表了“高地热带雨林”气候。虽然紧邻赤道，但其平均海拔超过1100米，这使得气温较同纬度的海平面城市（如新加坡）温和。维多利亚湖（Lake Victoria）巨大的水体提供了局地水汽循环，形成的湖陆风效应确保了全年的高湿度和降水，使其符合Af标准。'
+        description: '坎帕拉代表了“高地热带雨林”气候。虽然紧邻赤道，但其平均海拔超过1100米，这使得气温较同纬度的海平面城市（如新加坡）温和。维多利亚湖（Lake Victoria）巨大的水体提供了局地水汽循环，形成的湖陆风效应确保了全年的高湿度 and 降水，使其符合Af标准。'
       },
       {
         name: 'Honiara (霍尼亚拉)',
@@ -267,18 +267,18 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于欧亚大陆腹地的吐鲁番盆地，是中国的热极和旱极。盆地地形闭塞，海拔低于海平面，增温效应显著，但冬季受西伯利亚高压控制，气温骤降至冰点以下，年温差极大。'
       },
       {
-        name: 'Ashgabat (阿什哈巴德)',
-        country: 'Turkmenistan',
-        lat: 37.9333,
-        lng: 58.3667,
-        description: '位于卡拉库姆沙漠边缘，科佩特山脉北麓。虽然山脉能拦截少量水汽，但整体环境极端干燥。冬季寒冷，常有降雪。'
+        name: 'Golmud (格尔木)',
+        country: 'China',
+        lat: 36.4072,
+        lng: 94.9283,
+        description: '位于柴达木盆地，距海极为遥远，地形封闭，水汽几乎无法抵达，高寒干旱。'
       },
       {
-        name: 'Damascus (大马士革)',
-        country: 'Syria',
-        lat: 33.5000,
-        lng: 36.3000,
-        description: '位于安替黎巴嫩山脉的雨影区。地中海的水汽被山脉阻隔，造就了这一古老的绿洲城市。其海拔（约700米）导致冬季气温较低，偶见降雪。'
+        name: 'Aqtau (阿克套)',
+        country: 'Qazaqstan',
+        lat: 43.6525,
+        lng: 51.1575,
+        description: '虽有里海调节，但是夏季高温仍可达到45℃以上，位于中亚内陆，水汽大多被西部大高加索山脉拦截，降水稀少。'
       }
     ]
   },
@@ -479,7 +479,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '南支槽与地形锋面： 冬季受西风在青藏高原分流的南支西风槽引导，印度洋暖湿气流与西伯利亚冷空气在湘江流域形成准静止锋，导致持续阴雨和冻雨。夏季受副高控制。'
       },
       {
-        name: 'Buenos Aires (布宜诺斯艾利斯)',
+        name: 'Buenos Aires (布宜诺斯艾米斯)',
         country: 'Argentina',
         lat: -34.6000,
         lng: -58.3667,
@@ -795,6 +795,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 37.577,
         lng: 43.739,
         description: '土耳其东南部多山地区。位于安纳托利亚高原东部，海拔高。冬季严寒多雪，夏季炎热干燥，典型的Dsa气候。'
+      },
+      {
+        name: 'Kabul (喀布尔)',
+        country: 'Afghanistan',
+        lat: 34.5458,
+        lng: 69.0820,
+        description: '夏季受干燥大陆气团控制，冬季山脉拦截西风降水。'
       }
     ]
   },

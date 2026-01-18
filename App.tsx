@@ -9,6 +9,7 @@ import { ComparisonChart } from './components/ComparisonChart';
 import { ExploreMenu } from './components/ExploreMenu';
 import { CityAnalysisCard } from './components/CityAnalysisCard';
 import { fetchClimateData, fetchClassification } from './services/climateService';
+import { searchCities, findNearestCity } from './services/csvService';
 import { generatePDF, generateComparisonPDF } from './services/pdfService';
 import { GeoLocation, ClimateDataResponse, ClassificationResponse, ComparisonPoint, CityDefinition } from './types';
 import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2, BookOpen } from 'lucide-react';
@@ -141,6 +142,10 @@ const App: React.FC = () => {
       setClimateData(null);
       setClassification(null);
 
+      // Reset location name if it wasn't manually set (e.g. Map Click)
+      // If it was manually set (e.g. Search), it will have a value.
+      // We will check and fetch if necessary inside the try block.
+
       try {
         const [climateRes, classRes] = await Promise.all([
           fetchClimateData(selectedLocation.lat, selectedLocation.lng),
@@ -149,6 +154,15 @@ const App: React.FC = () => {
 
         setClimateData(climateRes);
         setClassification(classRes);
+        
+        // If locationName is missing, try to find nearest city
+        if (!locationName) {
+           // We don't await this to block UI, but we update state when done
+           findNearestCity(selectedLocation.lat, selectedLocation.lng).then(cityStr => {
+             if (cityStr) setLocationName(cityStr);
+           });
+        }
+
       } catch (err) {
         console.error(err);
         setError(t.errorText);
@@ -176,7 +190,8 @@ const App: React.FC = () => {
     const location = { lat: city.lat, lng: city.lng };
     setSelectedLocation(location);
     setSelectedCity(city);
-    setLocationName(city.name);
+    // Use format "City, Country" to match nearest city API format style
+    setLocationName(`${city.name}, ${city.country}`);
   };
 
   // --- Comparison Mode Logic ---
@@ -190,7 +205,11 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const climateRes = await fetchClimateData(location.lat, location.lng);
+      // Parallel fetch for climate data and city name if needed
+      const [climateRes, nearestCity] = await Promise.all([
+        fetchClimateData(location.lat, location.lng),
+        !location.name ? findNearestCity(location.lat, location.lng) : Promise.resolve(null)
+      ]);
       
       // Check for valid data (if ocean, api might return empty data)
       if (!climateRes.data || climateRes.data.length === 0) {
@@ -202,11 +221,13 @@ const App: React.FC = () => {
       // Find the first available color
       const usedColors = new Set(comparePoints.map(p => p.color));
       const nextColor = PALETTE.find(c => !usedColors.has(c)) || PALETTE[0];
+      
+      const displayName = location.name || nearestCity || null;
 
       const newPoint: ComparisonPoint = {
         id: Date.now().toString(),
         location: location,
-        name: location.name, // Store the name if available
+        name: displayName, 
         data: climateRes,
         color: nextColor
       };
@@ -477,9 +498,9 @@ const App: React.FC = () => {
                           locationName={locationName} 
                         />
                         
-                        <ClimateChart data={climateData.data} />
+                        <ClimateChart data={climateData.data} locationName={locationName} />
                         
-                        <ClimateTable data={climateData.data} />
+                        <ClimateTable data={climateData.data} locationName={locationName} />
                       </>
                     )}
                   </div>

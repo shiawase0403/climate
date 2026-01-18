@@ -72,4 +72,5 @@ export interface CitySearchResult {
   lat: number;
   lng: number;
   country: string;
+  count?: number;
 }
