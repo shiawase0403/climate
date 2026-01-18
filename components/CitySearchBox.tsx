@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Loader2, X, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { CitySearchResult, GeoLocation } from '../types';
-import { searchCities } from '../services/csvService';
+import { searchCities, findNearestCity } from '../services/csvService';
 
 interface CitySearchBoxProps {
   onLocationSelect: (location: GeoLocation) => void;
@@ -57,6 +57,9 @@ export const CitySearchBox: React.FC<CitySearchBoxProps> = ({ onLocationSelect }
     onLocationSelect({ lat: city.lat, lng: city.lng, name: city.city_ascii });
     setQuery('');
     setIsOpen(false);
+    
+    // Ping API for tracking purposes as requested
+    findNearestCity(city.lat, city.lng);
   };
 
   const clearSearch = () => {

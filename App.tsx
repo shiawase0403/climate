@@ -192,6 +192,9 @@ const App: React.FC = () => {
     setSelectedCity(city);
     // Use format "City, Country" to match nearest city API format style
     setLocationName(`${city.name}, ${city.country}`);
+    
+    // Ping API for tracking purposes as requested
+    findNearestCity(city.lat, city.lng);
   };
 
   // --- Comparison Mode Logic ---

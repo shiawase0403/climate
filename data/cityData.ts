@@ -341,6 +341,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: -9.3833,
         lng: -40.5000,
         description: '位于巴西东北部的“干旱多边形”腹地。大西洋水汽难以到达此地，且该区域大气层结常年稳定。'
+      },
+      {
+        name: 'Yuanjiang (元江)',
+        country: 'China',
+        lat: 23.5961,
+        lng: 101.9981,
+        description: '典型"干热河谷"，常出现40C高温'
       }
     ]
   },
@@ -430,6 +437,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 38.5667,
         lng: -121.4833,
         description: '加州中央谷地。虽然纬度比旧金山高，但由于海岸山脉阻挡了海风，夏季酷热难耐，是典型的内陆型Csa。'
+      },
+      {
+        name: 'Athens (雅典)',
+        country: 'Greece',
+        lat: 37.9700,
+        lng: 23.7200,
+        description: '更低纬度的Csa，降水模式更为典型'
       }
     ]
   },
@@ -469,7 +483,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Cfa',
-    title: '亚热带湿润气候 (Humid Subtropical)',
+    title: '亚热带季风和亚热带湿润气候 (Humid Subtropical)',
     cities: [
       {
         name: 'Changsha (长沙)',
@@ -498,12 +512,19 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 33.7500,
         lng: -84.3833,
         description: '典型的亚热带季风性湿润气候，夏季墨西哥湾暖湿气流北上提供不稳定能量，冬季受锋面气旋影响。'
+      },
+      {
+        name: 'Taipei (台北)',
+        country: 'China',
+        lat: 25.0375,
+        lng: 121.5625,
+        description: '夏季受东南季风和台风影响，冬季有冷湿的偏北风带来阴雨'
       }
     ]
   },
   {
     code: 'Cwa',
-    title: '亚热带季风气候 (Monsoon-influenced Humid Subtropical)',
+    title: '亚热带季风和亚热带湿润气候 (Monsoon-influenced Humid Subtropical)',
     cities: [
       {
         name: 'Hong Kong (香港)',
@@ -612,7 +633,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Cfc',
-    title: '亚寒带海洋性气候 (Subpolar Oceanic)',
+    title: '温带海洋性气候(副极地型) (Subpolar Oceanic)',
     cities: [
       {
         name: 'Reykjavík (雷克雅未克)',
@@ -787,7 +808,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dsa',
-    title: '温带大陆性湿润气候 (Hot-summer Mediterranean Continental)',
+    title: '温带大陆性气候(冬雨型) (Hot-summer Mediterranean Continental)',
     cities: [
       {
         name: 'Hakkâri (哈卡里)',
@@ -807,7 +828,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dsb',
-    title: '温带大陆性湿润气候 (Warm-summer Mediterranean Continental)',
+    title: '温带大陆性气候(冬雨型) (Warm-summer Mediterranean Continental)',
     cities: [
       {
         name: 'Sivas (锡瓦斯)',
