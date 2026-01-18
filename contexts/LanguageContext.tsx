@@ -56,6 +56,7 @@ export interface Translations {
   // Comparison Mode
   modeSingle: string;
   modeCompare: string;
+  modeGame: string; // New
   compareTitle: string;
   compareIntro: string;
   addPoint: string;
@@ -66,6 +67,22 @@ export interface Translations {
   comparePrecip: string;
   tempComparisonTable: string;
   precipComparisonTable: string;
+  // Game Mode
+  gameTitle: string;
+  gameInstruction: string;
+  gameInstructionGuess: string;
+  gameConfirmGuess: string;
+  gameResult: string;
+  gameScore: string;
+  gameDistance: string;
+  gameActualLocation: string;
+  gameNextRound: string;
+  gameLoading: string;
+  mysteryLocation: string;
+  gameNeedHint: string;
+  gameShowHint: string;
+  gameShowCountryHint: string; // New
+  gameCountry: string; // New
   // Explore Mode
   exploreCities: string;
   climateExplorer: string;
@@ -158,6 +175,7 @@ export const translations: Record<Language, Translations> = {
     noResults: "No cities found",
     modeSingle: "Single Location",
     modeCompare: "Compare Locations",
+    modeGame: "Game",
     compareTitle: "Climate Comparison",
     compareIntro: "Select up to 5 points on the map to compare their climate data side-by-side.",
     addPoint: "Click map to add point",
@@ -168,6 +186,21 @@ export const translations: Record<Language, Translations> = {
     comparePrecip: "Precipitation Comparison",
     tempComparisonTable: "Temperature Comparison Data (°C)",
     precipComparisonTable: "Precipitation Comparison Data (mm)",
+    gameTitle: "Climate Treasure Hunt",
+    gameInstruction: "Analyze the climate data on the right. Can you guess where this location is? Click on the map to place your guess.",
+    gameInstructionGuess: "Place your marker on the map",
+    gameConfirmGuess: "Confirm Guess",
+    gameResult: "Round Result",
+    gameScore: "Score",
+    gameDistance: "Distance",
+    gameActualLocation: "Actual Location",
+    gameNextRound: "Next Round",
+    gameLoading: "Finding a random city...",
+    mysteryLocation: "Mystery Location",
+    gameNeedHint: "Need a hint?",
+    gameShowHint: "Show Climate Code",
+    gameShowCountryHint: "Show Country",
+    gameCountry: "Country",
     exploreCities: "Explore Cities",
     climateExplorer: "Climate Explorer",
     exploreInstruction: "Select a climate classification code to view classic city examples and their deep climate analysis.",
@@ -254,6 +287,7 @@ export const translations: Record<Language, Translations> = {
     noResults: "未找到城市",
     modeSingle: "单点模式",
     modeCompare: "对比模式",
+    modeGame: "气候寻宝", // Game
     compareTitle: "气候对比",
     compareIntro: "在地图上选择最多 5 个点以并排比较它们的气候数据。",
     addPoint: "点击地图添加地点",
@@ -264,6 +298,21 @@ export const translations: Record<Language, Translations> = {
     comparePrecip: "降水量对比",
     tempComparisonTable: "温度对比数据 (°C)",
     precipComparisonTable: "降水量对比数据 (mm)",
+    gameTitle: "气候寻宝模式",
+    gameInstruction: "观察右侧的气候数据，猜猜看这是世界上的哪个地方？点击地图进行猜测。",
+    gameInstructionGuess: "在地图上标记你的猜测",
+    gameConfirmGuess: "确认猜测",
+    gameResult: "本轮结果",
+    gameScore: "得分",
+    gameDistance: "距离",
+    gameActualLocation: "实际位置",
+    gameNextRound: "下一轮",
+    gameLoading: "正在寻找随机城市...",
+    mysteryLocation: "神秘地点",
+    gameNeedHint: "需要提示吗？",
+    gameShowHint: "显示气候代码",
+    gameShowCountryHint: "显示国家", // New
+    gameCountry: "国家", // New
     exploreCities: "探索城市",
     climateExplorer: "气候探索",
     exploreInstruction: "选择一个气候分类代码以查看经典城市案例及其深度气候分析。",

@@ -74,3 +74,13 @@ export interface CitySearchResult {
   country: string;
   count?: number;
 }
+
+// Game Types
+export interface RandomCityResponse {
+  city: string;
+  lat: string | number;
+  lon: string | number;
+  country: string;
+}
+
+export type GameStatus = 'playing' | 'revealed';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ClassificationEntry } from '../types';
-import { Info, MapPin, BookOpen } from 'lucide-react';
+import { Info, MapPin, BookOpen, HelpCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getChineseClimateClassification } from '../services/climateService';
 
@@ -9,6 +9,8 @@ interface ClassificationCardProps {
   lat: number;
   lng: number;
   locationName?: string | null;
+  masked?: boolean; // New prop for game mode
+  hintRevealed?: boolean; // If true, shows code/description even if masked
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -78,39 +80,60 @@ const adjustBrightness = (hex: string, percent: number): string => {
 // Specifically: Csa (Yellow), Cfa (Light Green), Cwa (Light Green), Dfa (Cyan)
 const BRIGHT_CLIMATE_CODES = ['Csa', 'Cfa', 'Cwa', 'Dfa'];
 
-export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classificationData, lat, lng, locationName }) => {
+export const ClassificationCard: React.FC<ClassificationCardProps> = ({ 
+  classificationData, 
+  lat, 
+  lng, 
+  locationName, 
+  masked = false, 
+  hintRevealed = false 
+}) => {
   const { t, language } = useLanguage();
-  // Find the main Köppen-Geiger entry (usually the first one or one with text)
+
+  // Determine actual data
   const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
-  
-  const bgColor = getClimateColor(mainClass?.code);
-  
-  // Determine if we should use dark text based on the specific code list
-  const isBright = mainClass?.code ? BRIGHT_CLIMATE_CODES.includes(mainClass.code) : false;
-  
-  // Generate a slightly darker version for the gradient end
-  const gradientEnd = adjustBrightness(bgColor, -20);
-  
-  // Determine display text
+  let code = mainClass?.code || 'N/A';
   let displayText = mainClass?.text;
   
   if (language === 'zh' && mainClass?.code) {
     const cnText = getChineseClimateClassification(mainClass.code);
     if (cnText) displayText = cnText;
   }
-
   displayText = displayText || (language === 'zh' ? '未知气候' : 'Unknown Climate');
+  
+  const actualDescription = mainClass?.code ? t.climateDescriptions[mainClass.code] : null;
 
-  // Specific description if available
-  const description = mainClass?.code ? t.climateDescriptions[mainClass.code] : null;
+  // Determine display State based on masked & hintRevealed
+  // masked means "Game Playing Mode" -> Location is hidden
+  // hintRevealed means "Show Climate Info anyway"
+  
+  const isClimateHidden = masked && !hintRevealed;
+  
+  // If climate is hidden, we use mystery values. 
+  // If hint is revealed, we show actual code/text/color but keep location masked.
+  
+  const displayCode = isClimateHidden ? "??" : code;
+  const displayTitle = isClimateHidden ? t.unknownClimate : displayText;
+  const displayDescription = isClimateHidden ? t.gameInstruction : actualDescription;
+  
+  // Background logic
+  // If hidden, use the dark mystery background.
+  // If revealed, use the actual climate color.
+  const bgColor = isClimateHidden ? '#475569' : getClimateColor(code);
+  const gradientEnd = isClimateHidden ? '#1e293b' : adjustBrightness(bgColor, -20);
+  
+  // Brightness check for text contrast
+  const isBright = (!isClimateHidden && code) ? BRIGHT_CLIMATE_CODES.includes(code) : false;
+  
+  // Location is always masked if masked=true
+  const locationHeader = masked ? t.mysteryLocation : (locationName || `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`);
+  const locationSubtext = masked ? "??.??°N/S, ??.??°E/W" : `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`;
 
-  // Dynamic styles based on brightness
+  // Styles
   const textColorClass = isBright ? 'text-[rgba(0,0,0,0.85)]' : 'text-white';
-  const subTextClass = isBright ? 'text-[rgba(0,0,0,0.6)]' : 'text-white/90';
+  const subTextClass = isBright ? 'text-[rgba(0,0,0,0.6)]' : (isClimateHidden ? 'text-white/70' : 'text-white/90');
   const iconClass = isBright ? 'text-[rgba(0,0,0,0.7)]' : 'text-white';
   
-  // For bright backgrounds, use a dark-ish translucent background for badges to maintain contrast
-  // For dark backgrounds, use light-ish translucent
   const badgeBgClass = isBright 
     ? 'bg-black/5 border-black/10 backdrop-blur-md' 
     : 'bg-black/10 border-white/20 backdrop-blur-md shadow-sm';
@@ -121,8 +144,7 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
     ? 'bg-white/40 border-black/5 backdrop-blur-sm'
     : 'bg-black/10 border-white/20 backdrop-blur-sm';
 
-  // Handsome text shader (Shadow) only when text is white to ensure pop
-  const textShadowStyle = isBright ? {} : {
+  const textShadowStyle = (isBright || isClimateHidden) ? {} : {
     textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)'
   };
 
@@ -136,43 +158,43 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({ classifi
       <div className="flex items-start justify-between">
         <div style={textShadowStyle}>
           <div className={`flex items-center space-x-2 mb-1 ${subTextClass}`}>
-            <MapPin className="w-4 h-4" style={isBright ? {} : { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+            <MapPin className="w-4 h-4" style={(!isBright && !isClimateHidden) ? { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' } : {}} />
             <span className="text-sm font-medium">{t.selectedLocation}</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight mb-4">
-             {locationName ? locationName : `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`}
+          <h2 className="text-2xl font-bold tracking-tight mb-4 flex items-center">
+             {masked && <HelpCircle className={`w-6 h-6 mr-2 ${isClimateHidden ? 'animate-pulse' : ''}`} />}
+             {locationHeader}
           </h2>
-          {locationName && (
-             <p className={`text-sm ${subTextClass} -mt-2 mb-4`}>
-                {Math.abs(lat).toFixed(2)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lng).toFixed(2)}°{lng >= 0 ? 'E' : 'W'}
-             </p>
-          )}
+          <p className={`text-sm ${subTextClass} -mt-2 mb-4 font-mono`}>
+             {locationSubtext}
+          </p>
         </div>
         <div className={`${badgeBgClass} p-3 rounded-lg border`}>
              <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>
-             <span className="text-3xl font-bold" style={textShadowStyle}>{mainClass?.code || 'N/A'}</span>
+             <span className="text-3xl font-bold" style={textShadowStyle}>{displayCode}</span>
         </div>
       </div>
       
       <div className={`mt-4 pt-4 border-t ${dividerClass}`}>
         <div className="flex items-start space-x-3 mb-3" style={textShadowStyle}>
-          <Info className={`w-5 h-5 mt-1 flex-shrink-0 ${iconClass}`} style={isBright ? {} : { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+          <Info className={`w-5 h-5 mt-1 flex-shrink-0 ${iconClass}`} style={(!isBright && !isClimateHidden) ? { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' } : {}} />
           <div>
             <h3 className="text-lg font-semibold">
-              {displayText}
+              {displayTitle}
             </h3>
+            {/* If hint revealed, show basedOn, otherwise show instruction context */}
             <p className={`text-sm mt-1 ${subTextClass}`}>
-              {t.basedOn}
+              {isClimateHidden ? t.gameInstruction : t.basedOn}
             </p>
           </div>
         </div>
 
-        {/* Dynamic Description if available */}
-        {description && (
+        {/* Dynamic Description if available (or game instruction if hidden) */}
+        {displayDescription && (
            <div className={`mt-4 rounded-lg p-3 border flex items-start space-x-3 animate-in fade-in slide-in-from-top-2 duration-300 ${descriptionBgClass}`}>
-             <BookOpen className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconClass}`} style={isBright ? {} : { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+             <BookOpen className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconClass}`} style={(!isBright && !isClimateHidden) ? { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' } : {}} />
              <p className="text-sm leading-relaxed font-medium" style={textShadowStyle}>
-               {description}
+               {displayDescription}
              </p>
            </div>
         )}

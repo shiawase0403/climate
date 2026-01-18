@@ -1,8 +1,9 @@
-import { CitySearchResult } from '../types';
+import { CitySearchResult, RandomCityResponse } from '../types';
 
 // API endpoint provided by the user
 const API_BASE_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=1&name=';
 const API_NEAREST_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=2';
+const API_RANDOM_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=3';
 
 export const searchCities = async (query: string): Promise<CitySearchResult[]> => {
   if (!query || query.trim().length < 2) return [];
@@ -67,6 +68,17 @@ export const findNearestCity = async (lat: number, lng: number): Promise<string 
     return null;
   } catch (error) {
     console.warn('Error fetching nearest city:', error);
+    return null;
+  }
+};
+
+export const fetchRandomCity = async (): Promise<RandomCityResponse | null> => {
+  try {
+    const response = await fetch(API_RANDOM_URL);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching random city:', error);
     return null;
   }
 };

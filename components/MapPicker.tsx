@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { GeoLocation } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -11,9 +11,10 @@ export interface MapPoint {
 }
 
 interface MapPickerProps {
-  mode: 'single' | 'compare';
-  selectedLocation: GeoLocation | null; // For single mode
+  mode: 'single' | 'compare' | 'game';
+  selectedLocation: GeoLocation | null; // For single mode and game user guess
   comparisonPoints?: MapPoint[];        // For compare mode
+  gameTargetLocation?: GeoLocation | null; // For game revealed state
   onLocationSelect: (location: GeoLocation) => void;
 }
 
@@ -45,6 +46,11 @@ const defaultIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+// Green icon for Game Correct Location
+const greenIcon = createColoredIcon('#10b981');
+// Red icon for Game User Guess
+const redIcon = createColoredIcon('#ef4444');
 
 const MapController: React.FC<{ onSelect: (loc: GeoLocation) => void }> = ({ onSelect }) => {
   useMapEvents({
@@ -97,19 +103,35 @@ const MapInvalidator: React.FC = () => {
 };
 
 // Component to fly to location when it changes
-const MapFlyTo: React.FC<{ location: GeoLocation | null }> = ({ location }) => {
+const MapFlyTo: React.FC<{ location: GeoLocation | null; mode: string }> = ({ location, mode }) => {
   const map = useMap();
   useEffect(() => {
-    if (location) {
-      // We use noMoveStart: true to avoid interrupting user interaction if they are dragging
-      // But typically we want to center. 
+    // Don't auto-fly in game mode to avoid giving hints, unless it's the very first load or explicit action
+    // Actually, in single mode we want to fly. In game mode, we probably don't want to fly to the target (cheating).
+    // We only fly to user selection in single mode.
+    if (location && mode === 'single') {
       map.flyTo([location.lat, location.lng], 6, { duration: 1.5 });
     }
-  }, [location, map]);
+  }, [location, map, mode]);
   return null;
 };
 
-export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, onLocationSelect }) => {
+// Component to fit bounds for game result
+const GameResultFitter: React.FC<{ guess: GeoLocation | null; target: GeoLocation | null }> = ({ guess, target }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (guess && target) {
+      const bounds = L.latLngBounds([
+        [guess.lat, guess.lng],
+        [target.lat, target.lng]
+      ]);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6, duration: 1 });
+    }
+  }, [guess, target, map]);
+  return null;
+};
+
+export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect }) => {
   const { t } = useLanguage();
 
   return (
@@ -160,14 +182,16 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
 
         <ScaleControl position="bottomleft" />
         
-        <MapController onSelect={onLocationSelect} />
+        {/* Disable click to select if game is already revealed (target exists) */}
+        {!gameTargetLocation && <MapController onSelect={onLocationSelect} />}
+        
         <MapInvalidator />
         
         {/* Single Mode Marker */}
         {mode === 'single' && selectedLocation && (
           <>
             <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={defaultIcon} />
-            <MapFlyTo location={selectedLocation} />
+            <MapFlyTo location={selectedLocation} mode={mode} />
           </>
         )}
 
@@ -185,11 +209,46 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
               </Popup>
            </Marker>
         ))}
+
+        {/* Game Mode Markers */}
+        {mode === 'game' && (
+          <>
+            {/* User Guess */}
+            {selectedLocation && (
+              <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={gameTargetLocation ? redIcon : defaultIcon}>
+                 {gameTargetLocation && <Popup offset={[0, -28]}>Your Guess</Popup>}
+              </Marker>
+            )}
+            
+            {/* Actual Target (Revealed) */}
+            {gameTargetLocation && (
+              <>
+                <Marker position={[gameTargetLocation.lat, gameTargetLocation.lng]} icon={greenIcon}>
+                  <Popup offset={[0, -28]} autoClose={false} closeOnClick={false}>Actual Location</Popup>
+                </Marker>
+                
+                {/* Line connecting them */}
+                {selectedLocation && (
+                  <Polyline 
+                    positions={[
+                      [selectedLocation.lat, selectedLocation.lng],
+                      [gameTargetLocation.lat, gameTargetLocation.lng]
+                    ]}
+                    dashArray="10, 10"
+                    color="#475569"
+                  />
+                )}
+                <GameResultFitter guess={selectedLocation} target={gameTargetLocation} />
+              </>
+            )}
+          </>
+        )}
+
       </MapContainer>
       
       {/* Hint Overlay */}
       <div className="absolute bottom-6 right-14 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 pointer-events-none z-[400] hidden sm:block border border-slate-200">
-        {t.clickMapHint}
+        {mode === 'game' && !gameTargetLocation ? t.gameInstructionGuess : t.clickMapHint}
       </div>
     </div>
   );
