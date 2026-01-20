@@ -8,14 +8,16 @@ import { CitySearchBox } from './components/CitySearchBox';
 import { ComparisonChart } from './components/ComparisonChart';
 import { ExploreMenu } from './components/ExploreMenu';
 import { CityAnalysisCard } from './components/CityAnalysisCard';
+import { TutorialModal } from './components/TutorialModal';
+import { PvpGame } from './components/PvpGame';
 import { fetchClimateData, fetchClassification } from './services/climateService';
 import { searchCities, findNearestCity, fetchRandomCity } from './services/csvService';
 import { generatePDF, generateComparisonPDF } from './services/pdfService';
-import { GeoLocation, ClimateDataResponse, ClassificationResponse, ComparisonPoint, CityDefinition, RandomCityResponse, GameStatus } from './types';
-import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2, BookOpen, Gamepad2, Trophy, Target, ArrowRight, Lightbulb, Globe } from 'lucide-react';
+import { GeoLocation, ClimateDataResponse, ClassificationResponse, ComparisonPoint, CityDefinition, RandomCityResponse, GameStatus, ChallengeRoundResult } from './types';
+import { CloudRain, Map as MapIcon, Loader2, AlertCircle, Waves, Languages, Download, SplitSquareHorizontal, MousePointerClick, X, Trash2, BookOpen, Gamepad2, Trophy, Target, ArrowRight, Lightbulb, Globe, Award, Medal, Flag, HelpCircle, Swords } from 'lucide-react';
 import { useLanguage } from './contexts/LanguageContext';
 
-type AppMode = 'single' | 'compare' | 'game';
+type AppMode = 'single' | 'compare' | 'game' | 'pvp';
 
 const PALETTE = [
   '#ef4444', // Red
@@ -26,17 +28,35 @@ const PALETTE = [
 ];
 
 // Footer Notice Component
-const NoticeFooter: React.FC = () => {
+interface NoticeFooterProps {
+  onOpenTutorial: () => void;
+  isChallengeMode: boolean;
+}
+
+const NoticeFooter: React.FC<NoticeFooterProps> = ({ onOpenTutorial, isChallengeMode }) => {
   const { t } = useLanguage();
   
   return (
-    <div className="mt-16 bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 border-l-4 border-l-amber-500">
+    <div className="mt-16 bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 border-l-4 border-l-amber-500 relative">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         <div className="p-3 bg-amber-100 text-amber-600 rounded-full flex-shrink-0 mt-1">
           <BookOpen className="w-5 h-5" />
         </div>
         <div className="flex-1 w-full">
-          <h3 className="text-lg font-bold text-slate-800 mb-2">{t.notice.title}</h3>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-lg font-bold text-slate-800">{t.notice.title}</h3>
+            
+            {!isChallengeMode && (
+              <button 
+                onClick={onOpenTutorial}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>{t.openTutorial}</span>
+              </button>
+            )}
+          </div>
+          
           <p className="text-slate-600 mb-6 text-sm leading-relaxed max-w-4xl">
             {t.notice.description}
           </p>
@@ -119,13 +139,8 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   const phi1 = toRad(lat1);
   const phi2 = toRad(lat2);
   const deltaLambda = toRad(lon2 - lon1);
-
-  // Using the user provided formula structure: S=R·arccos[cosβ₁cosβ₂cos(α₁-α₂)+sinβ₁sinβ₂]
-  // In our vars: S = R * acos( sin(phi1)*sin(phi2) + cos(phi1)*cos(phi2)*cos(deltaLambda) )
-  // This is the Spherical Law of Cosines
   
   const cosCentralAngle = Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
-  // Clamp value to -1..1 to handle float errors
   const clampedCos = Math.max(-1, Math.min(1, cosCentralAngle));
   
   return R * Math.acos(clampedCos);
@@ -133,8 +148,22 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 // Calculate score based on distance (km)
 const calculateScore = (distanceInKm: number): number => {
-  // SCORE=5000/(sqrt(1+(S/1000)^2))
   return Math.round(5000 / Math.sqrt(1 + Math.pow(distanceInKm / 1000, 2)));
+};
+
+// Calculate Grade based on challenge history
+const calculateGrade = (history: ChallengeRoundResult[]): { grade: string, color: string } => {
+  const totalScore = history.reduce((acc, curr) => acc + curr.score, 0);
+  const minScore = Math.min(...history.map(r => r.score));
+
+  // Adjusted colors for dark background visibility
+  if (totalScore >= 24000) return { grade: 'φ', color: 'text-amber-300' };
+  if (minScore >= 4000) return { grade: 'Blue V', color: 'text-blue-300' };
+  if (totalScore >= 22000) return { grade: 'V', color: 'text-white' };
+  if (totalScore >= 18000) return { grade: 'A', color: 'text-white' };
+  if (totalScore >= 14000) return { grade: 'B', color: 'text-white' };
+  if (totalScore >= 10000) return { grade: 'C', color: 'text-white' };
+  return { grade: 'F', color: 'text-white' };
 };
 
 const App: React.FC = () => {
@@ -142,6 +171,7 @@ const App: React.FC = () => {
   
   // State
   const [mode, setMode] = useState<AppMode>('single');
+  const [showTutorial, setShowTutorial] = useState(false);
   
   // Single Mode State
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
@@ -163,6 +193,12 @@ const App: React.FC = () => {
   const [gameDistance, setGameDistance] = useState<number>(0);
   const [gameHintRevealed, setGameHintRevealed] = useState<boolean>(false);
   const [gameCountryHintRevealed, setGameCountryHintRevealed] = useState<boolean>(false);
+
+  // Challenge Mode State
+  const [isChallengeMode, setIsChallengeMode] = useState<boolean>(false);
+  const [challengeRound, setChallengeRound] = useState<number>(1);
+  const [challengeHistory, setChallengeHistory] = useState<ChallengeRoundResult[]>([]);
+  const [showChallengeResults, setShowChallengeResults] = useState<boolean>(false);
 
   // Shared State
   const [loading, setLoading] = useState<boolean>(false);
@@ -197,7 +233,6 @@ const App: React.FC = () => {
       const lat = typeof randomCity.lat === 'string' ? parseFloat(randomCity.lat) : randomCity.lat;
       const lon = typeof randomCity.lon === 'string' ? parseFloat(randomCity.lon) : randomCity.lon;
 
-      // Fetch Data for hidden city
       const [climateRes, classRes] = await Promise.all([
           fetchClimateData(lat, lon),
           fetchClassification(lat, lon)
@@ -214,6 +249,38 @@ const App: React.FC = () => {
     }
   };
 
+  // --- Challenge Logic ---
+  const startChallenge = async () => {
+    setIsChallengeMode(true);
+    setChallengeRound(1);
+    setChallengeHistory([]);
+    setShowChallengeResults(false);
+    await startNewGameRound();
+  };
+
+  const handleNextChallengeRound = async () => {
+    if (challengeRound < 5) {
+      setChallengeRound(prev => prev + 1);
+      await startNewGameRound();
+    } else {
+      setShowChallengeResults(true);
+    }
+  };
+
+  const quitChallenge = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.confirm(t.challengeQuitConfirm)) {
+      setIsChallengeMode(false);
+      setChallengeHistory([]);
+      setChallengeRound(1);
+      setShowChallengeResults(false);
+      startNewGameRound(); 
+    }
+  };
+
   const handleGameGuess = () => {
     if (!gameUserGuess || !targetCity) return;
     
@@ -226,25 +293,44 @@ const App: React.FC = () => {
     setGameDistance(dist);
     setGameScore(score);
     setGameStatus('revealed');
+
+    if (isChallengeMode) {
+      setChallengeHistory(prev => [
+        ...prev, 
+        {
+          round: challengeRound,
+          targetCity: targetCity,
+          userGuess: gameUserGuess,
+          distance: dist,
+          score: score
+        }
+      ]);
+    }
+  };
+
+  const attemptModeSwitch = (newMode: AppMode) => {
+    if (isChallengeMode && !showChallengeResults) {
+      if (window.confirm(t.challengeQuitConfirm)) {
+        setIsChallengeMode(false);
+        setMode(newMode);
+      }
+    } else {
+      setMode(newMode);
+    }
   };
 
   useEffect(() => {
-    if (mode === 'game' && !targetCity) {
+    if (mode === 'game' && !targetCity && !isChallengeMode) {
       startNewGameRound();
     }
   }, [mode]);
 
-
-  // --- Single Mode Logic ---
   useEffect(() => {
     const loadData = async () => {
-      if (mode !== 'single' || !selectedLocation) return;
+      if ((mode !== 'single') || !selectedLocation) return;
 
       setLoading(true);
       setError(null);
-      // We don't clear old data immediately to avoid flickering if switching back, 
-      // but here we are loading new data for a new location.
-      // If location changed, we should clear.
       setSingleClimateData(null);
       setSingleClassification(null);
 
@@ -257,9 +343,7 @@ const App: React.FC = () => {
         setSingleClimateData(climateRes);
         setSingleClassification(classRes);
         
-        // If locationName is missing, try to find nearest city
         if (!locationName) {
-           // We don't await this to block UI, but we update state when done
            findNearestCity(selectedLocation.lat, selectedLocation.lng).then(cityStr => {
              if (cityStr) setLocationName(cityStr);
            });
@@ -278,13 +362,11 @@ const App: React.FC = () => {
 
   const handleManualLocationSelect = (location: GeoLocation) => {
     if (mode === 'game') {
-      // In game mode, manual select updates the guess
       setGameUserGuess(location);
     } else {
       setSelectedLocation(location);
-      setSelectedCity(null); // Clear city analysis if manual pick
+      setSelectedCity(null);
       
-      // Set location name if provided (e.g. from search), otherwise clear it
       if (location.name) {
         setLocationName(location.name);
       } else {
@@ -297,38 +379,28 @@ const App: React.FC = () => {
     const location = { lat: city.lat, lng: city.lng };
     setSelectedLocation(location);
     setSelectedCity(city);
-    // Use format "City, Country" to match nearest city API format style
     setLocationName(`${city.name}, ${city.country}`);
-    
-    // Ping API for tracking purposes as requested
     findNearestCity(city.lat, city.lng);
   };
 
-  // --- Comparison Mode Logic ---
   const handleComparisonLocationSelect = async (location: GeoLocation) => {
-    if (comparePoints.length >= 5) {
-      // Optional: Show toast or alert that max is reached
-      return;
-    }
+    if (comparePoints.length >= 5) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      // Parallel fetch for climate data and city name if needed
       const [climateRes, nearestCity] = await Promise.all([
         fetchClimateData(location.lat, location.lng),
         !location.name ? findNearestCity(location.lat, location.lng) : Promise.resolve(null)
       ]);
       
-      // Check for valid data (if ocean, api might return empty data)
       if (!climateRes.data || climateRes.data.length === 0) {
          setError(t.noDataText);
          setLoading(false);
          return;
       }
 
-      // Find the first available color
       const usedColors = new Set(comparePoints.map(p => p.color));
       const nextColor = PALETTE.find(c => !usedColors.has(c)) || PALETTE[0];
       
@@ -360,7 +432,6 @@ const App: React.FC = () => {
     setError(null);
   };
 
-  // --- Handlers ---
   const handleDownloadReport = async () => {
     if (!selectedLocation || !singleClimateData || !singleClassification) return;
     
@@ -395,14 +466,16 @@ const App: React.FC = () => {
     color: p.color
   }));
 
-  // Determine which data to display based on mode
   const activeClimateData = mode === 'game' ? gameClimateData : singleClimateData;
   const activeClassification = mode === 'game' ? gameClassification : singleClassification;
   const hasActiveData = activeClimateData && activeClimateData.data && activeClimateData.data.length > 0;
 
+  const challengeGrade = showChallengeResults ? calculateGrade(challengeHistory) : null;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
+      <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      
       <header className="bg-white border-b border-slate-200 sticky top-0 z-[1001]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -414,10 +487,9 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-             {/* Mode Switcher */}
             <div className="flex bg-slate-100 p-1 rounded-lg">
               <button
-                onClick={() => setMode('single')}
+                onClick={() => attemptModeSwitch('single')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
                   mode === 'single' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -426,7 +498,7 @@ const App: React.FC = () => {
                 <span className="hidden sm:inline">{t.modeSingle}</span>
               </button>
               <button
-                onClick={() => setMode('compare')}
+                onClick={() => attemptModeSwitch('compare')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
                   mode === 'compare' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -435,13 +507,22 @@ const App: React.FC = () => {
                 <span className="hidden sm:inline">{t.modeCompare}</span>
               </button>
               <button
-                onClick={() => setMode('game')}
+                onClick={() => attemptModeSwitch('game')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
                   mode === 'game' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <Gamepad2 className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.modeGame}</span>
+              </button>
+              <button
+                onClick={() => attemptModeSwitch('pvp')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-2 ${
+                  mode === 'pvp' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Swords className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.modePvp}</span>
               </button>
             </div>
 
@@ -458,14 +539,17 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Render PVP Game Component independently if mode is PVP */}
+      {mode === 'pvp' ? (
+        <main className="flex-1 w-full mx-auto">
+          <PvpGame />
+        </main>
+      ) : (
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-auto">
           
-          {/* Left Column: Input & Map */}
           <div className="lg:col-span-5 lg:sticky lg:top-24">
             
-            {/* Context Header for Left Column */}
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-1">
                 {mode === 'game' ? <Gamepad2 className="w-5 h-5 text-indigo-600" /> : <MapIcon className="w-5 h-5 text-indigo-600" />}
@@ -489,7 +573,6 @@ const App: React.FC = () => {
               </>
             )}
 
-            {/* Compare Mode List */}
             {mode === 'compare' && (
               <div className="mb-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
@@ -534,9 +617,45 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Game Mode Controls */}
-            {mode === 'game' && (
+            {mode === 'game' && !showChallengeResults && (
               <div className="mb-6 space-y-4">
+                 {isChallengeMode ? (
+                   <div className="bg-indigo-900 text-white p-4 rounded-xl shadow-md">
+                     <div className="flex justify-between items-center mb-2">
+                       <div className="flex items-center space-x-2">
+                         <Medal className="w-5 h-5 text-amber-400" />
+                         <span className="font-bold">{t.challengeMode}</span>
+                       </div>
+                       <div className="bg-indigo-800 px-3 py-1 rounded-full text-xs font-mono">
+                         {t.challengeRound} {challengeRound}/5
+                       </div>
+                     </div>
+                     <div className="flex items-center justify-between text-indigo-200 text-xs mt-2">
+                        <span>{t.challengeHintsDisabled}</span>
+                        <button 
+                          type="button"
+                          onClick={quitChallenge} 
+                          className="text-red-300 hover:text-red-200 underline px-2 py-1 -mr-2 cursor-pointer z-10"
+                        >
+                          {t.challengeQuitBtn}
+                        </button>
+                     </div>
+                   </div>
+                 ) : (
+                   <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-xl text-white shadow-md flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Flag className="w-5 h-5 text-white" />
+                        <span className="font-bold text-sm">{t.challengeMode}</span>
+                      </div>
+                      <button 
+                        onClick={startChallenge}
+                        className="px-4 py-1.5 bg-white text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors"
+                      >
+                        {t.startChallenge}
+                      </button>
+                   </div>
+                 )}
+
                  {gameStatus === 'playing' && (
                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
                       <div className="flex items-center space-x-3 mb-3">
@@ -557,67 +676,66 @@ const App: React.FC = () => {
                         </div>
                       )}
                       
-                      {/* Hints Section */}
-                      <div className="mt-4 pt-4 border-t border-indigo-200/60">
-                         <div className="flex items-center justify-between mb-3">
-                           <span className="text-sm text-indigo-900 font-semibold flex items-center gap-1.5">
-                             <Lightbulb className="w-4 h-4 text-amber-500" />
-                             {t.gameNeedHint}
-                           </span>
-                         </div>
-                         
-                         <div className="grid grid-cols-2 gap-3">
-                           {/* Climate Code Hint */}
-                           <button 
-                             onClick={() => setGameHintRevealed(true)}
-                             disabled={gameHintRevealed}
-                             className={`flex flex-col items-center justify-center p-3 rounded-xl text-xs font-medium transition-all duration-200 border ${
-                               gameHintRevealed 
-                                 ? 'bg-amber-100/50 border-amber-200 text-amber-800 cursor-default' 
-                                 : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600 hover:shadow-sm'
-                             }`}
-                           >
-                             {gameHintRevealed ? (
-                                <>
-                                  <span className="font-bold text-lg text-amber-600 mb-0.5">
-                                    {gameClassification?.data.find(c => c.type === 'K\u00f6ppen-Geiger')?.code || '?'}
-                                  </span>
-                                  <span className="opacity-70">{t.code}</span>
-                                </>
-                             ) : (
-                                <>
-                                  <span className="text-lg mb-1">🌡️</span>
-                                  <span>{t.gameShowHint}</span>
-                                </>
-                             )}
-                           </button>
+                      {!isChallengeMode && (
+                        <div className="mt-4 pt-4 border-t border-indigo-200/60">
+                           <div className="flex items-center justify-between mb-3">
+                             <span className="text-sm text-indigo-900 font-semibold flex items-center gap-1.5">
+                               <Lightbulb className="w-4 h-4 text-amber-500" />
+                               {t.gameNeedHint}
+                             </span>
+                           </div>
+                           
+                           <div className="grid grid-cols-2 gap-3">
+                             <button 
+                               onClick={() => setGameHintRevealed(true)}
+                               disabled={gameHintRevealed}
+                               className={`flex flex-col items-center justify-center p-3 rounded-xl text-xs font-medium transition-all duration-200 border ${
+                                 gameHintRevealed 
+                                   ? 'bg-amber-100/50 border-amber-200 text-amber-800 cursor-default' 
+                                   : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600 hover:shadow-sm'
+                               }`}
+                             >
+                               {gameHintRevealed ? (
+                                  <>
+                                    <span className="font-bold text-lg text-amber-600 mb-0.5">
+                                      {gameClassification?.data.find(c => c.type === 'K\u00f6ppen-Geiger')?.code || '?'}
+                                    </span>
+                                    <span className="opacity-70">{t.code}</span>
+                                  </>
+                               ) : (
+                                  <>
+                                    <span className="text-lg mb-1">🌡️</span>
+                                    <span>{t.gameShowHint}</span>
+                                  </>
+                               )}
+                             </button>
 
-                           {/* Country Hint */}
-                           <button 
-                             onClick={() => setGameCountryHintRevealed(true)}
-                             disabled={gameCountryHintRevealed}
-                             className={`flex flex-col items-center justify-center p-3 rounded-xl text-xs font-medium transition-all duration-200 border ${
-                               gameCountryHintRevealed 
-                                 ? 'bg-emerald-100/50 border-emerald-200 text-emerald-800 cursor-default' 
-                                 : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600 hover:shadow-sm'
-                             }`}
-                           >
-                             {gameCountryHintRevealed ? (
-                                <>
-                                  <span className="font-bold text-sm text-emerald-700 mb-0.5 line-clamp-2 text-center leading-tight">
-                                    {targetCity?.country}
-                                  </span>
-                                  <span className="opacity-70 mt-0.5">{t.gameCountry}</span>
-                                </>
-                             ) : (
-                                <>
-                                   <Globe className="w-5 h-5 mb-1 text-emerald-500/80" />
-                                   <span>{t.gameShowCountryHint}</span>
-                                </>
-                             )}
-                           </button>
-                         </div>
-                      </div>
+                             <button 
+                               onClick={() => setGameCountryHintRevealed(true)}
+                               disabled={gameCountryHintRevealed}
+                               className={`flex flex-col items-center justify-center p-3 rounded-xl text-xs font-medium transition-all duration-200 border ${
+                                 gameCountryHintRevealed 
+                                   ? 'bg-emerald-100/50 border-emerald-200 text-emerald-800 cursor-default' 
+                                   : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600 hover:shadow-sm'
+                               }`}
+                             >
+                               {gameCountryHintRevealed ? (
+                                  <>
+                                    <span className="font-bold text-sm text-emerald-700 mb-0.5 line-clamp-2 text-center leading-tight">
+                                      {targetCity?.country}
+                                    </span>
+                                    <span className="opacity-70 mt-0.5">{t.gameCountry}</span>
+                                  </>
+                               ) : (
+                                  <>
+                                     <Globe className="w-5 h-5 mb-1 text-emerald-500/80" />
+                                     <span>{t.gameShowCountryHint}</span>
+                                  </>
+                               )}
+                             </button>
+                           </div>
+                        </div>
+                      )}
                    </div>
                  )}
 
@@ -627,7 +745,7 @@ const App: React.FC = () => {
                         <div className="flex justify-between items-center mb-1">
                           <h3 className="font-bold flex items-center">
                             <Trophy className="w-5 h-5 mr-2" />
-                            {t.gameResult}
+                            {isChallengeMode ? `${t.challengeRound} ${challengeRound}` : t.gameResult}
                           </h3>
                           <div className="text-2xl font-bold">{gameScore}</div>
                         </div>
@@ -647,7 +765,7 @@ const App: React.FC = () => {
                           </div>
                        </div>
                        <button 
-                         onClick={startNewGameRound}
+                         onClick={isChallengeMode ? handleNextChallengeRound : startNewGameRound}
                          className="w-full flex justify-center items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-lg transition-colors"
                        >
                          <span>{t.gameNextRound}</span>
@@ -657,6 +775,65 @@ const App: React.FC = () => {
                    </div>
                  )}
               </div>
+            )}
+
+            {mode === 'game' && showChallengeResults && challengeGrade && (
+               <div className="mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg animate-in zoom-in-95 duration-300">
+                  <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-8 text-white text-center">
+                     <div className="flex justify-center mb-4">
+                        <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/10 shadow-inner">
+                           <Award className="w-10 h-10 text-amber-300" />
+                        </div>
+                     </div>
+                     
+                     <h2 className="text-xl font-bold mb-6 text-indigo-100">{t.challengeComplete}</h2>
+                     
+                     <div className="mb-6">
+                         <div className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-2">{t.challengeGrade}</div>
+                         <div className={`text-8xl font-black ${challengeGrade.color} tracking-tight drop-shadow-2xl`} style={{ textShadow: '0 0 20px rgba(255,255,255,0.1)' }}>
+                            {(t[challengeGrade.grade === 'φ' ? 'gradePhi' : `grade${challengeGrade.grade.replace(' ', '')}` as keyof typeof t] as string) || challengeGrade.grade}
+                         </div>
+                     </div>
+
+                     <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 shadow-lg">
+                        <Trophy className="w-4 h-4 text-yellow-400" />
+                        <span className="font-mono font-bold text-lg">{challengeHistory.reduce((a,b) => a + b.score, 0)}</span>
+                        <span className="text-xs text-indigo-200 uppercase tracking-wider ml-1">{t.gameScore}</span>
+                     </div>
+                  </div>
+                  
+                  <div className="max-h-60 overflow-y-auto bg-slate-50 border-t border-slate-200">
+                    {challengeHistory.map((res, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
+                         <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-700">
+                              {idx + 1}
+                            </div>
+                            <div className="text-left">
+                               <div className="font-bold text-sm text-slate-800">{res.targetCity.city}</div>
+                               <div className="text-xs text-slate-500 font-medium">{res.targetCity.country}</div>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <div className="font-bold text-emerald-600 font-mono text-lg">{res.score}</div>
+                            <div className="text-xs text-slate-400 font-medium">{res.distance.toFixed(0)} km</div>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-4 bg-white border-t border-slate-200">
+                     <button 
+                       onClick={() => {
+                         setIsChallengeMode(false);
+                         setShowChallengeResults(false);
+                         startNewGameRound();
+                       }}
+                       className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all transform active:scale-[0.98]"
+                     >
+                       {t.challengePlayAgain}
+                     </button>
+                  </div>
+               </div>
             )}
 
             <MapPicker 
@@ -671,10 +848,7 @@ const App: React.FC = () => {
             />
           </div>
 
-          {/* Right Column: Data */}
           <div className="lg:col-span-7">
-            
-            {/* Loading State */}
             {loading && (
               <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-2xl border border-slate-100 mb-6">
                 <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
@@ -682,7 +856,6 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Error State */}
             {error && !loading && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4 mb-6">
                 <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
@@ -693,7 +866,6 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* ---------------- SINGLE MODE VIEW & GAME MODE VIEW ---------------- */}
             {(mode === 'single' || mode === 'game') && (
               <>
                 {mode === 'single' && !selectedLocation && (
@@ -708,9 +880,8 @@ const App: React.FC = () => {
                   </div>
                 )}
                 
-                {mode === 'game' && !targetCity && !loading && !error && (
+                {mode === 'game' && !targetCity && !loading && !error && !showChallengeResults && (
                    <div className="min-h-[500px] h-full flex items-center justify-center">
-                      {/* Should normally start automatically, but fallback UI */}
                       <button onClick={startNewGameRound} className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition-colors">
                         Start Game
                       </button>
@@ -719,8 +890,6 @@ const App: React.FC = () => {
 
                 {((mode === 'single' && selectedLocation) || (mode === 'game' && targetCity)) && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    
-                    {/* No Data State (Ocean) */}
                     {!loading && !error && !hasActiveData && activeClimateData && (
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 flex flex-col items-center text-center">
                         <Waves className="w-12 h-12 text-blue-500 mb-4" />
@@ -731,7 +900,6 @@ const App: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Data Display */}
                     {!loading && !error && hasActiveData && activeClimateData && activeClassification && (
                       <>
                         {mode === 'single' && (
@@ -751,10 +919,8 @@ const App: React.FC = () => {
                           </div>
                         )}
                         
-                        {/* Display City Analysis Card if a city is selected via Explore Menu (Single Mode only) */}
                         {mode === 'single' && selectedCity && <CityAnalysisCard city={selectedCity} />}
 
-                        {/* In Game Mode: Pass masked=true if status is playing */}
                         {mode === 'game' && targetCity ? (
                            <ClassificationCard 
                              classificationData={activeClassification.data} 
@@ -762,7 +928,7 @@ const App: React.FC = () => {
                              lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
                              locationName={`${targetCity.city}, ${targetCity.country}`}
                              masked={gameStatus === 'playing'}
-                             hintRevealed={gameHintRevealed}
+                             hintRevealed={gameHintRevealed} 
                            />
                         ) : (
                            selectedLocation && (
@@ -791,7 +957,6 @@ const App: React.FC = () => {
               </>
             )}
 
-            {/* ---------------- COMPARE MODE VIEW ---------------- */}
             {mode === 'compare' && (
               <>
                  {comparePoints.length === 0 && !loading && (
@@ -831,13 +996,11 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        {/* Footer Notice */}
-        <NoticeFooter />
-        
-        {/* About Footer */}
+        <NoticeFooter onOpenTutorial={() => setShowTutorial(true)} isChallengeMode={isChallengeMode} />
         <AboutFooter />
 
       </main>
+      )}
     </div>
   );
 };

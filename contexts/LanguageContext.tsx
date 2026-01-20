@@ -56,7 +56,8 @@ export interface Translations {
   // Comparison Mode
   modeSingle: string;
   modeCompare: string;
-  modeGame: string; // New
+  modeGame: string;
+  modePvp: string; // New
   compareTitle: string;
   compareIntro: string;
   addPoint: string;
@@ -81,14 +82,59 @@ export interface Translations {
   mysteryLocation: string;
   gameNeedHint: string;
   gameShowHint: string;
-  gameShowCountryHint: string; // New
-  gameCountry: string; // New
+  gameShowCountryHint: string;
+  gameCountry: string;
+  // Challenge Mode
+  challengeMode: string;
+  startChallenge: string;
+  challengeRound: string;
+  challengeTotal: string;
+  challengeGrade: string;
+  challengeComplete: string;
+  challengeQuitConfirm: string;
+  challengeQuitBtn: string;
+  challengePlayAgain: string;
+  challengeHintsDisabled: string;
+  gradePhi: string;
+  gradeBlueV: string;
+  gradeV: string;
+  gradeA: string;
+  gradeB: string;
+  gradeC: string;
+  gradeF: string;
   // Explore Mode
   exploreCities: string;
   climateExplorer: string;
   exploreInstruction: string;
   exploreDataCredit: string;
   climateDynamicsAnalysis: string;
+  // Tutorial
+  openTutorial: string;
+  tutorialTitle: string;
+  closeTutorial: string;
+  // PVP Mode (New)
+  pvpLoginTitle: string;
+  pvpUsername: string;
+  pvpPassword: string;
+  pvpLoginBtn: string;
+  pvpCreateRoom: string;
+  pvpJoinRoom: string;
+  pvpRoomIdPlaceholder: string;
+  pvpWaitingForPlayers: string;
+  pvpStartGame: string;
+  pvpPlayers: string;
+  pvpRoomId: string;
+  pvpRound: string;
+  pvpTimeLeft: string;
+  pvpAnswerSubmitted: string;
+  pvpWaitingOthers: string;
+  pvpRoundResults: string;
+  pvpGameOver: string;
+  pvpFinalRank: string;
+  pvpRatingChange: string;
+  pvpBackToLobby: string;
+  pvpHP: string;
+  pvpScore: string;
   // Specific Descriptions
   climateDescriptions: Record<string, string>;
   // Footer Notice
@@ -176,6 +222,7 @@ export const translations: Record<Language, Translations> = {
     modeSingle: "Single Location",
     modeCompare: "Compare Locations",
     modeGame: "Game",
+    modePvp: "PVP Battle",
     compareTitle: "Climate Comparison",
     compareIntro: "Select up to 5 points on the map to compare their climate data side-by-side.",
     addPoint: "Click map to add point",
@@ -201,11 +248,53 @@ export const translations: Record<Language, Translations> = {
     gameShowHint: "Show Climate Code",
     gameShowCountryHint: "Show Country",
     gameCountry: "Country",
+    challengeMode: "Challenge Mode",
+    startChallenge: "Start 5-Round Challenge",
+    challengeRound: "Round",
+    challengeTotal: "Total Score",
+    challengeGrade: "Final Grade",
+    challengeComplete: "Challenge Complete!",
+    challengeQuitConfirm: "Are you sure you want to quit the challenge? Your progress will be lost.",
+    challengeQuitBtn: "Quit Challenge",
+    challengePlayAgain: "Play Again",
+    challengeHintsDisabled: "Hints are banned in Challenge Mode",
+    gradePhi: "Golden Phi (φ)",
+    gradeBlueV: "Blue V",
+    gradeV: "V",
+    gradeA: "A",
+    gradeB: "B",
+    gradeC: "C",
+    gradeF: "F",
     exploreCities: "Explore Cities",
     climateExplorer: "Climate Explorer",
     exploreInstruction: "Select a climate classification code to view classic city examples and their deep climate analysis.",
     exploreDataCredit: "Data provided by Detailed Analysis Report of Global Classic Urban Geo-Climatology",
     climateDynamicsAnalysis: "Climate Dynamics Depth Analysis",
+    openTutorial: "Tutorial",
+    tutorialTitle: "App Tutorial",
+    closeTutorial: "Close",
+    pvpLoginTitle: "Login to PVP",
+    pvpUsername: "Username",
+    pvpPassword: "Password",
+    pvpLoginBtn: "Login",
+    pvpCreateRoom: "Create Room",
+    pvpJoinRoom: "Join Room",
+    pvpRoomIdPlaceholder: "Enter 5-digit Room ID",
+    pvpWaitingForPlayers: "Waiting for players...",
+    pvpStartGame: "Start Game",
+    pvpPlayers: "Players",
+    pvpRoomId: "Room ID",
+    pvpRound: "Round",
+    pvpTimeLeft: "Time Left",
+    pvpAnswerSubmitted: "Answer Submitted! Waiting for others...",
+    pvpWaitingOthers: "Waiting for other players to answer...",
+    pvpRoundResults: "Round Results",
+    pvpGameOver: "Game Over",
+    pvpFinalRank: "Final Ranking",
+    pvpRatingChange: "Rating Change",
+    pvpBackToLobby: "Back to Lobby",
+    pvpHP: "HP",
+    pvpScore: "Score",
     climateDescriptions: {}, // Empty for English
     notice: {
       title: "About Climate Classification",
@@ -287,7 +376,8 @@ export const translations: Record<Language, Translations> = {
     noResults: "未找到城市",
     modeSingle: "单点模式",
     modeCompare: "对比模式",
-    modeGame: "气候寻宝", // Game
+    modeGame: "气候寻宝",
+    modePvp: "PVP对战",
     compareTitle: "气候对比",
     compareIntro: "在地图上选择最多 5 个点以并排比较它们的气候数据。",
     addPoint: "点击地图添加地点",
@@ -311,13 +401,55 @@ export const translations: Record<Language, Translations> = {
     mysteryLocation: "神秘地点",
     gameNeedHint: "需要提示吗？",
     gameShowHint: "显示气候代码",
-    gameShowCountryHint: "显示国家", // New
-    gameCountry: "国家", // New
+    gameShowCountryHint: "显示国家",
+    gameCountry: "国家",
+    challengeMode: "挑战模式",
+    startChallenge: "开始 5 轮挑战",
+    challengeRound: "轮次",
+    challengeTotal: "总分",
+    challengeGrade: "最终评级",
+    challengeComplete: "挑战完成！",
+    challengeQuitConfirm: "确定要退出挑战吗？当前进度将丢失。",
+    challengeQuitBtn: "退出挑战",
+    challengePlayAgain: "再次挑战",
+    challengeHintsDisabled: "挑战模式下禁止使用提示",
+    gradePhi: "金 Phi (φ)",
+    gradeBlueV: "蓝 V",
+    gradeV: "V",
+    gradeA: "A",
+    gradeB: "B",
+    gradeC: "C",
+    gradeF: "F",
     exploreCities: "探索城市",
     climateExplorer: "气候探索",
     exploreInstruction: "选择一个气候分类代码以查看经典城市案例及其深度气候分析。",
     exploreDataCredit: "数据来源：《全球经典城市地理气候详细分析报告》",
     climateDynamicsAnalysis: "气候动力学深度分析",
+    openTutorial: "使用教程",
+    tutorialTitle: "应用教程",
+    closeTutorial: "关闭",
+    pvpLoginTitle: "登录 PVP",
+    pvpUsername: "用户名",
+    pvpPassword: "密码",
+    pvpLoginBtn: "登录",
+    pvpCreateRoom: "创建房间",
+    pvpJoinRoom: "加入房间",
+    pvpRoomIdPlaceholder: "输入5位房间号",
+    pvpWaitingForPlayers: "等待玩家加入...",
+    pvpStartGame: "开始游戏",
+    pvpPlayers: "玩家列表",
+    pvpRoomId: "房间号",
+    pvpRound: "回合",
+    pvpTimeLeft: "剩余时间",
+    pvpAnswerSubmitted: "答案已提交！等待其他玩家...",
+    pvpWaitingOthers: "正在等待其他玩家作答...",
+    pvpRoundResults: "本轮结果",
+    pvpGameOver: "游戏结束",
+    pvpFinalRank: "最终排名",
+    pvpRatingChange: "积分变动",
+    pvpBackToLobby: "返回大厅",
+    pvpHP: "生命值",
+    pvpScore: "分数",
     climateDescriptions: {
       "Af": "分布于赤道两侧，以及海洋信风的迎风坡",
       "Am": "在柯本气候分类法中位于热带雨林两侧，属于过渡型，与课内定义不同。",

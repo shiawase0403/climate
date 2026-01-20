@@ -8,6 +8,7 @@ export interface MapPoint {
   id: string;
   location: GeoLocation;
   color: string;
+  name?: string;
 }
 
 interface MapPickerProps {
@@ -51,6 +52,10 @@ const defaultIcon = L.icon({
 const greenIcon = createColoredIcon('#10b981');
 // Red icon for Game User Guess
 const redIcon = createColoredIcon('#ef4444');
+
+const isValidCoordinate = (lat: any, lng: any) => {
+  return typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
+};
 
 const MapController: React.FC<{ onSelect: (loc: GeoLocation) => void }> = ({ onSelect }) => {
   useMapEvents({
@@ -107,9 +112,8 @@ const MapFlyTo: React.FC<{ location: GeoLocation | null; mode: string }> = ({ lo
   const map = useMap();
   useEffect(() => {
     // Don't auto-fly in game mode to avoid giving hints, unless it's the very first load or explicit action
-    // Actually, in single mode we want to fly. In game mode, we probably don't want to fly to the target (cheating).
     // We only fly to user selection in single mode.
-    if (location && mode === 'single') {
+    if (location && mode === 'single' && isValidCoordinate(location.lat, location.lng)) {
       map.flyTo([location.lat, location.lng], 6, { duration: 1.5 });
     }
   }, [location, map, mode]);
@@ -120,7 +124,7 @@ const MapFlyTo: React.FC<{ location: GeoLocation | null; mode: string }> = ({ lo
 const GameResultFitter: React.FC<{ guess: GeoLocation | null; target: GeoLocation | null }> = ({ guess, target }) => {
   const map = useMap();
   useEffect(() => {
-    if (guess && target) {
+    if (guess && target && isValidCoordinate(guess.lat, guess.lng) && isValidCoordinate(target.lat, target.lng)) {
       const bounds = L.latLngBounds([
         [guess.lat, guess.lng],
         [target.lat, target.lng]
@@ -188,47 +192,52 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
         <MapInvalidator />
         
         {/* Single Mode Marker */}
-        {mode === 'single' && selectedLocation && (
+        {mode === 'single' && selectedLocation && isValidCoordinate(selectedLocation.lat, selectedLocation.lng) && (
           <>
             <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={defaultIcon} />
             <MapFlyTo location={selectedLocation} mode={mode} />
           </>
         )}
 
-        {/* Compare Mode Markers */}
-        {mode === 'compare' && comparisonPoints && comparisonPoints.map((point) => (
-           <Marker 
-             key={point.id} 
-             position={[point.location.lat, point.location.lng]} 
-             icon={createColoredIcon(point.color)}
-           >
-              <Popup closeButton={false} offset={[0, -28]}>
-                <div className="font-semibold text-xs">
-                  {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
-                </div>
-              </Popup>
-           </Marker>
+        {/* Compare Mode OR Game Mode with other players: Render Comparison Points */}
+        {(mode === 'compare' || mode === 'game') && comparisonPoints && comparisonPoints.map((point) => (
+           isValidCoordinate(point.location.lat, point.location.lng) && (
+             <Marker 
+               key={point.id} 
+               position={[point.location.lat, point.location.lng]} 
+               icon={createColoredIcon(point.color)}
+             >
+                <Popup closeButton={false} offset={[0, -28]}>
+                  <div className="text-xs">
+                    {point.name && <div className="font-bold mb-1">{point.name}</div>}
+                    <div className="font-mono text-slate-500">
+                      {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
+                    </div>
+                  </div>
+                </Popup>
+             </Marker>
+           )
         ))}
 
-        {/* Game Mode Markers */}
+        {/* Game Mode Specific Markers (User + Target) */}
         {mode === 'game' && (
           <>
             {/* User Guess */}
-            {selectedLocation && (
+            {selectedLocation && isValidCoordinate(selectedLocation.lat, selectedLocation.lng) && (
               <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={gameTargetLocation ? redIcon : defaultIcon}>
                  {gameTargetLocation && <Popup offset={[0, -28]}>Your Guess</Popup>}
               </Marker>
             )}
             
             {/* Actual Target (Revealed) */}
-            {gameTargetLocation && (
+            {gameTargetLocation && isValidCoordinate(gameTargetLocation.lat, gameTargetLocation.lng) && (
               <>
                 <Marker position={[gameTargetLocation.lat, gameTargetLocation.lng]} icon={greenIcon}>
                   <Popup offset={[0, -28]} autoClose={false} closeOnClick={false}>Actual Location</Popup>
                 </Marker>
                 
                 {/* Line connecting them */}
-                {selectedLocation && (
+                {selectedLocation && isValidCoordinate(selectedLocation.lat, selectedLocation.lng) && (
                   <Polyline 
                     positions={[
                       [selectedLocation.lat, selectedLocation.lng],

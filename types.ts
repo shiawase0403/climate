@@ -84,3 +84,56 @@ export interface RandomCityResponse {
 }
 
 export type GameStatus = 'playing' | 'revealed';
+
+export interface ChallengeRoundResult {
+  round: number;
+  targetCity: RandomCityResponse;
+  userGuess: GeoLocation;
+  distance: number;
+  score: number;
+}
+
+// PVP Mode Types
+export interface PvpPlayer {
+  id: string;
+  name: string;
+  score: number;
+  hp?: number; // For 1v1 mode
+  isOwner?: boolean;
+  hasAnswered?: boolean;
+}
+
+export interface PvpRoomInfo {
+  roomId: string;
+  players: PvpPlayer[];
+  status: 'waiting' | 'playing' | 'finished';
+  mode: '1v1' | 'multi'; // Inferred from player count/logic
+}
+
+export interface PvpRoundResult {
+  answer: {
+    city: string;
+    country: string;
+    lat: number;
+    lon: number;
+    climate?: ClassificationResponse;
+  };
+  players: {
+    id: string;
+    name: string;
+    lat: number; // User guess
+    lon: number; // User guess
+    score: number; // Round score
+    totalScore: number;
+    distance: number;
+    delta?: number; // Score change
+  }[];
+}
+
+export interface PvpGameResult {
+  rank: number;
+  name: string;
+  score: number;
+  delta: number; // Final rating change
+  newScore: number; // Final rating
+}
