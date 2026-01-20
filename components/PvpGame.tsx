@@ -167,6 +167,7 @@ export const PvpGame: React.FC = () => {
       setGameState('countdown');
       setStartCountdown(data.count);
       setCountdownMessage(''); // Clear specific message if strictly using old event
+      setTimeLeft(0); // Reset game timer
     });
 
     // Game Flow - Specific Start Countdown with message
@@ -177,6 +178,7 @@ export const PvpGame: React.FC = () => {
       setCountdownMessage(data.message || '');
       // Clear any previous status info (e.g. loading)
       setStatusInfo(null);
+      setTimeLeft(0); // Reset game timer
     });
 
     socket.on('newQuestion', (raw: any) => {
@@ -201,6 +203,7 @@ export const PvpGame: React.FC = () => {
     socket.on('roundResult', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
       setGameState('round_result');
+      setTimeLeft(0); // Reset timer
       
       const normalizedPlayers = (data.players || []).map((p: any) => ({
         ...p,
@@ -262,7 +265,8 @@ export const PvpGame: React.FC = () => {
 
   // Auto-submit effect when time is running out
   useEffect(() => {
-    if (gameState === 'playing' && !hasSubmitted && timeLeft > 0 && timeLeft <= 1) {
+    // Allow auto-submit if in playing OR countdown state (in case server switches to countdown for last few seconds)
+    if ((gameState === 'playing' || gameState === 'countdown') && !hasSubmitted && timeLeft > 0 && timeLeft <= 1) {
       console.log("Auto-submitting due to timeout");
       let lat = userGuess?.lat;
       let lon = userGuess?.lng;
@@ -729,7 +733,7 @@ export const PvpGame: React.FC = () => {
     let mapPoints: MapPoint[] = [];
     let targetLoc: GeoLocation | null = null;
 
-    if (gameState === 'round_result' && roundResult) {
+    if ((gameState === 'round_result' || gameState === 'countdown') && roundResult) {
       if (roundResult.answer && (roundResult.answer.lat || roundResult.answer.lat === 0) && (roundResult.answer.lon || roundResult.answer.lon === 0)) {
          targetLoc = { lat: Number(roundResult.answer.lat), lng: Number(roundResult.answer.lon) };
       }
@@ -785,7 +789,7 @@ export const PvpGame: React.FC = () => {
              />
              
              {/* Countdown Overlay (Transparent & Non-Blocking) */}
-             {gameState === 'countdown' && (
+             {gameState === 'countdown' && !roundResult && (
                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[500] pointer-events-none flex flex-col items-center">
                  {countdownMessage && (
                     <div className="px-4 py-2 bg-slate-900/80 backdrop-blur-sm rounded-lg text-white font-bold mb-2 animate-in fade-in slide-in-from-top-2 shadow-lg">
@@ -799,7 +803,7 @@ export const PvpGame: React.FC = () => {
              )}
 
              {/* Action Button */}
-             {gameState === 'playing' && (
+             {(gameState === 'playing' || gameState === 'countdown') && (
                <div className="absolute bottom-6 left-6 right-6 z-[400]">
                  {hasSubmitted ? (
                     <div className="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center animate-in slide-in-from-bottom-2">
@@ -835,53 +839,64 @@ export const PvpGame: React.FC = () => {
 
         {/* Right: Data & Results */}
         <div className="lg:col-span-7 flex flex-col">
-           {gameState === 'round_result' && roundResult ? (
+           {(gameState === 'round_result' || (gameState === 'countdown' && roundResult)) ? (
              <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden h-full animate-in fade-in">
-               <div className="bg-slate-900 text-white p-6">
-                 <h3 className="text-xl font-bold mb-1">{roundResult.answer.city}, {roundResult.answer.country}</h3>
-                 <p className="text-slate-400 text-sm font-mono">
-                   {roundResult.answer.lat ? Number(roundResult.answer.lat).toFixed(2) : '0.00'}, {roundResult.answer.lon ? Number(roundResult.answer.lon).toFixed(2) : '0.00'}
-                 </p>
-               </div>
-               <div className="p-0 overflow-y-auto max-h-[600px]">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
-                      <tr>
-                        <th className="p-4 font-medium">Rank</th>
-                        <th className="p-4 font-medium">Player</th>
-                        <th className="p-4 font-medium text-right">Distance</th>
-                        <th className="p-4 font-medium text-right">Score (+Delta)</th>
-                        <th className="p-4 font-medium text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {roundResult.players.sort((a,b) => b.score - a.score).map((p, idx) => (
-                        <tr key={idx} className={p.id === currentUser?.id ? 'bg-indigo-50/50' : ''}>
-                          <td className="p-4">
-                             {idx === 0 ? <Trophy className="w-4 h-4 text-yellow-500" /> : <span className="text-slate-400 font-mono ml-1">#{idx+1}</span>}
-                          </td>
-                          <td className="p-4 font-bold" style={{ color: PLAYER_COLORS[players.findIndex(pl => pl.id === p.id) % PLAYER_COLORS.length] }}>
-                            {p.name || 'Unknown'}
-                          </td>
-                          <td className="p-4 text-right font-mono text-slate-600">
-                            {p.distance !== undefined ? Math.round(p.distance) + ' km' : '-'}
-                          </td>
-                          <td className="p-4 text-right">
-                             <span className="font-bold text-emerald-600">+{p.score}</span>
-                             {p.delta !== undefined && p.delta < 0 && <span className="text-xs text-red-500 ml-1">({p.delta})</span>}
-                          </td>
-                          <td className="p-4 text-right font-bold text-indigo-900">
-                            {p.totalScore}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  
-                  <div className="p-6 text-center border-t border-slate-100 bg-slate-50 mt-auto">
-                     <p className="text-slate-500 animate-pulse text-sm font-medium">Next round starting soon...</p>
-                  </div>
-               </div>
+               {roundResult && (
+                 <>
+                   <div className="bg-slate-900 text-white p-6">
+                     <h3 className="text-xl font-bold mb-1">{roundResult.answer.city}, {roundResult.answer.country}</h3>
+                     <p className="text-slate-400 text-sm font-mono">
+                       {roundResult.answer.lat ? Number(roundResult.answer.lat).toFixed(2) : '0.00'}, {roundResult.answer.lon ? Number(roundResult.answer.lon).toFixed(2) : '0.00'}
+                     </p>
+                   </div>
+                   <div className="p-0 overflow-y-auto max-h-[600px]">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                          <tr>
+                            <th className="p-4 font-medium">Rank</th>
+                            <th className="p-4 font-medium">Player</th>
+                            <th className="p-4 font-medium text-right">Distance</th>
+                            <th className="p-4 font-medium text-right">Score (+Delta)</th>
+                            <th className="p-4 font-medium text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {roundResult.players.sort((a,b) => b.score - a.score).map((p, idx) => (
+                            <tr key={idx} className={p.id === currentUser?.id ? 'bg-indigo-50/50' : ''}>
+                              <td className="p-4">
+                                 {idx === 0 ? <Trophy className="w-4 h-4 text-yellow-500" /> : <span className="text-slate-400 font-mono ml-1">#{idx+1}</span>}
+                              </td>
+                              <td className="p-4 font-bold" style={{ color: PLAYER_COLORS[players.findIndex(pl => pl.id === p.id) % PLAYER_COLORS.length] }}>
+                                {p.name || 'Unknown'}
+                              </td>
+                              <td className="p-4 text-right font-mono text-slate-600">
+                                {p.distance !== undefined ? Math.round(p.distance) + ' km' : '-'}
+                              </td>
+                              <td className="p-4 text-right">
+                                 <span className="font-bold text-emerald-600">+{p.score}</span>
+                                 {p.delta !== undefined && p.delta < 0 && <span className="text-xs text-red-500 ml-1">({p.delta})</span>}
+                              </td>
+                              <td className="p-4 text-right font-bold text-indigo-900">
+                                {p.totalScore}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      
+                      <div className="p-6 text-center border-t border-slate-100 bg-slate-50 mt-auto">
+                         {gameState === 'countdown' && startCountdown > 0 ? (
+                            <div className="flex flex-col items-center animate-pulse">
+                               <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Next round in</p>
+                               <p className="text-3xl font-black text-indigo-600 font-mono">{startCountdown}</p>
+                            </div>
+                         ) : (
+                            <p className="text-slate-500 animate-pulse text-sm font-medium">Next round starting soon...</p>
+                         )}
+                      </div>
+                   </div>
+                 </>
+               )}
              </div>
            ) : (
              <div className="space-y-6 overflow-y-auto pr-1 custom-scrollbar">
