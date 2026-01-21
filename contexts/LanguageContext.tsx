@@ -108,6 +108,11 @@ export interface Translations {
   exploreInstruction: string;
   exploreDataCredit: string;
   climateDynamicsAnalysis: string;
+  // Vegetation Card
+  vegetationAnalysis: string;
+  vegetationType: string;
+  typicalVegetation: string;
+  keySpecies: string;
   // Tutorial
   openTutorial: string;
   tutorialTitle: string;
@@ -270,6 +275,10 @@ export const translations: Record<Language, Translations> = {
     exploreInstruction: "Select a climate classification code to view classic city examples and their deep climate analysis.",
     exploreDataCredit: "Data provided by Detailed Analysis Report of Global Classic Urban Geo-Climatology",
     climateDynamicsAnalysis: "Climate Dynamics Depth Analysis",
+    vegetationAnalysis: "Vegetation & Ecosystem Analysis",
+    vegetationType: "Vegetation Type",
+    typicalVegetation: "Ecological Characteristics",
+    keySpecies: "Key Species",
     openTutorial: "Tutorial",
     tutorialTitle: "App Tutorial",
     closeTutorial: "Close",
@@ -425,6 +434,10 @@ export const translations: Record<Language, Translations> = {
     exploreInstruction: "选择一个气候分类代码以查看经典城市案例及其深度气候分析。",
     exploreDataCredit: "数据来源：《全球经典城市地理气候详细分析报告》",
     climateDynamicsAnalysis: "气候动力学深度分析",
+    vegetationAnalysis: "植被与生态系统分析",
+    vegetationType: "植被类型",
+    typicalVegetation: "典型植被与生态特征",
+    keySpecies: "关键物种",
     openTutorial: "使用教程",
     tutorialTitle: "应用教程",
     closeTutorial: "关闭",

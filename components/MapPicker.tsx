@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
+import { Shovel } from 'lucide-react';
 import { GeoLocation } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -17,6 +18,9 @@ interface MapPickerProps {
   comparisonPoints?: MapPoint[];        // For compare mode
   gameTargetLocation?: GeoLocation | null; // For game revealed state
   onLocationSelect: (location: GeoLocation) => void;
+  onAntipodeTrigger?: () => void;
+  isMarsMode?: boolean;
+  isRetroMode?: boolean;
 }
 
 // Helper to create a colored DivIcon marker
@@ -135,53 +139,113 @@ const GameResultFitter: React.FC<{ guess: GeoLocation | null; target: GeoLocatio
   return null;
 };
 
-export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect }) => {
+export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect, onAntipodeTrigger, isMarsMode, isRetroMode }) => {
   const { t } = useLanguage();
+  const [isDigging, setIsDigging] = useState(false);
+
+  const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
+    if (e.originalEvent.shiftKey && selectedLocation) {
+      // Prevent default map zoom behavior
+      L.DomEvent.stopPropagation(e.originalEvent);
+      
+      setIsDigging(true);
+      
+      // Calculate Antipode
+      const lat = selectedLocation.lat;
+      const lng = selectedLocation.lng;
+      
+      const antiLat = -lat;
+      let antiLng = lng + 180;
+      if (antiLng > 180) antiLng -= 360;
+      
+      // Delay for animation
+      setTimeout(() => {
+        setIsDigging(false);
+        onLocationSelect({ lat: antiLat, lng: antiLng });
+        if (onAntipodeTrigger) onAntipodeTrigger();
+      }, 1500); // 1.5s digging animation
+    }
+  };
+
+  // Construct border/shadow classes based on mode
+  let containerClasses = "h-[400px] w-full rounded-xl overflow-hidden shadow-lg border relative z-0";
+  if (isRetroMode) {
+    containerClasses += " border-4 border-black shadow-none grayscale-[0.2]";
+  } else if (isMarsMode) {
+    containerClasses += " border-orange-500 shadow-orange-200";
+  } else {
+    containerClasses += " border-slate-200";
+  }
+
+  // Retro map filter
+  const mapStyle = isRetroMode ? { 
+    height: '100%', 
+    width: '100%',
+    filter: 'contrast(1.3) saturate(1.4) sepia(0.3) hue-rotate(-10deg)',
+    imageRendering: 'pixelated' as const
+  } : { 
+    height: '100%', 
+    width: '100%' 
+  };
 
   return (
-    <div className="h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 relative z-0">
+    <div className={containerClasses}>
       <MapContainer
         center={[20, 0]}
         zoom={2}
         minZoom={2}
-        style={{ height: '100%', width: '100%' }}
+        style={mapStyle}
         scrollWheelZoom={true}
         // Removed maxBounds to allow infinite horizontal scrolling
         // Added worldCopyJump to keep markers in view when panning across worlds
         worldCopyJump={true}
         attributionControl={false}
+        doubleClickZoom={!isDigging} // Temporarily disable default dblclick zoom
       >
         <AttributionControl position="bottomright" prefix={false} />
         
         <LayersControl position="topright">
-          <LayersControl.BaseLayer name={t.mapLayers.osm}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              noWrap={false}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name={t.mapLayers.gaode}>
-            <TileLayer
-              attribution='&copy; AutoNavi'
-              url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
-              subdomains={["1", "2", "3", "4"]}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer checked name={t.mapLayers.gaodeEn}>
-            <TileLayer
-              attribution='&copy; AutoNavi'
-              url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=en&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
-              subdomains={["1", "2", "3", "4"]}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name={t.mapLayers.gaodeSat}>
-             <TileLayer
-              attribution='&copy; AutoNavi'
-              url="https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
-              subdomains={["1", "2", "3", "4"]}
-            />
-          </LayersControl.BaseLayer>
+          {isMarsMode ? (
+            <LayersControl.BaseLayer checked name="Mars Surface">
+              <TileLayer
+                attribution='&copy; <a href="https://github.com/openplanetary/opm">OpenPlanetary</a>'
+                url="https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-mars-basemap-v0-1/all/{z}/{x}/{y}.png"
+                maxZoom={18}
+              />
+            </LayersControl.BaseLayer>
+          ) : (
+            <>
+              <LayersControl.BaseLayer checked={!isRetroMode} name={t.mapLayers.osm}>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  noWrap={false}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name={t.mapLayers.gaode}>
+                <TileLayer
+                  attribution='&copy; AutoNavi'
+                  url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+                  subdomains={["1", "2", "3", "4"]}
+                />
+              </LayersControl.BaseLayer>
+              {/* For Retro Mode, maybe prefer a cleaner map like Gaode En or just stay with OSM */}
+              <LayersControl.BaseLayer checked={!!isRetroMode && !isMarsMode} name={t.mapLayers.gaodeEn}>
+                <TileLayer
+                  attribution='&copy; AutoNavi'
+                  url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=en&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+                  subdomains={["1", "2", "3", "4"]}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name={t.mapLayers.gaodeSat}>
+                  <TileLayer
+                  attribution='&copy; AutoNavi'
+                  url="https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
+                  subdomains={["1", "2", "3", "4"]}
+                />
+              </LayersControl.BaseLayer>
+            </>
+          )}
         </LayersControl>
 
         <ScaleControl position="bottomleft" />
@@ -194,7 +258,13 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
         {/* Single Mode Marker */}
         {mode === 'single' && selectedLocation && isValidCoordinate(selectedLocation.lat, selectedLocation.lng) && (
           <>
-            <Marker position={[selectedLocation.lat, selectedLocation.lng]} icon={defaultIcon} />
+            <Marker 
+              position={[selectedLocation.lat, selectedLocation.lng]} 
+              icon={defaultIcon} 
+              eventHandlers={{
+                dblclick: handleMarkerDblClick
+              }}
+            />
             <MapFlyTo location={selectedLocation} mode={mode} />
           </>
         )}
@@ -256,9 +326,23 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
       </MapContainer>
       
       {/* Hint Overlay */}
-      <div className="absolute bottom-6 right-14 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 pointer-events-none z-[400] hidden sm:block border border-slate-200">
+      <div className={`absolute bottom-6 right-14 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 pointer-events-none z-[400] hidden sm:block border ${isRetroMode ? 'border-2 border-black font-[inherit]' : 'border border-slate-200'}`}>
         {mode === 'game' && !gameTargetLocation ? t.gameInstructionGuess : t.clickMapHint}
       </div>
+
+      {/* Digging Animation Overlay */}
+      {isDigging && (
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none animate-in fade-in duration-300">
+           <div className="flex flex-col items-center">
+              <div className="bg-amber-500 p-6 rounded-full shadow-2xl animate-bounce border-4 border-white">
+                 <Shovel className="w-12 h-12 text-white" />
+              </div>
+              <div className="mt-4 bg-white/90 px-4 py-2 rounded-lg font-bold text-amber-600 shadow-lg animate-pulse">
+                 Digging to the other side...
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

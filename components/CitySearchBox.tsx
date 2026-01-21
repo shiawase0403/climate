@@ -32,10 +32,25 @@ export const CitySearchBox: React.FC<CitySearchBoxProps> = ({ onLocationSelect }
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.trim().length >= 2) {
+      const trimmedQuery = query.trim();
+      
+      if (trimmedQuery.length >= 2) {
         setLoading(true);
         try {
           const searchResults = await searchCities(query);
+          
+          // Easter Egg: Mars
+          if ('mars'.includes(trimmedQuery.toLowerCase())) {
+             searchResults.unshift({
+               city: 'Mars',
+               city_ascii: 'Mars',
+               lat: 0, 
+               lng: 0,
+               country: 'The Red Planet',
+               count: 9999999
+             });
+          }
+
           setResults(searchResults);
           setIsOpen(true);
         } catch (e) {
