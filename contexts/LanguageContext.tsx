@@ -48,6 +48,9 @@ export interface Translations {
     gaode: string;
     gaodeSat: string;
     gaodeEn: string;
+    bingSat: string;
+    bingHybrid: string; // New
+    bingStreet: string;
   };
   // City Search
   searchCity: string;
@@ -57,7 +60,7 @@ export interface Translations {
   modeSingle: string;
   modeCompare: string;
   modeGame: string;
-  modePvp: string; // New
+  modePvp: string;
   compareTitle: string;
   compareIntro: string;
   addPoint: string;
@@ -219,7 +222,10 @@ export const translations: Record<Language, Translations> = {
       osm: "OpenStreetMap",
       gaode: "GaoDe Map",
       gaodeSat: "GaoDe Satellite",
-      gaodeEn: "GaoDe English/Chinese"
+      gaodeEn: "GaoDe English/Chinese",
+      bingSat: "Bing Satellite",
+      bingHybrid: "Bing Hybrid (Labels)",
+      bingStreet: "Bing Street (CN)"
     },
     searchCity: "City Search",
     searchCityPlaceholder: "Enter city name...",
@@ -378,7 +384,10 @@ export const translations: Record<Language, Translations> = {
       osm: "OpenStreetMap",
       gaode: "高德地图",
       gaodeSat: "高德卫星地图",
-      gaodeEn: "高德中英地图"
+      gaodeEn: "高德中英地图",
+      bingSat: "必应卫星 (Bing)",
+      bingHybrid: "必应混合 (Bing Hybrid)",
+      bingStreet: "必应街道 (Bing CN)"
     },
     searchCity: "城市搜索",
     searchCityPlaceholder: "输入城市名称...",

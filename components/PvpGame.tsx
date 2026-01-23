@@ -6,7 +6,7 @@ import { ClimateChart } from './ClimateChart';
 import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
 import { PvpPlayer, ClimateDataResponse, GeoLocation, PvpRoundResult, PvpGameResult } from '../types';
-import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen } from 'lucide-react';
+import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle } from 'lucide-react';
 
 type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over';
 
@@ -100,7 +100,15 @@ export const PvpGame: React.FC = () => {
                 setCurrentUser({ id: u, name: u });
                 
                 // Only move to lobby if we are currently in login screen
-                setGameState(current => current === 'login' ? 'lobby' : current);
+                setGameState(current => {
+                  if (current === 'login') {
+                    // Show notification for auto-login
+                    setStatusInfo({ message: `Welcome back, ${u}!`, type: 'success' });
+                    setTimeout(() => setStatusInfo(null), 1500);
+                    return 'lobby';
+                  }
+                  return current;
+                });
               } else {
                 console.warn("Auto-login failed:", response.message);
               }
@@ -924,7 +932,11 @@ export const PvpGame: React.FC = () => {
              <h3 className="text-lg font-bold text-slate-500 uppercase tracking-widest mb-6">{t.pvpFinalRank}</h3>
              
              <div className="space-y-4 mb-8">
-                {gameResult?.sort((a,b) => b.score - a.score).map((p, idx) => (
+                {/* Sort by delta (descending), then by match score */}
+                {gameResult?.sort((a,b) => {
+                  if (b.delta !== a.delta) return b.delta - a.delta;
+                  return b.score - a.score;
+                }).map((p, idx) => (
                   <div key={idx} className="flex items-center p-4 rounded-xl border-2 border-slate-100 hover:border-indigo-100 transition-colors bg-slate-50">
                      <div className={`w-12 h-12 flex items-center justify-center rounded-full font-black text-xl mr-4 ${
                        idx === 0 ? 'bg-yellow-100 text-yellow-600' : 
@@ -935,12 +947,14 @@ export const PvpGame: React.FC = () => {
                      </div>
                      <div className="flex-1 text-left">
                         <div className="font-bold text-lg text-slate-800">{p.name || 'Unknown'}</div>
-                        <div className="text-xs text-slate-500">Final Rating: {p.newScore}</div>
+                        {/* Show Match Score as secondary info */}
+                        <div className="text-xs text-slate-500">{t.pvpScore}: {p.score}</div>
                      </div>
                      <div className="text-right">
-                        <div className="font-black text-2xl text-indigo-600">{p.score}</div>
+                        {/* Show Personal Rating (newScore) as primary info */}
+                        <div className="font-black text-2xl text-indigo-600">{p.newScore}</div>
                         <div className={`text-xs font-bold ${p.delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                           {p.delta >= 0 ? '+' : ''}{p.delta} rating
+                           {p.delta >= 0 ? '+' : ''}{p.delta} {t.pvpRatingChange || 'rating'}
                         </div>
                      </div>
                   </div>
@@ -982,6 +996,11 @@ export const PvpGame: React.FC = () => {
                           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
                       </div>
                    </div>
+                )}
+                {statusInfo.type === 'success' && (
+                  <div className="mb-4 bg-emerald-100 p-3 rounded-full text-emerald-600">
+                     <User className="w-8 h-8" />
+                  </div>
                 )}
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{statusInfo.message}</h3>
                 {statusInfo.type === 'loading' && <p className="text-slate-500 text-sm animate-pulse">Please wait...</p>}

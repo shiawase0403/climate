@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { Shovel } from 'lucide-react';
@@ -22,6 +22,57 @@ interface MapPickerProps {
   isMarsMode?: boolean;
   isRetroMode?: boolean;
 }
+
+// Custom TileLayer to support QuadKeys for Bing Maps
+const QuadKeyTileLayer = ({ url, ...props }: any) => {
+  const tileLayerRef = useRef<L.TileLayer>(null);
+
+  useEffect(() => {
+    const layer = tileLayerRef.current;
+    if (layer) {
+      // We capture the original URL with {q} here
+      const template = url;
+      
+      // Override getTileUrl to support 'q' placeholder for QuadKey
+      layer.getTileUrl = function(coords: L.Coords) {
+        const x = coords.x;
+        const y = coords.y;
+        const z = coords.z;
+        
+        // QuadKey conversion logic
+        let quadKey = '';
+        for (let i = z; i > 0; i--) {
+          let digit = 0;
+          const mask = 1 << (i - 1);
+          if ((x & mask) !== 0) {
+            digit++;
+          }
+          if ((y & mask) !== 0) {
+            digit += 2;
+          }
+          quadKey += digit;
+        }
+        
+        return L.Util.template(template, {
+          q: quadKey,
+          s: this._getSubdomain(coords),
+          x: x,
+          y: y,
+          z: z
+        });
+      };
+      
+      // Force a redraw since the initial render used the safe URL
+      layer.redraw();
+    }
+  }, [url]);
+
+  // Pass a safe URL to the underlying TileLayer to prevent L.Util.template from throwing "No value provided for variable {q}"
+  // during the initial render before our useEffect override kicks in.
+  const safeUrl = url.replace('{q}', '_q_placeholder_');
+
+  return <TileLayer ref={tileLayerRef} url={safeUrl} {...props} />;
+};
 
 // Helper to create a colored DivIcon marker
 const createColoredIcon = (color: string) => {
@@ -215,7 +266,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
             </LayersControl.BaseLayer>
           ) : (
             <>
-              <LayersControl.BaseLayer checked={!isRetroMode} name={t.mapLayers.osm}>
+              <LayersControl.BaseLayer name={t.mapLayers.osm}>
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -242,6 +293,27 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
                   attribution='&copy; AutoNavi'
                   url="https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
                   subdomains={["1", "2", "3", "4"]}
+                />
+              </LayersControl.BaseLayer>
+              {/* Bing Satellite (WGS84) - Pure Aerial */}
+              <LayersControl.BaseLayer name={t.mapLayers.bingSat}>
+                <QuadKeyTileLayer
+                  attribution='&copy; Microsoft Bing Maps'
+                  url="https://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1"
+                />
+              </LayersControl.BaseLayer>
+              {/* Bing Hybrid (WGS84) - Satellite + Labels */}
+              <LayersControl.BaseLayer checked={!isRetroMode} name={t.mapLayers.bingHybrid}>
+                <QuadKeyTileLayer
+                  attribution='&copy; Microsoft Bing Maps'
+                  url="https://ecn.t3.tiles.virtualearth.net/tiles/h{q}.jpeg?g=1"
+                />
+              </LayersControl.BaseLayer>
+              {/* Bing Street (GCJ02/Mars - Offset may exist relative to markers) */}
+              <LayersControl.BaseLayer name={t.mapLayers.bingStreet}>
+                <QuadKeyTileLayer
+                  attribution='&copy; Microsoft Bing Maps'
+                  url="https://t1.dynamic.tiles.ditu.live.com/comp/ch/{q}?mkt=zh-CN&ur=CN&it=G,RL&n=z&og=804&cstl=vb"
                 />
               </LayersControl.BaseLayer>
             </>
