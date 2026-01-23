@@ -197,6 +197,7 @@ const App: React.FC = () => {
   // Easter Egg States
   const [isMarsMode, setIsMarsMode] = useState(false);
   const [isRetroMode, setIsRetroMode] = useState(false);
+  const [isDigging, setIsDigging] = useState(false);
 
   // Single Mode State
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
@@ -302,6 +303,26 @@ const App: React.FC = () => {
   // Handle Antipode Trigger
   const handleAntipodeTrigger = () => {
     setIsAntipodeJump(true);
+  };
+
+  const handleDig = () => {
+    if (mode !== 'single' || !selectedLocation) return;
+    
+    setIsDigging(true);
+    
+    setTimeout(() => {
+      setIsDigging(false);
+      setIsAntipodeJump(true);
+
+      const lat = selectedLocation.lat;
+      const lng = selectedLocation.lng;
+      
+      const antiLat = -lat;
+      let antiLng = lng + 180;
+      if (antiLng > 180) antiLng -= 360;
+      
+      handleManualLocationSelect({ lat: antiLat, lng: antiLng });
+    }, 1500);
   };
 
   // --- Game Mode Logic ---
@@ -1055,6 +1076,8 @@ const App: React.FC = () => {
               onAntipodeTrigger={handleAntipodeTrigger}
               isMarsMode={isMarsMode}
               isRetroMode={isRetroMode}
+              isDigging={isDigging}
+              onDig={handleDig}
             />
           </div>
 
@@ -1138,7 +1161,8 @@ const App: React.FC = () => {
                              lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
                              locationName={`${targetCity.city}, ${targetCity.country}`}
                              masked={gameStatus === 'playing'}
-                             hintRevealed={gameHintRevealed} 
+                             hintRevealed={gameHintRevealed}
+                             onDig={handleDig}
                            />
                         ) : (
                            selectedLocation && (
@@ -1147,6 +1171,7 @@ const App: React.FC = () => {
                                lat={selectedLocation.lat} 
                                lng={selectedLocation.lng}
                                locationName={locationName} 
+                               onDig={handleDig}
                              />
                            )
                         )}

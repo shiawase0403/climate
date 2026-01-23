@@ -21,6 +21,8 @@ interface MapPickerProps {
   onAntipodeTrigger?: () => void;
   isMarsMode?: boolean;
   isRetroMode?: boolean;
+  isDigging?: boolean;
+  onDig?: () => void;
 }
 
 // Custom TileLayer to support QuadKeys for Bing Maps
@@ -190,31 +192,14 @@ const GameResultFitter: React.FC<{ guess: GeoLocation | null; target: GeoLocatio
   return null;
 };
 
-export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect, onAntipodeTrigger, isMarsMode, isRetroMode }) => {
+export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect, onAntipodeTrigger, isMarsMode, isRetroMode, isDigging = false, onDig }) => {
   const { t } = useLanguage();
-  const [isDigging, setIsDigging] = useState(false);
 
   const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
     if (e.originalEvent.shiftKey && selectedLocation) {
       // Prevent default map zoom behavior
       L.DomEvent.stopPropagation(e.originalEvent);
-      
-      setIsDigging(true);
-      
-      // Calculate Antipode
-      const lat = selectedLocation.lat;
-      const lng = selectedLocation.lng;
-      
-      const antiLat = -lat;
-      let antiLng = lng + 180;
-      if (antiLng > 180) antiLng -= 360;
-      
-      // Delay for animation
-      setTimeout(() => {
-        setIsDigging(false);
-        onLocationSelect({ lat: antiLat, lng: antiLng });
-        if (onAntipodeTrigger) onAntipodeTrigger();
-      }, 1500); // 1.5s digging animation
+      if (onDig) onDig();
     }
   };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ClassificationEntry } from '../types';
 import { Info, MapPin, BookOpen, HelpCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -11,6 +11,7 @@ interface ClassificationCardProps {
   locationName?: string | null;
   masked?: boolean; // New prop for game mode
   hintRevealed?: boolean; // If true, shows code/description even if masked
+  onDig?: () => void; // Trigger for digger mode
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -86,9 +87,11 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   lng, 
   locationName, 
   masked = false, 
-  hintRevealed = false 
+  hintRevealed = false,
+  onDig
 }) => {
   const { t, language } = useLanguage();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Determine actual data
   const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
@@ -148,11 +151,39 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
     textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)'
   };
 
+  const startPress = () => {
+    if (onDig && !timerRef.current) {
+      timerRef.current = setTimeout(() => {
+        onDig();
+        timerRef.current = null;
+      }, 3000);
+    }
+  };
+
+  const endPress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
   return (
     <div 
       className={`rounded-xl shadow-lg p-6 mb-6 transition-all duration-500 ${textColorClass}`}
       style={{ 
-        background: `linear-gradient(135deg, ${bgColor} 0%, ${gradientEnd} 100%)` 
+        background: `linear-gradient(135deg, ${bgColor} 0%, ${gradientEnd} 100%)`,
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
+      }}
+      onMouseDown={startPress}
+      onMouseUp={endPress}
+      onMouseLeave={endPress}
+      onTouchStart={startPress}
+      onTouchEnd={endPress}
+      onTouchMove={endPress}
+      onContextMenu={(e) => {
+        // Prevent context menu if using long press for digging
+        if (onDig) e.preventDefault();
       }}
     >
       <div className="flex items-start justify-between">
