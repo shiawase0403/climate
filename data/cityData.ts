@@ -833,8 +833,8 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       {
         name: 'Sivas (锡瓦斯)',
         country: 'Turkey',
-        lat: 39.7505,
-        lng: 37.0150,
+        lat: 39.69
+        lng: 37.02,
         description: '土耳其安纳托利亚高原中部城市。海拔约1200米，使得其夏季比周边低地凉爽，冬季寒冷。降水呈夏干冬湿特征，符合Dsb。'
       }
     ]
