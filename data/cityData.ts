@@ -646,7 +646,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Cwc',
-    title: '寒带高原季风气候 (Cold Subtropical Highland)',
+    title: '冷夏高原季风气候 (Cold Subtropical Highland)',
     cities: [
       {
         name: 'Puno (普诺)',

@@ -96,7 +96,7 @@ export const getChineseClimateClassification = (code: string): string | undefine
     'Cfc': '温带海洋性气候(副极地型)',
     'Cwa': '亚热带季风和亚热带湿润气候',
     'Cwb': '亚热带高原季风气候',
-    'Cwc': '亚热带高原季风气候',
+    'Cwc': '冷夏高原季风气候',
     'Dsa': '温带大陆性气候(冬雨型)',
     'Dsb': '温带大陆性气候(冬雨型)',
     'Dsc': '亚寒带针叶林气候',

@@ -20,19 +20,19 @@ const VEGETATION_DB: Record<string, VegetationInfo> = {
     description: '热带稀树草原 (Savanna) 呈“双层结构”：地面为连续的高草本层（C4植物为主），上层为稀疏、非连续的耐旱乔木/灌木层。沿河流发育走廊林 (Gallery Forest)。',
     species: '金合欢 (Acacia)、猴面包树 (Baobab)、桉树（澳）、象草'
   },
-  'As': {
+  'As/Aw': {
     name: '热带稀树草原 (Savanna)',
     description: '热带稀树草原 (Savanna) 呈“双层结构”：地面为连续的高草本层（C4植物为主），上层为稀疏、非连续的耐旱乔木/灌木层。沿河流发育走廊林 (Gallery Forest)。',
     species: '金合欢 (Acacia)、猴面包树 (Baobab)、桉树（澳）、象草'
   },
   'Cfa': {
     name: '亚热带常绿阔叶林 (照叶林)',
-    description: '亚热带常绿阔叶林 (Evergreen Broad-leaved Forest) 东亚特称为照叶林 (Laurel Forest)。叶片革质、表面有光泽（角质层发达）以反射强光。林下灌木层发达。',
+    description: '亚热带常绿阔叶林 (Evergreen Broad-leaved Forest) 东亚特称为照叶林 (Laurel Forest)。叶片革质、表面有光泽（角质层发达）以反射强光。林下灌木层发达。纬度较高则有落叶阔叶林。',
     species: '壳斗科（青冈、柯）、樟科、木兰科'
   },
   'Cwa': {
     name: '亚热带常绿与落叶混交林',
-    description: '亚热带常绿与落叶混交林 因冬季干旱明显，相较于Cfa，乔木层中落叶树种比例增加。降水较少区可退化为灌草丛。',
+    description: '亚热带常绿与落叶混交林 因冬季干旱明显，相较于Cfa，乔木层中落叶树种比例增加。降水较少区可退化为灌草丛。纬度较高则有落叶阔叶林。',
     species: '樟树、枫香、马尾松、竹类'
   },
   'Cwb': {

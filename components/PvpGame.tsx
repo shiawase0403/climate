@@ -952,7 +952,7 @@ export const PvpGame: React.FC = () => {
                      </div>
                      <div className="text-right">
                         {/* Show Personal Rating (newScore) as primary info */}
-                        <div className="font-black text-2xl text-indigo-600">{p.newScore}</div>
+                        <div className="font-black text-2xl text-indigo-600">{p.rating}</div>
                         <div className={`text-xs font-bold ${p.delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                            {p.delta >= 0 ? '+' : ''}{p.delta} {t.pvpRatingChange || 'rating'}
                         </div>
