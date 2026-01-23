@@ -6,7 +6,7 @@ import { ClimateChart } from './ClimateChart';
 import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
 import { PvpPlayer, ClimateDataResponse, GeoLocation, PvpRoundResult, PvpGameResult } from '../types';
-import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle } from 'lucide-react';
+import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw } from 'lucide-react';
 
 type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over';
 
@@ -56,6 +56,10 @@ export const PvpGame: React.FC = () => {
   const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   
+  // Rejoin State
+  const [rejoinRoomId, setRejoinRoomId] = useState<string | null>(null);
+  const [showRejoinModal, setShowRejoinModal] = useState(false);
+  
   // Game State
   const [players, setPlayers] = useState<PvpPlayer[]>([]);
   const [round, setRound] = useState(0);
@@ -98,6 +102,12 @@ export const PvpGame: React.FC = () => {
                 setUsername(u);
                 setPassword(p);
                 setCurrentUser({ id: u, name: u });
+                
+                // Check if user was in a room
+                if (response.activeRoomId) {
+                  setRejoinRoomId(response.activeRoomId);
+                  setShowRejoinModal(true);
+                }
                 
                 // Only move to lobby if we are currently in login screen
                 setGameState(current => {
@@ -162,7 +172,8 @@ export const PvpGame: React.FC = () => {
             name, 
             score: p.totalScore || p.score || 0,
             hp: p.hp,
-            isOwner: p.isOwner
+            isOwner: p.isOwner,
+            isOnline: p.isOnline
           };
         });
         setPlayers(mappedPlayers);
@@ -363,6 +374,13 @@ export const PvpGame: React.FC = () => {
       if (response.success) {
         saveCredentials(username, password);
         setCurrentUser({ id: username, name: username });
+        
+        // Check for active room
+        if (response.activeRoomId) {
+          setRejoinRoomId(response.activeRoomId);
+          setShowRejoinModal(true);
+        }
+
         setGameState('lobby');
       } else {
         setError(response.message || "Login failed");
@@ -413,6 +431,29 @@ export const PvpGame: React.FC = () => {
         setError(raw.message || "Join room failed");
       }
     });
+  };
+
+  const handleRejoin = () => {
+    if (!socketRef.current || !rejoinRoomId) return;
+    
+    socketRef.current.emit('rejoinRoom', { roomId: rejoinRoomId }, (response: any) => {
+      const raw = Array.isArray(response) ? response[0] : response;
+      setShowRejoinModal(false);
+      setRejoinRoomId(null);
+      
+      if (raw.success) {
+        setCurrentRoomId(rejoinRoomId);
+        // Initially set to waiting; subsequent socket events (e.g., newQuestion, roomInfo) will update the specific state
+        setGameState('waiting');
+      } else {
+        setError(raw.message || "Rejoin failed");
+      }
+    });
+  };
+
+  const handleDeclineRejoin = () => {
+    setShowRejoinModal(false);
+    setRejoinRoomId(null);
   };
 
   const handleLeaveRoom = () => {
@@ -695,13 +736,23 @@ export const PvpGame: React.FC = () => {
         <div className="p-8">
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
              {players.map((p, idx) => (
-               <div key={idx} className="flex items-center p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mr-3">
+               <div key={idx} className={`flex items-center p-3 rounded-xl border transition-colors ${
+                 p.isOnline === false 
+                   ? 'bg-slate-200 border-slate-300 opacity-75' 
+                   : 'bg-slate-50 border-slate-200'
+               }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold mr-3 ${
+                    p.isOnline === false ? 'bg-slate-300 text-slate-500' : 'bg-indigo-100 text-indigo-700'
+                  }`}>
                     {(p.name || '??').substring(0,2).toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-medium text-slate-800">{p.name || 'Unknown Player'}</div>
-                    <div className="text-xs text-slate-500">Ready</div>
+                    <div className={`font-medium text-slate-800 ${p.isOnline === false ? 'line-through text-slate-500' : ''}`}>
+                      {p.name || 'Unknown Player'}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {p.isOnline === false ? 'Offline' : 'Ready'}
+                    </div>
                   </div>
                </div>
              ))}
@@ -833,8 +884,16 @@ export const PvpGame: React.FC = () => {
            {/* Players List (Mini) */}
            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
              {players.map((p, idx) => (
-                <div key={idx} className={`p-2 rounded-lg border text-xs flex justify-between items-center ${p.id === currentUser?.id ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100'}`}>
-                   <span className="font-bold truncate max-w-[60px]" style={{ color: PLAYER_COLORS[idx % PLAYER_COLORS.length] }}>{p.name || 'Unknown'}</span>
+                <div key={idx} className={`p-2 rounded-lg border text-xs flex justify-between items-center transition-colors ${
+                  p.isOnline === false ? 'bg-slate-100 border-slate-200 opacity-60' :
+                  (p.id === currentUser?.id ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100')
+                }`}>
+                   <span 
+                     className={`font-bold truncate max-w-[60px] ${p.isOnline === false ? 'line-through decoration-slate-400 text-slate-400' : ''}`} 
+                     style={{ color: p.isOnline === false ? undefined : PLAYER_COLORS[idx % PLAYER_COLORS.length] }}
+                   >
+                     {p.name || 'Unknown'}
+                   </span>
                    <div className="flex flex-col items-end">
                       <span className="font-mono">{p.score} pts</span>
                       {/* Show HP for 1v1 or generic score */}
@@ -1006,6 +1065,43 @@ export const PvpGame: React.FC = () => {
                 {statusInfo.type === 'loading' && <p className="text-slate-500 text-sm animate-pulse">Please wait...</p>}
              </div>
           </div>
+       )}
+
+       {/* Rejoin Modal */}
+       {showRejoinModal && rejoinRoomId && (
+         <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border-2 border-indigo-100 relative animate-in zoom-in-95">
+               <div className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={handleDeclineRejoin}>
+                 <X className="w-5 h-5" />
+               </div>
+               
+               <div className="flex flex-col items-center text-center">
+                  <div className="bg-blue-100 p-4 rounded-full mb-6">
+                     <RotateCcw className="w-8 h-8 text-blue-600" />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">Rejoin Previous Game?</h3>
+                  <p className="text-slate-600 mb-6">
+                    You seem to have been disconnected from room <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded">{rejoinRoomId}</span>. Would you like to rejoin?
+                  </p>
+                  
+                  <div className="flex space-x-4 w-full">
+                     <button 
+                       onClick={handleDeclineRejoin}
+                       className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       onClick={handleRejoin}
+                       className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
+                     >
+                       Rejoin Game
+                     </button>
+                  </div>
+               </div>
+            </div>
+         </div>
        )}
 
        {gameState === 'login' && renderLogin()}

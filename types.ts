@@ -101,6 +101,7 @@ export interface PvpPlayer {
   hp?: number; // For 1v1 mode
   isOwner?: boolean;
   hasAnswered?: boolean;
+  isOnline?: boolean;
 }
 
 export interface PvpRoomInfo {
