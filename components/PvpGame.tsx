@@ -7,8 +7,8 @@ import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
 import { ClassificationCard } from './ClassificationCard';
 import { fetchClimateData, fetchClassification } from '../services/climateService';
-import { PvpPlayer, ClimateDataResponse, ClassificationResponse, GeoLocation, PvpRoundResult, PvpGameResult, MatchReviewData, MatchReviewDetail } from '../types';
-import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw, History, Search, Calendar, MapPin } from 'lucide-react';
+import { PvpPlayer, ClimateDataResponse, ClassificationResponse, GeoLocation, PvpRoundResult, PvpGameResult, MatchReviewData, MatchReviewDetail, RankingEntry, UserHistoryEntry, UserRankInfo } from '../types';
+import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw, History, Search, Calendar, MapPin, Crown, TrendingUp, TrendingDown, Eye, Star, Info } from 'lucide-react';
 
 type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over' | 'review';
 
@@ -39,10 +39,12 @@ export const PvpGame: React.FC = () => {
 
   // States
   const [gameState, setGameState] = useState<PvpState>('login');
-  const [error, setError] = useState<string | null>(null);
+  
+  // Notification System (Replaces Error State)
+  const [notification, setNotification] = useState<{message: string, type: 'error' | 'success' | 'info'} | null>(null);
   const [matchId, setMatchId] = useState<string | number | null>(null);
   
-  // Status & Notification States
+  // Status Info (Strictly for Loading Modals)
   const [statusInfo, setStatusInfo] = useState<{message: string, type: string} | null>(null);
   const [countdownMessage, setCountdownMessage] = useState<string>('');
   
@@ -52,12 +54,19 @@ export const PvpGame: React.FC = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [currentUser, setCurrentUser] = useState<{ id: string, name: string } | null>(null);
+  const [userRankInfo, setUserRankInfo] = useState<UserRankInfo | null>(null);
 
   // Lobby State
   const [roomIdInput, setRoomIdInput] = useState('');
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<RankingEntry[]>([]);
+  
+  // History State
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [userHistory, setUserHistory] = useState<UserHistoryEntry[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   
   // Rejoin State
   const [rejoinRoomId, setRejoinRoomId] = useState<string | null>(null);
@@ -95,6 +104,16 @@ export const PvpGame: React.FC = () => {
     currentRoomIdRef.current = currentRoomId;
   }, [currentRoomId]);
 
+  // Auto-dismiss notifications
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   const saveCredentials = (u: string, p: string) => {
     localStorage.setItem('pvp_credentials', JSON.stringify({ username: u, password: p }));
   };
@@ -109,7 +128,6 @@ export const PvpGame: React.FC = () => {
       const res = await fetch(`${API_BASE}/match/${id}`);
       if (res.ok) {
         const data = await res.json();
-        // If we get valid data from the match endpoint, it usually means the match is over/archived.
         return !!data;
       }
     } catch (e) {
@@ -118,13 +136,17 @@ export const PvpGame: React.FC = () => {
     return false;
   };
 
+  const showToast = (message: string, type: 'error' | 'success' | 'info' = 'info') => {
+    setNotification({ message, type });
+  };
+
   useEffect(() => {
     const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
     socket.on('connect', () => {
       console.log('Connected to PVP server');
-      setError(null);
+      setNotification(null);
       
       const saved = localStorage.getItem('pvp_credentials');
       if (saved) {
@@ -138,7 +160,6 @@ export const PvpGame: React.FC = () => {
                 setCurrentUser({ id: u, name: u });
                 
                 if (response.activeRoomId) {
-                  // Check if the room has actually ended before prompting rejoin
                   const isEnded = await checkIfMatchEnded(response.activeRoomId);
                   if (!isEnded) {
                     setRejoinRoomId(response.activeRoomId);
@@ -148,8 +169,7 @@ export const PvpGame: React.FC = () => {
                 
                 setGameState(current => {
                   if (current === 'login') {
-                    setStatusInfo({ message: `Welcome back, ${u}!`, type: 'success' });
-                    setTimeout(() => setStatusInfo(null), 1500);
+                    showToast(`Welcome back, ${u}!`, 'success');
                     return 'lobby';
                   }
                   return current;
@@ -164,20 +184,22 @@ export const PvpGame: React.FC = () => {
     });
 
     socket.on('connect_error', (err) => {
-        setError(`Connection failed: ${err.message}`);
+        showToast(`Connection failed: ${err.message}`, 'error');
     });
 
     socket.on('error', (msg: any) => {
       const errorMessage = typeof msg === 'string' ? msg : (msg?.message || JSON.stringify(msg));
-      setError(errorMessage);
-      setTimeout(() => setError(null), 5000);
+      showToast(errorMessage, 'error');
     });
 
     socket.on('statusInfo', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
-      setStatusInfo(data);
-      if (data.type !== 'loading') {
-         setTimeout(() => setStatusInfo(null), 3000);
+      if (data.type === 'loading') {
+        setStatusInfo(data);
+      } else {
+        // Convert other status messages to non-blocking toasts
+        showToast(data.message, data.type === 'success' ? 'success' : 'info');
+        setStatusInfo(null); // Clear any loading modal
       }
     });
 
@@ -278,8 +300,6 @@ export const PvpGame: React.FC = () => {
     });
 
     socket.on('gameOver', (...args: any[]) => {
-      console.log('Game Over Event Received:', args);
-      
       let incomingResults: any[] = [];
       const secondArg = args[1];
       const firstArg = args[0];
@@ -297,14 +317,9 @@ export const PvpGame: React.FC = () => {
 
       setGameState('game_over');
       
-      // Use the current room ID from the reference to ensure we fetch the correct match
       const finalMatchId = currentRoomIdRef.current;
-
       if (finalMatchId) {
         setMatchId(finalMatchId);
-        console.log("Setting Match ID for review:", finalMatchId);
-      } else {
-        console.warn("Could not determine Match ID (Room ID) for review.");
       }
 
       const normalizedResults = (incomingResults || []).map((r: any) => ({
@@ -353,10 +368,17 @@ export const PvpGame: React.FC = () => {
   useEffect(() => {
     if (gameState === 'lobby') {
       fetchRooms();
-      const interval = setInterval(fetchRooms, 10000); 
+      fetchLeaderboard();
+      if (currentUser) {
+        fetchUserRank();
+      }
+      const interval = setInterval(() => {
+        fetchRooms();
+        fetchLeaderboard();
+      }, 10000); 
       return () => clearInterval(interval);
     }
-  }, [gameState]);
+  }, [gameState, currentUser]);
 
   const fetchRooms = async () => {
     setIsLoadingRooms(true);
@@ -383,35 +405,85 @@ export const PvpGame: React.FC = () => {
     }
   };
 
-  const handleReviewMatch = async () => {
-    if (!matchId) {
-      setError("Match ID is missing. Cannot review.");
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await fetch('https://climate-game.hywiki.org/api/rankings/top10');
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch leaderboard", e);
+    }
+  };
+
+  const fetchUserRank = async () => {
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`https://climate-game.hywiki.org/api/rankings/user?q=${currentUser.name}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserRankInfo(data);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch user rank", e);
+    }
+  };
+
+  const fetchHistory = async () => {
+    if (!username || !password) return;
+    setIsLoadingHistory(true);
+    setShowHistoryModal(true);
+    try {
+      const res = await fetch(`${API_BASE}/user/history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserHistory(data.history);
+      } else {
+        showToast(data.message || "Failed to fetch history", 'error');
+      }
+    } catch (e) {
+      showToast("Network error fetching history", 'error');
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleReviewMatch = async (idOverride?: string | number) => {
+    const targetId = idOverride || matchId;
+    
+    if (!targetId) {
+      showToast("Match ID is missing. Cannot review.", 'error');
       return;
     }
     
     setLoadingReview(true);
-    setError(null);
+    setNotification(null);
     
     try {
-      // The API uses the Room ID (string) to fetch the match
-      const res = await fetch(`${API_BASE}/match/${matchId}`);
+      const res = await fetch(`${API_BASE}/match/${targetId}`);
       if (res.ok) {
         const data: MatchReviewData = await res.json();
-        // Validation: check if the data returned is actually valid
         if (!data || !data.details || data.details.length === 0) {
-           setError("Match data is incomplete or unavailable.");
+           showToast("Match data is incomplete or unavailable.", 'error');
            return;
         }
         
         setMatchReviewData(data);
         setGameState('review');
         handleSelectReviewRound(0, data.details[0]);
+        // Close history modal if open
+        setShowHistoryModal(false);
       } else {
-        setError("Failed to fetch match details. Match may not be archived yet.");
+        showToast("Failed to fetch match details. Match may not be archived yet.", 'error');
       }
     } catch (e) {
       console.error(e);
-      setError("Network error fetching match review.");
+      showToast("Network error fetching match review.", 'error');
     } finally {
       setLoadingReview(false);
     }
@@ -460,7 +532,7 @@ export const PvpGame: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password || !email) {
-      setError("All fields are required");
+      showToast("All fields are required", 'error');
       return;
     }
     try {
@@ -471,14 +543,14 @@ export const PvpGame: React.FC = () => {
       });
       const data = await res.json();
       if (res.ok || data.success) {
-        setError("Registration successful! Please login.");
+        showToast("Registration successful! Please check your email to verify your account before logging in.", 'success');
         setIsRegistering(false);
         setPassword(''); 
       } else {
-        setError(data.message || "Registration failed");
+        showToast(data.message || "Registration failed", 'error');
       }
     } catch (err) {
-      setError("Network error during registration");
+      showToast("Network error during registration", 'error');
     }
   };
 
@@ -491,7 +563,6 @@ export const PvpGame: React.FC = () => {
         setCurrentUser({ id: username, name: username });
         
         if (response.activeRoomId) {
-          // Check if the room has actually ended before prompting rejoin
           const isEnded = await checkIfMatchEnded(response.activeRoomId);
           if (!isEnded) {
             setRejoinRoomId(response.activeRoomId);
@@ -500,7 +571,7 @@ export const PvpGame: React.FC = () => {
         }
         setGameState('lobby');
       } else {
-        setError(response.message || "Login failed");
+        showToast(response.message || "Login failed", 'error');
       }
     });
   };
@@ -522,7 +593,7 @@ export const PvpGame: React.FC = () => {
            setGameState('waiting');
          }
       } else {
-         setError(raw.message || "Create room failed");
+         showToast(raw.message || "Create room failed", 'error');
       }
     });
   };
@@ -538,7 +609,7 @@ export const PvpGame: React.FC = () => {
         setCurrentRoomId(idToJoin);
         setGameState('waiting');
       } else {
-        setError(raw.message || "Join room failed");
+        showToast(raw.message || "Join room failed", 'error');
       }
     });
   };
@@ -553,7 +624,7 @@ export const PvpGame: React.FC = () => {
         setCurrentRoomId(rejoinRoomId);
         setGameState('waiting');
       } else {
-        setError(raw.message || "Rejoin failed");
+        showToast(raw.message || "Rejoin failed", 'error');
       }
     });
   };
@@ -689,6 +760,12 @@ export const PvpGame: React.FC = () => {
               <LogIn className="w-4 h-4 mr-2" />
               {t.pvpLoginBtn}
             </button>
+            
+            <div className="text-xs text-center text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 flex items-center justify-center">
+               <AlertCircle className="w-3 h-3 mr-1.5" />
+               Please verify your email before logging in.
+            </div>
+
             <div className="text-center mt-4">
               <button type="button" onClick={() => setIsRegistering(true)} className="text-sm text-indigo-600 hover:underline">
                 Need an account? Register
@@ -702,23 +779,75 @@ export const PvpGame: React.FC = () => {
 
   const renderLobby = () => (
     <div className="flex flex-col items-center justify-start min-h-[600px] w-full max-w-6xl mx-auto gap-8">
-      {/* Header with User Info */}
-      <div className="w-full bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
-         <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
-               {currentUser?.name.substring(0,2).toUpperCase()}
-            </div>
-            <div>
-              <div className="font-bold text-slate-800">{currentUser?.name}</div>
-              <div className="text-xs text-slate-500 flex items-center">
-                 <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5"></span>
-                 Online
-              </div>
-            </div>
-         </div>
-         <button onClick={handleLogout} className="text-slate-500 hover:text-red-500 transition-colors p-2" title="Logout">
-           <LogOut className="w-5 h-5" />
-         </button>
+      {/* Optimized User Profile Card */}
+      <div className="w-full bg-white p-6 rounded-2xl shadow-lg border border-slate-100 relative overflow-hidden">
+        {/* Decorative Background */}
+        <div className="absolute -top-6 -right-6 opacity-5 pointer-events-none">
+          <Trophy className="w-48 h-48 text-indigo-900" />
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center relative z-10 gap-6">
+          <div className="flex items-center space-x-5 w-full md:w-auto">
+             {/* Avatar */}
+             <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-md transform rotate-3">
+                {currentUser?.name.substring(0,2).toUpperCase()}
+             </div>
+             
+             <div className="flex-1">
+                <h2 className="text-3xl font-black text-slate-800 tracking-tight">{currentUser?.name}</h2>
+                <div className="flex items-center space-x-3 mt-2">
+                   <div className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full flex items-center border border-emerald-200">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
+                      Online
+                   </div>
+                   {userRankInfo && (
+                      <div className="text-xs text-slate-400 font-mono">
+                         ID: #{userRankInfo.id}
+                      </div>
+                   )}
+                </div>
+             </div>
+          </div>
+
+          {/* Stats Block */}
+          <div className="flex items-center justify-center w-full md:w-auto space-x-8 bg-slate-50 px-8 py-4 rounded-xl border border-slate-100 shadow-inner">
+             <div className="text-center">
+                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                  <Star className="w-3 h-3" /> Rating
+                </div>
+                <div className="text-2xl font-black text-indigo-600">
+                   {userRankInfo?.rating ?? '---'}
+                </div>
+             </div>
+             <div className="w-px h-10 bg-slate-200"></div>
+             <div className="text-center">
+                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                  <Trophy className="w-3 h-3" /> Rank
+                </div>
+                <div className="text-2xl font-black text-amber-500 flex items-center justify-center gap-0.5">
+                   <span className="text-sm opacity-50">#</span>{userRankInfo?.rank ?? '-'}
+                </div>
+             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+             <button 
+               onClick={fetchHistory} 
+               className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 rounded-xl font-bold transition-all shadow-sm group"
+             >
+               <History className="w-4 h-4 group-hover:scale-110 transition-transform" />
+               <span>History</span>
+             </button>
+             <button 
+               onClick={handleLogout} 
+               className="flex items-center space-x-2 px-5 py-2.5 bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold transition-all"
+             >
+               <LogOut className="w-4 h-4" />
+               <span>Logout</span>
+             </button>
+          </div>
+        </div>
       </div>
 
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -752,6 +881,39 @@ export const PvpGame: React.FC = () => {
                  Join
                </button>
              </form>
+          </div>
+
+          {/* Leaderboard Card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+             <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center">
+                <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
+                <h3 className="font-bold text-slate-700">Top 10 Players</h3>
+             </div>
+             <div className="divide-y divide-slate-50">
+                {leaderboard.length > 0 ? (
+                  leaderboard.map((player, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors">
+                       <div className="flex items-center space-x-3">
+                          <div className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                             index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                             index === 1 ? 'bg-slate-200 text-slate-700' :
+                             index === 2 ? 'bg-orange-100 text-orange-700' :
+                             'text-slate-400'
+                          }`}>
+                             {index + 1}
+                          </div>
+                          <span className="font-medium text-slate-800 text-sm truncate max-w-[120px]">{player.username}</span>
+                       </div>
+                       <span className="font-mono text-indigo-600 font-bold text-sm">{player.rating}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-slate-400 text-sm">
+                     <Loader2 className="w-4 h-4 animate-spin mx-auto mb-1" />
+                     Loading rankings...
+                  </div>
+                )}
+             </div>
           </div>
         </div>
 
@@ -817,6 +979,78 @@ export const PvpGame: React.FC = () => {
       </div>
     </div>
   );
+
+  const renderHistoryModal = () => {
+    if (!showHistoryModal) return null;
+
+    return (
+      <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 className="font-bold text-lg text-slate-800 flex items-center">
+              <History className="w-5 h-5 mr-2 text-indigo-600" />
+              Match History
+            </h3>
+            <button onClick={() => setShowHistoryModal(false)} className="p-2 hover:bg-slate-200 rounded-full text-slate-500">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-0">
+            {isLoadingHistory ? (
+              <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                Loading history...
+              </div>
+            ) : userHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                <History className="w-12 h-12 mb-2 opacity-20" />
+                No match history found.
+              </div>
+            ) : (
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-500 sticky top-0 shadow-sm">
+                  <tr>
+                    <th className="p-4 font-medium">Date</th>
+                    <th className="p-4 font-medium">Room</th>
+                    <th className="p-4 font-medium text-right">Change</th>
+                    <th className="p-4 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {userHistory.map((entry, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 text-slate-600">
+                        <div className="font-medium">{new Date(entry.end_time).toLocaleDateString()}</div>
+                        <div className="text-xs text-slate-400">{new Date(entry.end_time).toLocaleTimeString()}</div>
+                      </td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{entry.room_id}</td>
+                      <td className="p-4 text-right font-bold">
+                        <div className={`flex items-center justify-end ${
+                          entry.delta > 0 ? 'text-emerald-600' : (entry.delta < 0 ? 'text-red-500' : 'text-slate-400')
+                        }`}>
+                          {entry.delta > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : (entry.delta < 0 ? <TrendingDown className="w-3 h-3 mr-1" /> : null)}
+                          {entry.delta > 0 ? '+' : ''}{entry.delta}
+                        </div>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button 
+                          onClick={() => handleReviewMatch(entry.room_id)}
+                          className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition-colors flex items-center ml-auto"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderWaiting = () => (
     <div className="max-w-4xl mx-auto">
@@ -1141,7 +1375,7 @@ export const PvpGame: React.FC = () => {
                {/* Show Review Match button if matchId is present */}
                {matchId ? (
                  <button 
-                   onClick={handleReviewMatch}
+                   onClick={() => handleReviewMatch()}
                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center group"
                  >
                    <History className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -1316,36 +1550,38 @@ export const PvpGame: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 relative">
-       {/* Error Toast */}
-       {error && (
-         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[2000] bg-red-500 text-white px-6 py-4 rounded-lg shadow-xl flex items-start max-w-[90vw] md:max-w-[600px] animate-in slide-in-from-top-4">
-           <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
-           <div className="flex-1 text-sm font-medium break-words">
-             {error}
+       {/* New Notification Toast System (Replaces old red Error banner) */}
+       {notification && (
+         <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-[2000] px-6 py-4 rounded-xl shadow-2xl flex items-center max-w-[90vw] md:max-w-[500px] animate-in slide-in-from-top-4 border-l-4 bg-white ${
+           notification.type === 'error' ? 'border-red-500' : 
+           notification.type === 'success' ? 'border-emerald-500' : 
+           'border-indigo-500'
+         }`}>
+           {notification.type === 'error' && <AlertCircle className="w-6 h-6 mr-3 text-red-500 flex-shrink-0" />}
+           {notification.type === 'success' && <CheckCircle className="w-6 h-6 mr-3 text-emerald-500 flex-shrink-0" />}
+           {notification.type === 'info' && <Info className="w-6 h-6 mr-3 text-indigo-500 flex-shrink-0" />}
+           
+           <div className="flex-1 text-sm font-medium break-words text-slate-800">
+             {notification.message}
            </div>
-           <button onClick={() => setError(null)} className="ml-4 hover:opacity-80 mt-0.5 flex-shrink-0"><X className="w-4 h-4" /></button>
+           <button onClick={() => setNotification(null)} className="ml-4 p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
+             <X className="w-4 h-4" />
+           </button>
          </div>
        )}
        
-       {/* Status Info Overlay (Loading/Transient Messages) */}
-       {statusInfo && (
+       {/* Status Info Overlay (Strictly for Blocking/Loading states) */}
+       {statusInfo && statusInfo.type === 'loading' && (
           <div className="fixed inset-0 z-[3000] bg-black/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
              <div className="bg-white px-10 py-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm text-center transform scale-100 animate-in zoom-in-95 duration-200">
-                {statusInfo.type === 'loading' && (
-                   <div className="relative mb-6">
-                      <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-                      </div>
+                <div className="relative mb-6">
+                   <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                   <div className="absolute inset-0 flex items-center justify-center">
+                       <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
                    </div>
-                )}
-                {statusInfo.type === 'success' && (
-                  <div className="mb-4 bg-emerald-100 p-3 rounded-full text-emerald-600">
-                     <User className="w-8 h-8" />
-                  </div>
-                )}
+                </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{statusInfo.message}</h3>
-                {statusInfo.type === 'loading' && <p className="text-slate-500 text-sm animate-pulse">Please wait...</p>}
+                <p className="text-slate-500 text-sm animate-pulse">Please wait...</p>
              </div>
           </div>
        )}
@@ -1393,6 +1629,7 @@ export const PvpGame: React.FC = () => {
        {(gameState === 'playing' || gameState === 'countdown' || gameState === 'round_result') && renderGame()}
        {gameState === 'game_over' && renderGameOver()}
        {gameState === 'review' && renderReview()}
+       {renderHistoryModal()}
     </div>
   );
 };

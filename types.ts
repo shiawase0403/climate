@@ -1,4 +1,3 @@
-
 // Raw Climate Data Types
 export interface MonthlyClimateData {
   month: number;
@@ -137,6 +136,28 @@ export interface PvpGameResult {
   score: number;
   delta: number; // Final rating change
   rating: number; // Final rating
+}
+
+export interface RankingEntry {
+  username: string;
+  rating: number;
+  created_at: string;
+}
+
+export interface UserRankInfo {
+  id: number | string;
+  username: string;
+  rating: number;
+  rank: number;
+}
+
+export interface UserHistoryEntry {
+  room_id: string;
+  start_time: string;
+  end_time: string;
+  delta: number;
+  reason: string;
+  log_time: string;
 }
 
 // Match Review Types

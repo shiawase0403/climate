@@ -71,6 +71,11 @@ export interface Translations {
   comparePrecip: string;
   tempComparisonTable: string;
   precipComparisonTable: string;
+  importGameTitle: string;
+  importRoundPlaceholder: string;
+  importCompareBtn: string;
+  importFetching: string;
+  importInitializing: string;
   // Game Mode
   gameTitle: string;
   gameInstruction: string;
@@ -244,6 +249,11 @@ export const translations: Record<Language, Translations> = {
     comparePrecip: "Precipitation Comparison",
     tempComparisonTable: "Temperature Comparison Data (°C)",
     precipComparisonTable: "Precipitation Comparison Data (mm)",
+    importGameTitle: "Import from Game",
+    importRoundPlaceholder: "Round",
+    importCompareBtn: "Import & Compare",
+    importFetching: "Fetching data {current}/{total}...",
+    importInitializing: "Initializing...",
     gameTitle: "Climate Treasure Hunt",
     gameInstruction: "Analyze the climate data on the right. Can you guess where this location is? Click on the map to place your guess.",
     gameInstructionGuess: "Place your marker on the map",
@@ -406,6 +416,11 @@ export const translations: Record<Language, Translations> = {
     comparePrecip: "降水量对比",
     tempComparisonTable: "温度对比数据 (°C)",
     precipComparisonTable: "降水量对比数据 (mm)",
+    importGameTitle: "从游戏导入",
+    importRoundPlaceholder: "轮次",
+    importCompareBtn: "导入并对比",
+    importFetching: "正在获取数据 {current}/{total}...",
+    importInitializing: "正在初始化...",
     gameTitle: "气候寻宝模式",
     gameInstruction: "观察右侧的气候数据，猜猜看这是世界上的哪个地方？点击地图进行猜测。",
     gameInstructionGuess: "在地图上标记你的猜测",
