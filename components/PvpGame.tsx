@@ -93,8 +93,10 @@ export const PvpGame: React.FC = () => {
   const [loadingReview, setLoadingReview] = useState(false);
   const [guessAnalysis, setGuessAnalysis] = useState<{
     username: string;
-    climate: ClimateDataResponse;
-    classification: ClassificationResponse;
+    lat: number;
+    lon: number;
+    climate: ClimateDataResponse | null;
+    classification: ClassificationResponse | null;
   } | null>(null);
 
   // Ref to access the latest currentRoomId inside socket listeners
@@ -510,18 +512,32 @@ export const PvpGame: React.FC = () => {
   };
 
   const handleAnalyzeGuess = async (lat: number, lon: number, username: string) => {
+    // 1. Show loading state immediately with null data
+    setGuessAnalysis({
+      username,
+      lat,
+      lon,
+      climate: null,
+      classification: null
+    });
+
     try {
       const [climateRes, classRes] = await Promise.all([
         fetchClimateData(lat, lon),
         fetchClassification(lat, lon)
       ]);
+      // 2. Update with fetched data
       setGuessAnalysis({
         username,
+        lat,
+        lon,
         climate: climateRes,
         classification: classRes
       });
     } catch (e) {
       console.error("Failed to analyze guess", e);
+      showToast("Failed to analyze data", 'error');
+      setGuessAnalysis(null);
     }
   };
 
@@ -1531,15 +1547,30 @@ export const PvpGame: React.FC = () => {
                 </button>
               </div>
               <div className="p-6 overflow-y-auto space-y-6">
-                 <ClassificationCard 
-                   classificationData={guessAnalysis.classification.data}
-                   lat={0} lng={0} 
-                   locationName={`${guessAnalysis.username}'s Selected Location`}
-                 />
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
-                    <ClimateTable data={guessAnalysis.climate.data} />
-                 </div>
+                 {/* LOADING STATE */}
+                 {(!guessAnalysis.climate || !guessAnalysis.classification) ? (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                       <div className="relative">
+                          <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                              <Search className="w-6 h-6 text-indigo-600" />
+                          </div>
+                       </div>
+                       <p className="text-slate-500 font-medium animate-pulse">Retrieving climate data...</p>
+                    </div>
+                 ) : (
+                    <>
+                       <ClassificationCard 
+                         classificationData={guessAnalysis.classification.data}
+                         lat={guessAnalysis.lat} lng={guessAnalysis.lon} // CORRECT COORDINATES
+                         locationName={`${guessAnalysis.username}'s Selected Location`}
+                       />
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
+                          <ClimateTable data={guessAnalysis.climate.data} />
+                       </div>
+                    </>
+                 )}
               </div>
             </div>
           </div>
