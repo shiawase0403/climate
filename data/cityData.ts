@@ -162,7 +162,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Colombia',
         lat: 10.9500,
         lng: -74.7833,
-        description: '位于哥伦比亚加勒比海岸。受加勒比低空急流的影响，干季风力强劲且极度干燥。ITCZ南移后，该地完全暴露在干燥的东北信风下。'
+        description: '位于哥伦比亚加勒比海岸。受加勒比低空急流的影响，干季风力强劲且极度干燥。赤道低压带南移后，该地完全暴露在干燥的东北信风下。'
       }
     ]
   },
@@ -189,7 +189,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Brazil',
         lat: -3.7167,
         lng: -38.5333,
-        description: '巴西东北部的“干旱角”。虽然靠海，但海岸线走向与东南信风平行，且南部的博尔博雷马高原阻挡了水汽。更重要的是，ITCZ在此处的移动幅度导致其降水集中在年初，而下半年（包括夏季部分时间）极其干燥。'
+        description: '巴西东北部的“干旱角”。虽然靠海，但海岸线走向与东南信风平行，且南部的博尔博雷马高原阻挡了水汽。赤道低压带在此处的移动幅度导致其降水集中在年初，而下半年（包括夏季部分时间）极其干燥。'
       }
     ]
   },
@@ -237,7 +237,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Australia',
         lat: -23.7000,
         lng: 133.8667,
-        description: '澳大利亚大陆的地理中心。这里是绝对的大陆性气候，距离任何海洋都超过1000公里。降水极其稀少且不可预测，完全取决于偶尔深入内陆的热带低压残余。'
+        description: '澳大利亚大陆的地理中心。这里是绝对的大陆性气候，距离任何海洋都超过1000公里。降水完全取决于偶尔深入内陆的热带低压残余。'
       },
       {
         name: 'Las Vegas (拉斯维加斯)',
@@ -251,7 +251,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Peru',
         lat: -12.0333,
         lng: -77.0333,
-        description: '全球最奇特的沙漠城市之一。虽然纬度低（热带），但秘鲁寒流（Humboldt Current）极强，导致气温异常偏低（最热月仅26°C左右）。寒流造成极其稳定的逆温层，不仅无雨，反而终年被厚厚的层云（Garúa）覆盖，形成了“无雨之湿地”。'
+        description: '全球最奇特的沙漠城市之一，凉爽多雾，全年湿度高，虽然纬度低，但秘鲁寒流（Humboldt Current）极强，导致气温异常偏低（最热月仅26°C左右）。寒流造成极其稳定的逆温层，不仅无雨，反而终年被厚厚的层云覆盖，形成了“无雨之湿地”。'
       }
     ]
   },
@@ -347,7 +347,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'China',
         lat: 23.5961,
         lng: 101.9981,
-        description: '典型"干热河谷"，常出现40C高温'
+        description: '典型"干热河谷"，常出现40℃高温'
       }
     ]
   },
@@ -387,7 +387,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Israel/Palestine',
         lat: 31.7833,
         lng: 35.2167,
-        description: '位于犹太山地。夏季受副高控制，完全无雨且酷热；冬季西风槽带来降水，高海拔偶致降雪。'
+        description: '夏季受副高控制，完全无雨且酷热；冬季西风槽带来降水，高海拔偶致降雪。'
       },
       {
         name: 'Tashkent (塔什干)',
@@ -401,7 +401,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Italy',
         lat: 41.8833,
         lng: 12.4833,
-        description: '地中海气候的模式标本。第勒尼安海调节了极端温度，但夏季依然受到来自北非高压脊的影响。'
+        description: '地中海气候的模式标本。第勒尼安海调节了极端温度，但夏季依然受到来自北非高压脊的影响，炎热少雨。'
       },
       {
         name: 'Split (斯普利特)',
@@ -456,7 +456,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Australia',
         lat: -31.9500,
         lng: 115.8500,
-        description: '全球季节反差最强烈的地中海气候之一。夏季极其干燥炎热，冬季西风带带来的锋面雨则非常集中。'
+        description: '全球季节反差最强烈的地中海气候之一，处于Csa/Csb过渡。夏季较炎热，冬季西风带带来的锋面雨则非常集中。'
       },
       {
         name: 'Porto (波尔图)',
@@ -768,7 +768,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'China',
         lat: 45.7575,
         lng: 126.6408,
-        description: '黑龙江省省会，被称为“冰城”。哈尔滨的冬季极其漫长寒冷，但夏季却短暂而炎热，满足Dwa标准。降水极度集中在夏季，符合季风指标。'
+        description: '黑龙江省省会，冰雪之城。哈尔滨的冬季极其漫长寒冷，但夏季却短暂而炎热，满足Dwa标准。降水极度集中在夏季，符合季风指标。'
       },
       {
         name: 'Pyongyang (平壤)',
@@ -782,7 +782,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'South Korea',
         lat: 37.5600,
         lng: 126.9900,
-        description: '韩国首都，汉江流域。首尔的气候处于Dwa与Cwa的边缘。依据0℃标准，首尔1月均温低于0℃，且夏季炎热多雨，故归为Dwa。城市热岛效应进一步增强了其夏季的高温。'
+        description: '韩国首都，汉江流域。首尔的气候处于Dwa与Cwa的边缘。城市热岛效应进一步增强了其夏季的高温。'
       }
     ]
   },
@@ -922,7 +922,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'Russia',
         lat: 63.4608,
         lng: 142.7858,
-        description: '与其说城市，不如说是村庄，记录到人类定居点的最低温。这是地球上人类居住的最冷气候区。'
+        description: '世界“寒极”，与其说城市，不如说是村庄，曾记录到人类定居点的最低温。这是地球上人类居住的最冷气候区。'
       }
     ]
   },
@@ -935,14 +935,14 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'United States',
         lat: 61.2167,
         lng: -149.8936,
-        description: '阿拉斯加最大城市，受沿海山脉雨影影响，降水呈夏末秋初多、春夏少的模式，有时归入Dsc。'
+        description: '阿拉斯加最大城市，受沿海山脉雨影影响，降水呈夏末秋初多、春夏少的模式。'
       },
       {
         name: 'Whitehorse (白马城)',
         country: 'Canada',
         lat: 60.7333,
         lng: -135.0667,
-        description: '育空地区首府，位于海岸山脉雨影区，干燥。'
+        description: '育空地区首府，位于海岸山脉雨影区，相当干燥。'
       }
     ]
   },
@@ -996,7 +996,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'China',
         lat: -80.4172,
         lng: 77.1164,
-        description: '中国极地研究中心在南极建立的第三个科学考察站，名称公布于2008年10月18日，位于南极大陆内部冰穹A最高点西南方向约7.3公里处，海拔4087米，是中国第一座、世界第六座南极内陆科考站，也是人类在南极地区建立的海拔最高的科考站。'
+        description: '中国极地研究中心在南极建立的第三个科学考察站，位于南极大陆内部冰穹A最高点西南方向约7.3公里处，海拔4087米，是中国第一座、世界第六座南极内陆科考站，也是人类在南极地区建立的海拔最高的科考站。'
       }
     ]
   }

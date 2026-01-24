@@ -136,5 +136,35 @@ export interface PvpGameResult {
   name: string;
   score: number;
   delta: number; // Final rating change
-  newScore: number; // Final rating
+  rating: number; // Final rating
+}
+
+// Match Review Types
+export interface MatchReviewAnswer {
+  userId: number | string;
+  username: string;
+  lat: number;
+  lon: number;
+  score: number;
+}
+
+export interface MatchReviewDetail {
+  round: number;
+  city: {
+    city: string;
+    id: number;
+    lat: string | number;
+    lon: string | number;
+    country: string;
+  };
+  answers: MatchReviewAnswer[];
+  scores: any[];
+}
+
+export interface MatchReviewData {
+  id: number;
+  room_id: string;
+  start_time: string;
+  end_time: string;
+  details: MatchReviewDetail[];
 }

@@ -5,10 +5,12 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { ClimateChart } from './ClimateChart';
 import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
-import { PvpPlayer, ClimateDataResponse, GeoLocation, PvpRoundResult, PvpGameResult } from '../types';
-import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw } from 'lucide-react';
+import { ClassificationCard } from './ClassificationCard';
+import { fetchClimateData, fetchClassification } from '../services/climateService';
+import { PvpPlayer, ClimateDataResponse, ClassificationResponse, GeoLocation, PvpRoundResult, PvpGameResult, MatchReviewData, MatchReviewDetail } from '../types';
+import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw, History, Search, Calendar, MapPin } from 'lucide-react';
 
-type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over';
+type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over' | 'review';
 
 const SOCKET_URL = 'https://climate-game.hywiki.org/';
 const API_BASE = 'https://climate-game.hywiki.org/API';
@@ -38,6 +40,7 @@ export const PvpGame: React.FC = () => {
   // States
   const [gameState, setGameState] = useState<PvpState>('login');
   const [error, setError] = useState<string | null>(null);
+  const [matchId, setMatchId] = useState<string | number | null>(null);
   
   // Status & Notification States
   const [statusInfo, setStatusInfo] = useState<{message: string, type: string} | null>(null);
@@ -73,7 +76,25 @@ export const PvpGame: React.FC = () => {
   const [roundResult, setRoundResult] = useState<PvpRoundResult | null>(null);
   const [gameResult, setGameResult] = useState<PvpGameResult[] | null>(null);
 
-  // Helper to persist credentials
+  // Review State
+  const [matchReviewData, setMatchReviewData] = useState<MatchReviewData | null>(null);
+  const [activeReviewRound, setActiveReviewRound] = useState<number>(0);
+  const [reviewClimateData, setReviewClimateData] = useState<ClimateDataResponse | null>(null);
+  const [reviewClassification, setReviewClassification] = useState<ClassificationResponse | null>(null);
+  const [loadingReview, setLoadingReview] = useState(false);
+  const [guessAnalysis, setGuessAnalysis] = useState<{
+    username: string;
+    climate: ClimateDataResponse;
+    classification: ClassificationResponse;
+  } | null>(null);
+
+  // Ref to access the latest currentRoomId inside socket listeners
+  const currentRoomIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentRoomIdRef.current = currentRoomId;
+  }, [currentRoomId]);
+
   const saveCredentials = (u: string, p: string) => {
     localStorage.setItem('pvp_credentials', JSON.stringify({ username: u, password: p }));
   };
@@ -82,8 +103,22 @@ export const PvpGame: React.FC = () => {
     localStorage.removeItem('pvp_credentials');
   };
 
+  // Helper to check if a room has already ended (match archived)
+  const checkIfMatchEnded = async (id: string | number) => {
+    try {
+      const res = await fetch(`${API_BASE}/match/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        // If we get valid data from the match endpoint, it usually means the match is over/archived.
+        return !!data;
+      }
+    } catch (e) {
+      console.warn("Error checking match status:", e);
+    }
+    return false;
+  };
+
   useEffect(() => {
-    // Initialize Socket
     const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
@@ -91,36 +126,34 @@ export const PvpGame: React.FC = () => {
       console.log('Connected to PVP server');
       setError(null);
       
-      // Always attempt to restore session / re-authenticate on connect
       const saved = localStorage.getItem('pvp_credentials');
       if (saved) {
         try {
           const { username: u, password: p } = JSON.parse(saved);
           if (u && p) {
-             socket.emit('login', { identifier: u, password: p }, (response: any) => {
+             socket.emit('login', { identifier: u, password: p }, async (response: any) => {
               if (response.success) {
                 setUsername(u);
                 setPassword(p);
                 setCurrentUser({ id: u, name: u });
                 
-                // Check if user was in a room
                 if (response.activeRoomId) {
-                  setRejoinRoomId(response.activeRoomId);
-                  setShowRejoinModal(true);
+                  // Check if the room has actually ended before prompting rejoin
+                  const isEnded = await checkIfMatchEnded(response.activeRoomId);
+                  if (!isEnded) {
+                    setRejoinRoomId(response.activeRoomId);
+                    setShowRejoinModal(true);
+                  }
                 }
                 
-                // Only move to lobby if we are currently in login screen
                 setGameState(current => {
                   if (current === 'login') {
-                    // Show notification for auto-login
                     setStatusInfo({ message: `Welcome back, ${u}!`, type: 'success' });
                     setTimeout(() => setStatusInfo(null), 1500);
                     return 'lobby';
                   }
                   return current;
                 });
-              } else {
-                console.warn("Auto-login failed:", response.message);
               }
             });
           }
@@ -130,31 +163,24 @@ export const PvpGame: React.FC = () => {
       }
     });
 
-    // Handle connection errors
     socket.on('connect_error', (err) => {
-        console.error('Connection Error:', err);
         setError(`Connection failed: ${err.message}`);
     });
 
     socket.on('error', (msg: any) => {
-      console.error('Socket error:', msg);
       const errorMessage = typeof msg === 'string' ? msg : (msg?.message || JSON.stringify(msg));
       setError(errorMessage);
       setTimeout(() => setError(null), 5000);
     });
 
-    // Handle generic status info (e.g. "Generating questions...")
     socket.on('statusInfo', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
-      console.log('Status Info:', data);
       setStatusInfo(data);
-      // Automatically clear if it's not a loading state (e.g. simple info toast)
       if (data.type !== 'loading') {
          setTimeout(() => setStatusInfo(null), 3000);
       }
     });
 
-    // Room Updates
     socket.on('roomInfo', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
       if (!data) return;
@@ -180,24 +206,21 @@ export const PvpGame: React.FC = () => {
       }
     });
 
-    // Game Flow - Standard Countdown
     socket.on('countdown', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
       setGameState('countdown');
       setStartCountdown(data.count);
-      setCountdownMessage(''); // Clear specific message if strictly using old event
-      setTimeLeft(0); // Reset game timer
+      setCountdownMessage('');
+      setTimeLeft(0);
     });
 
-    // Game Flow - Specific Start Countdown with message
     socket.on('startCountdown', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
       setGameState('countdown');
       setStartCountdown(data.seconds);
       setCountdownMessage(data.message || '');
-      // Clear any previous status info (e.g. loading)
       setStatusInfo(null);
-      setTimeLeft(0); // Reset game timer
+      setTimeLeft(0);
     });
 
     socket.on('newQuestion', (raw: any) => {
@@ -208,9 +231,7 @@ export const PvpGame: React.FC = () => {
       setUserGuess(null);
       setHasSubmitted(false);
       setRoundResult(null);
-      setTimeLeft(300); // Default, will be updated by answerCountdown
-      
-      // Clear transient UI states
+      setTimeLeft(300);
       setStatusInfo(null);
       setCountdownMessage('');
     });
@@ -222,7 +243,7 @@ export const PvpGame: React.FC = () => {
     socket.on('roundResult', (raw: any) => {
       const data = Array.isArray(raw) ? raw[0] : raw;
       setGameState('round_result');
-      setTimeLeft(0); // Reset timer
+      setTimeLeft(0);
       
       const normalizedPlayers = (data.players || []).map((p: any) => ({
         ...p,
@@ -256,15 +277,45 @@ export const PvpGame: React.FC = () => {
       }));
     });
 
-    socket.on('gameOver', (raw: any) => {
-      const data = Array.isArray(raw) ? raw[0] : raw;
+    socket.on('gameOver', (...args: any[]) => {
+      console.log('Game Over Event Received:', args);
+      
+      let incomingResults: any[] = [];
+      const secondArg = args[1];
+      const firstArg = args[0];
+
+      if (typeof firstArg === 'number' || (typeof firstArg === 'string' && !isNaN(Number(firstArg)))) {
+        if (Array.isArray(secondArg)) {
+          incomingResults = secondArg;
+        } else if (secondArg && (secondArg.results || secondArg.players)) {
+          incomingResults = secondArg.results || secondArg.players;
+        }
+      } else if (typeof firstArg === 'object' && firstArg !== null) {
+        const data = Array.isArray(firstArg) ? firstArg[0] : firstArg;
+        incomingResults = data.results || data.players || data.rankings || [];
+      }
+
       setGameState('game_over');
       
-      const normalizedResults = (data.results || []).map((r: any) => ({
+      // Use the current room ID from the reference to ensure we fetch the correct match
+      const finalMatchId = currentRoomIdRef.current;
+
+      if (finalMatchId) {
+        setMatchId(finalMatchId);
+        console.log("Setting Match ID for review:", finalMatchId);
+      } else {
+        console.warn("Could not determine Match ID (Room ID) for review.");
+      }
+
+      const normalizedResults = (incomingResults || []).map((r: any) => ({
         ...r,
         id: String(r.id || r.identifier || r.username),
-        name: r.username || r.name || r.identifier || String(r.id) || 'Unknown'
+        name: r.username || r.name || r.identifier || String(r.id) || 'Unknown',
+        rating: r.rating !== undefined ? r.rating : (r.newScore !== undefined ? r.newScore : 0),
+        delta: r.delta !== undefined ? r.delta : (r.ratingChange !== undefined ? r.ratingChange : 0),
+        score: r.score !== undefined ? r.score : r.totalScore
       }));
+      
       setGameResult(normalizedResults);
       setStatusInfo(null);
     });
@@ -274,7 +325,6 @@ export const PvpGame: React.FC = () => {
     };
   }, []);
 
-  // Timer effect for start countdown
   useEffect(() => {
     if (gameState === 'countdown' && startCountdown > 0) {
       const timer = setTimeout(() => setStartCountdown(prev => prev - 1), 1000);
@@ -282,19 +332,14 @@ export const PvpGame: React.FC = () => {
     }
   }, [gameState, startCountdown]);
 
-  // Auto-submit effect when time is running out
   useEffect(() => {
-    // Allow auto-submit if in playing OR countdown state (in case server switches to countdown for last few seconds)
     if ((gameState === 'playing' || gameState === 'countdown') && !hasSubmitted && timeLeft > 0 && timeLeft <= 1) {
-      console.log("Auto-submitting due to timeout");
       let lat = userGuess?.lat;
       let lon = userGuess?.lng;
 
-      // Force random coordinate if player didn't choose
       if (lat === undefined || lon === undefined) {
         lat = (Math.random() * 180) - 90;
         lon = (Math.random() * 360) - 180;
-        // Update local state to reflect the random guess visually if possible
         setUserGuess({ lat, lng: lon });
       }
 
@@ -305,16 +350,14 @@ export const PvpGame: React.FC = () => {
     }
   }, [gameState, hasSubmitted, timeLeft, userGuess]);
 
-  // Auto-refresh rooms in lobby
   useEffect(() => {
     if (gameState === 'lobby') {
       fetchRooms();
-      const interval = setInterval(fetchRooms, 10000); // Poll every 10s
+      const interval = setInterval(fetchRooms, 10000); 
       return () => clearInterval(interval);
     }
   }, [gameState]);
 
-  // Actions
   const fetchRooms = async () => {
     setIsLoadingRooms(true);
     try {
@@ -340,13 +383,86 @@ export const PvpGame: React.FC = () => {
     }
   };
 
+  const handleReviewMatch = async () => {
+    if (!matchId) {
+      setError("Match ID is missing. Cannot review.");
+      return;
+    }
+    
+    setLoadingReview(true);
+    setError(null);
+    
+    try {
+      // The API uses the Room ID (string) to fetch the match
+      const res = await fetch(`${API_BASE}/match/${matchId}`);
+      if (res.ok) {
+        const data: MatchReviewData = await res.json();
+        // Validation: check if the data returned is actually valid
+        if (!data || !data.details || data.details.length === 0) {
+           setError("Match data is incomplete or unavailable.");
+           return;
+        }
+        
+        setMatchReviewData(data);
+        setGameState('review');
+        handleSelectReviewRound(0, data.details[0]);
+      } else {
+        setError("Failed to fetch match details. Match may not be archived yet.");
+      }
+    } catch (e) {
+      console.error(e);
+      setError("Network error fetching match review.");
+    } finally {
+      setLoadingReview(false);
+    }
+  };
+
+  const handleSelectReviewRound = async (index: number, detail: MatchReviewDetail) => {
+    setActiveReviewRound(index);
+    setReviewClimateData(null);
+    setReviewClassification(null);
+    
+    try {
+      const lat = typeof detail.city.lat === 'string' ? parseFloat(detail.city.lat) : detail.city.lat;
+      const lon = typeof detail.city.lon === 'string' ? parseFloat(detail.city.lon) : detail.city.lon;
+      
+      const [climateRes, classRes] = await Promise.all([
+        fetchClimateData(lat, lon),
+        fetchClassification(lat, lon)
+      ]);
+      setReviewClimateData(climateRes);
+      setReviewClassification(classRes);
+    } catch (e) {
+      console.error("Failed to fetch review climate data", e);
+    }
+  };
+
+  const handleAnalyzeGuess = async (lat: number, lon: number, username: string) => {
+    try {
+      const [climateRes, classRes] = await Promise.all([
+        fetchClimateData(lat, lon),
+        fetchClassification(lat, lon)
+      ]);
+      setGuessAnalysis({
+        username,
+        climate: climateRes,
+        classification: classRes
+      });
+    } catch (e) {
+      console.error("Failed to analyze guess", e);
+    }
+  };
+
+  const closeGuessAnalysis = () => {
+    setGuessAnalysis(null);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password || !email) {
       setError("All fields are required");
       return;
     }
-    
     try {
       const res = await fetch(`${API_BASE}/register`, {
         method: 'POST',
@@ -354,7 +470,6 @@ export const PvpGame: React.FC = () => {
         body: JSON.stringify({ username, password, email })
       });
       const data = await res.json();
-      
       if (res.ok || data.success) {
         setError("Registration successful! Please login.");
         setIsRegistering(false);
@@ -370,17 +485,19 @@ export const PvpGame: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!socketRef.current) return;
-    socketRef.current.emit('login', { identifier: username, password }, (response: any) => {
+    socketRef.current.emit('login', { identifier: username, password }, async (response: any) => {
       if (response.success) {
         saveCredentials(username, password);
         setCurrentUser({ id: username, name: username });
         
-        // Check for active room
         if (response.activeRoomId) {
-          setRejoinRoomId(response.activeRoomId);
-          setShowRejoinModal(true);
+          // Check if the room has actually ended before prompting rejoin
+          const isEnded = await checkIfMatchEnded(response.activeRoomId);
+          if (!isEnded) {
+            setRejoinRoomId(response.activeRoomId);
+            setShowRejoinModal(true);
+          }
         }
-
         setGameState('lobby');
       } else {
         setError(response.message || "Login failed");
@@ -397,22 +514,15 @@ export const PvpGame: React.FC = () => {
   const handleCreateRoom = () => {
     if (!socketRef.current) return;
     socketRef.current.emit('createRoom', {}, (response: any) => {
-      if (response.success) {
-        const raw = Array.isArray(response) ? response[0] : response;
-        if (raw.roomId || raw.id) {
-           setCurrentRoomId(raw.roomId || raw.id);
+      const raw = Array.isArray(response) ? response[0] : response;
+      if (raw.success !== false) {
+         const id = raw.roomId || raw.id || raw.success?.roomId;
+         if (id) {
+           setCurrentRoomId(id);
            setGameState('waiting');
-        } else if (raw.success === false) {
-           setError(raw.message || "Create room failed");
-        }
+         }
       } else {
-        const raw = response;
-        if (raw.success) {
-          setCurrentRoomId(raw.roomId);
-          setGameState('waiting');
-        } else {
-          setError(raw.message || "Create room failed");
-        }
+         setError(raw.message || "Create room failed");
       }
     });
   };
@@ -435,15 +545,12 @@ export const PvpGame: React.FC = () => {
 
   const handleRejoin = () => {
     if (!socketRef.current || !rejoinRoomId) return;
-    
     socketRef.current.emit('rejoinRoom', { roomId: rejoinRoomId }, (response: any) => {
       const raw = Array.isArray(response) ? response[0] : response;
       setShowRejoinModal(false);
       setRejoinRoomId(null);
-      
       if (raw.success) {
         setCurrentRoomId(rejoinRoomId);
-        // Initially set to waiting; subsequent socket events (e.g., newQuestion, roomInfo) will update the specific state
         setGameState('waiting');
       } else {
         setError(raw.message || "Rejoin failed");
@@ -492,9 +599,10 @@ export const PvpGame: React.FC = () => {
     setCurrentRoomId(null);
     setGameResult(null);
     setStatusInfo(null);
+    setMatchId(null);
+    setMatchReviewData(null);
   };
 
-  // Render Helpers
   const renderLogin = () => (
     <div className="flex items-center justify-center min-h-[500px]">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
@@ -981,55 +1089,230 @@ export const PvpGame: React.FC = () => {
   };
 
   const renderGameOver = () => (
-    <div className="flex items-center justify-center min-h-[600px] animate-in zoom-in-95 duration-500">
-       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden w-full max-w-2xl text-center">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-10 text-white">
-             <Trophy className="w-20 h-20 mx-auto mb-4 text-yellow-300 drop-shadow-md" />
-             <h2 className="text-4xl font-black tracking-tight">{t.pvpGameOver}</h2>
-          </div>
-          <div className="p-8">
-             <h3 className="text-lg font-bold text-slate-500 uppercase tracking-widest mb-6">{t.pvpFinalRank}</h3>
+    <div className="flex items-center justify-center min-h-[600px] w-full p-4 animate-in fade-in duration-500">
+       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden w-full max-w-lg relative">
+          {/* Confetti / Decoration Background */}
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-indigo-500 to-purple-600 z-0"></div>
+          
+          <div className="relative z-10 flex flex-col items-center pt-8 pb-8 px-6">
+             {/* Trophy Icon */}
+             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-xl mb-4 border-4 border-yellow-100">
+                <Trophy className="w-12 h-12 text-yellow-500 fill-current" />
+             </div>
              
-             <div className="space-y-4 mb-8">
-                {/* Sort by delta (descending), then by match score */}
+             <h2 className="text-3xl font-black text-slate-800 mb-1">{t.pvpGameOver}</h2>
+             <p className="text-slate-500 font-medium text-sm mb-8">Match Complete</p>
+
+             {/* Results List */}
+             <div className="w-full space-y-3 mb-8">
                 {gameResult?.sort((a,b) => {
+                  // Sort by rank if available, else by rating delta, else by score
+                  if (a.rank && b.rank) return a.rank - b.rank;
                   if (b.delta !== a.delta) return b.delta - a.delta;
                   return b.score - a.score;
                 }).map((p, idx) => (
-                  <div key={idx} className="flex items-center p-4 rounded-xl border-2 border-slate-100 hover:border-indigo-100 transition-colors bg-slate-50">
-                     <div className={`w-12 h-12 flex items-center justify-center rounded-full font-black text-xl mr-4 ${
-                       idx === 0 ? 'bg-yellow-100 text-yellow-600' : 
-                       idx === 1 ? 'bg-slate-200 text-slate-600' :
-                       idx === 2 ? 'bg-orange-100 text-orange-600' : 'bg-white text-slate-400 border border-slate-200'
-                     }`}>
-                        {idx + 1}
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                     <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm ${
+                           idx === 0 ? 'bg-yellow-100 text-yellow-700' : 
+                           idx === 1 ? 'bg-slate-200 text-slate-700' :
+                           idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-white border border-slate-200 text-slate-500'
+                        }`}>
+                           {idx + 1}
+                        </div>
+                        <div className="flex flex-col">
+                           <span className="font-bold text-slate-800 text-sm">{p.name || 'Unknown'}</span>
+                           <span className="text-xs text-slate-400">Score: {p.score}</span>
+                        </div>
                      </div>
-                     <div className="flex-1 text-left">
-                        <div className="font-bold text-lg text-slate-800">{p.name || 'Unknown'}</div>
-                        {/* Show Match Score as secondary info */}
-                        <div className="text-xs text-slate-500">{t.pvpScore}: {p.score}</div>
-                     </div>
+                     
                      <div className="text-right">
-                        {/* Show Personal Rating (newScore) as primary info */}
-                        <div className="font-black text-2xl text-indigo-600">{p.newScore}</div>
-                        <div className={`text-xs font-bold ${p.delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                           {p.delta >= 0 ? '+' : ''}{p.delta} {t.pvpRatingChange || 'rating'}
+                        <div className="font-black text-lg text-indigo-600">{p.rating}</div>
+                        <div className={`text-[10px] font-bold ${p.delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                           {p.delta > 0 ? '+' : ''}{p.delta}
                         </div>
                      </div>
                   </div>
                 ))}
              </div>
 
-             <button 
-               onClick={resetGame}
-               className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg"
-             >
-               {t.pvpBackToLobby}
-             </button>
+             {/* Actions */}
+             <div className="w-full space-y-3">
+               {/* Show Review Match button if matchId is present */}
+               {matchId ? (
+                 <button 
+                   onClick={handleReviewMatch}
+                   className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center group"
+                 >
+                   <History className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                   Review Match
+                 </button>
+               ) : (
+                 <div className="text-xs text-center text-slate-300 py-1">Match ID not captured</div>
+               )}
+               
+               <button 
+                 onClick={resetGame}
+                 className="w-full py-3.5 bg-white border-2 border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-bold transition-all"
+               >
+                 {t.pvpBackToLobby}
+               </button>
+             </div>
           </div>
        </div>
     </div>
   );
+
+  const renderReview = () => {
+    if (!matchReviewData) return null;
+    const currentDetail = matchReviewData.details[activeReviewRound];
+
+    // Responsive Layout:
+    // Mobile: Flex Column (Map on top or middle, Selector horizontal scroller)
+    // Desktop: Flex Row (Selector on left sidebar)
+    
+    return (
+      <div className="w-full max-w-7xl mx-auto h-[calc(100dvh-80px)] flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden">
+        {/* Mobile: Match Header */}
+        <div className="md:hidden flex justify-between items-center px-2">
+           <div className="text-xs font-bold text-slate-500">
+             Match ID: <span className="text-slate-800 font-mono">{matchReviewData.room_id}</span>
+           </div>
+           <button 
+              onClick={() => setGameState('game_over')}
+              className="text-xs bg-slate-200 px-3 py-1 rounded-full font-bold text-slate-600"
+            >
+              Exit
+            </button>
+        </div>
+
+        {/* Sidebar / Top Bar */}
+        <div className="md:w-1/4 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col flex-shrink-0">
+          <div className="hidden md:flex p-4 bg-slate-50 border-b border-slate-100 font-bold text-slate-700 items-center justify-between">
+            <div className="flex items-center">
+              <History className="w-4 h-4 mr-2" />
+              Match Review
+            </div>
+            <div className="text-xs font-mono text-slate-400">{matchReviewData.room_id}</div>
+          </div>
+          
+          {/* Round Selector */}
+          <div className="flex md:flex-col overflow-x-auto md:overflow-y-auto p-2 space-x-2 md:space-x-0 md:space-y-2 no-scrollbar">
+            {matchReviewData.details.map((detail, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectReviewRound(index, detail)}
+                className={`flex-shrink-0 md:w-full p-3 rounded-lg border text-left transition-all min-w-[140px] md:min-w-0 ${
+                  activeReviewRound === index 
+                    ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-200' 
+                    : 'bg-white border-slate-100 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                    activeReviewRound === index ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    Round {detail.round}
+                  </span>
+                </div>
+                <div className="font-bold text-slate-800 text-sm truncate">{detail.city.city}</div>
+                <div className="text-xs text-slate-500 truncate">{detail.city.country}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="hidden md:block p-4 border-t border-slate-200 mt-auto">
+            <button 
+              onClick={() => setGameState('game_over')}
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium text-sm"
+            >
+              Back to Results
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col gap-4 md:gap-6 overflow-hidden">
+          {/* Map Section */}
+          <div className="flex-none h-[40vh] md:h-[45%] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
+             <MapPicker 
+               mode="review"
+               selectedLocation={null}
+               reviewRoundData={currentDetail}
+               onLocationSelect={() => {}}
+               onAnalyzeGuess={handleAnalyzeGuess}
+             />
+             
+             {/* Map Overlay Legend */}
+             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur p-2 rounded-lg border border-slate-200 shadow-sm text-xs space-y-1 z-[400]">
+                <div className="flex items-center">
+                   <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2 border border-white shadow-sm"></div>
+                   <span className="font-bold text-slate-700">Target</span>
+                </div>
+                <div className="flex items-center">
+                   <div className="w-3 h-3 rounded-full bg-red-500 mr-2 border border-white shadow-sm"></div>
+                   <span className="font-bold text-slate-700">Players</span>
+                </div>
+             </div>
+          </div>
+
+          {/* Climate Info Section */}
+          <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:p-6 custom-scrollbar">
+             <h3 className="font-bold text-lg mb-4 text-slate-800 flex items-center border-b border-slate-100 pb-3 sticky top-0 bg-white z-10">
+               <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
+               Correct Answer: <span className="ml-1 text-indigo-700">{currentDetail.city.city}, {currentDetail.city.country}</span>
+             </h3>
+             
+             {reviewClimateData && reviewClassification ? (
+               <div className="space-y-6">
+                 <ClassificationCard 
+                   classificationData={reviewClassification.data}
+                   lat={typeof currentDetail.city.lat === 'string' ? parseFloat(currentDetail.city.lat) : currentDetail.city.lat}
+                   lng={typeof currentDetail.city.lon === 'string' ? parseFloat(currentDetail.city.lon) : currentDetail.city.lon}
+                   locationName={`${currentDetail.city.city}`}
+                 />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <ClimateChart data={reviewClimateData.data} />
+                    <ClimateTable data={reviewClimateData.data} />
+                 </div>
+               </div>
+             ) : (
+               <div className="flex justify-center items-center h-40">
+                 <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
+               </div>
+             )}
+          </div>
+        </div>
+
+        {/* Modal for Guess Analysis */}
+        {guessAnalysis && (
+          <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
+              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 className="font-bold text-lg text-slate-800">
+                  Analysis: <span className="text-indigo-600">{guessAnalysis.username}'s Guess</span>
+                </h3>
+                <button onClick={closeGuessAnalysis} className="p-2 hover:bg-slate-200 rounded-full">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-6">
+                 <ClassificationCard 
+                   classificationData={guessAnalysis.classification.data}
+                   lat={0} lng={0} 
+                   locationName={`${guessAnalysis.username}'s Selected Location`}
+                 />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
+                    <ClimateTable data={guessAnalysis.climate.data} />
+                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 relative">
@@ -1109,6 +1392,7 @@ export const PvpGame: React.FC = () => {
        {gameState === 'waiting' && renderWaiting()}
        {(gameState === 'playing' || gameState === 'countdown' || gameState === 'round_result') && renderGame()}
        {gameState === 'game_over' && renderGameOver()}
+       {gameState === 'review' && renderReview()}
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { Shovel } from 'lucide-react';
-import { GeoLocation } from '../types';
+import { Shovel, Search } from 'lucide-react';
+import { GeoLocation, MatchReviewDetail } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export interface MapPoint {
@@ -13,16 +13,18 @@ export interface MapPoint {
 }
 
 interface MapPickerProps {
-  mode: 'single' | 'compare' | 'game';
+  mode: 'single' | 'compare' | 'game' | 'review';
   selectedLocation: GeoLocation | null; // For single mode and game user guess
   comparisonPoints?: MapPoint[];        // For compare mode
   gameTargetLocation?: GeoLocation | null; // For game revealed state
+  reviewRoundData?: MatchReviewDetail | null; // For review mode
   onLocationSelect: (location: GeoLocation) => void;
   onAntipodeTrigger?: () => void;
   isMarsMode?: boolean;
   isRetroMode?: boolean;
   isDigging?: boolean;
   onDig?: () => void;
+  onAnalyzeGuess?: (lat: number, lng: number, name: string) => void; // New callback for review mode
 }
 
 // Custom TileLayer to support QuadKeys for Bing Maps
@@ -77,7 +79,7 @@ const QuadKeyTileLayer = ({ url, ...props }: any) => {
 };
 
 // Helper to create a colored DivIcon marker
-const createColoredIcon = (color: string) => {
+const createColoredIcon = (color: string, size: number = 32) => {
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -88,11 +90,25 @@ const createColoredIcon = (color: string) => {
   return L.divIcon({
     className: 'custom-map-marker',
     html: svgIcon,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size],
   });
 };
+
+// Green Flag Icon for Correct Location
+const flagIcon = L.divIcon({
+  className: 'custom-map-marker-flag',
+  html: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#10b981" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+      <line x1="4" y1="22" x2="4" y2="15"></line>
+    </svg>
+  `,
+  iconSize: [32, 32],
+  iconAnchor: [4, 32],
+  popupAnchor: [0, -32],
+});
 
 // Default blue icon for single mode
 const defaultIcon = L.icon({
@@ -105,10 +121,22 @@ const defaultIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Green icon for Game Correct Location
+// Green icon for Game Correct Location (Generic)
 const greenIcon = createColoredIcon('#10b981');
 // Red icon for Game User Guess
 const redIcon = createColoredIcon('#ef4444');
+
+// Player Colors for Review Mode (Matches PvpGame)
+const PLAYER_COLORS = [
+  '#ef4444', // Red
+  '#3b82f6', // Blue
+  '#10b981', // Green
+  '#f59e0b', // Amber
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#06b6d4', // Cyan
+  '#84cc16'  // Lime
+];
 
 const isValidCoordinate = (lat: any, lng: any) => {
   return typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
@@ -192,7 +220,52 @@ const GameResultFitter: React.FC<{ guess: GeoLocation | null; target: GeoLocatio
   return null;
 };
 
-export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, comparisonPoints, gameTargetLocation, onLocationSelect, onAntipodeTrigger, isMarsMode, isRetroMode, isDigging = false, onDig }) => {
+// Review Mode Fitter
+const ReviewFitter: React.FC<{ data: MatchReviewDetail | null }> = ({ data }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (!data) return;
+    
+    // Ensure numbers for target
+    const targetLat = typeof data.city.lat === 'string' ? parseFloat(data.city.lat) : data.city.lat;
+    const targetLng = typeof data.city.lon === 'string' ? parseFloat(data.city.lon) : data.city.lon;
+    
+    if (!isValidCoordinate(targetLat, targetLng)) return;
+
+    const points: [number, number][] = [[targetLat, targetLng]];
+    
+    data.answers.forEach(a => {
+      // Ensure numbers for answers
+      const aLat = typeof a.lat === 'string' ? parseFloat(a.lat) : a.lat;
+      const aLon = typeof a.lon === 'string' ? parseFloat(a.lon) : a.lon;
+      
+      if (isValidCoordinate(aLat, aLon)) {
+        points.push([aLat, aLon]);
+      }
+    });
+    
+    if (points.length > 0) {
+      const bounds = L.latLngBounds(points);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6, duration: 1 });
+    }
+  }, [data, map]);
+  return null;
+};
+
+export const MapPicker: React.FC<MapPickerProps> = ({ 
+  mode, 
+  selectedLocation, 
+  comparisonPoints, 
+  gameTargetLocation, 
+  reviewRoundData,
+  onLocationSelect, 
+  onAntipodeTrigger, 
+  isMarsMode, 
+  isRetroMode, 
+  isDigging = false, 
+  onDig,
+  onAnalyzeGuess 
+}) => {
   const { t } = useLanguage();
 
   const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
@@ -205,11 +278,16 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
 
   // Construct border/shadow classes based on mode
   let containerClasses = "h-[400px] w-full rounded-xl overflow-hidden shadow-lg border relative z-0";
+  // Adjust height for review mode to fill container
+  if (mode === 'review') {
+    containerClasses = "h-full w-full rounded-none overflow-hidden relative z-0";
+  }
+
   if (isRetroMode) {
     containerClasses += " border-4 border-black shadow-none grayscale-[0.2]";
   } else if (isMarsMode) {
     containerClasses += " border-orange-500 shadow-orange-200";
-  } else {
+  } else if (mode !== 'review') {
     containerClasses += " border-slate-200";
   }
 
@@ -258,14 +336,13 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
                   noWrap={false}
                 />
               </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name={t.mapLayers.gaode}>
+              <LayersControl.BaseLayer checked name={t.mapLayers.gaode}>
                 <TileLayer
                   attribution='&copy; AutoNavi'
                   url="https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
                   subdomains={["1", "2", "3", "4"]}
                 />
               </LayersControl.BaseLayer>
-              {/* For Retro Mode, maybe prefer a cleaner map like Gaode En or just stay with OSM */}
               <LayersControl.BaseLayer checked={!!isRetroMode && !isMarsMode} name={t.mapLayers.gaodeEn}>
                 <TileLayer
                   attribution='&copy; AutoNavi'
@@ -280,21 +357,18 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
                   subdomains={["1", "2", "3", "4"]}
                 />
               </LayersControl.BaseLayer>
-              {/* Bing Satellite (WGS84) - Pure Aerial */}
               <LayersControl.BaseLayer name={t.mapLayers.bingSat}>
                 <QuadKeyTileLayer
                   attribution='&copy; Microsoft Bing Maps'
                   url="https://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1"
                 />
               </LayersControl.BaseLayer>
-              {/* Bing Hybrid (WGS84) - Satellite + Labels */}
               <LayersControl.BaseLayer checked={!isRetroMode} name={t.mapLayers.bingHybrid}>
                 <QuadKeyTileLayer
                   attribution='&copy; Microsoft Bing Maps'
                   url="https://ecn.t3.tiles.virtualearth.net/tiles/h{q}.jpeg?g=1"
                 />
               </LayersControl.BaseLayer>
-              {/* Bing Street (GCJ02/Mars - Offset may exist relative to markers) */}
               <LayersControl.BaseLayer name={t.mapLayers.bingStreet}>
                 <QuadKeyTileLayer
                   attribution='&copy; Microsoft Bing Maps'
@@ -307,8 +381,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
 
         <ScaleControl position="bottomleft" />
         
-        {/* Disable click to select if game is already revealed (target exists) */}
-        {!gameTargetLocation && <MapController onSelect={onLocationSelect} />}
+        {/* Disable click to select if game is already revealed or in review mode */}
+        {!gameTargetLocation && mode !== 'review' && <MapController onSelect={onLocationSelect} />}
         
         <MapInvalidator />
         
@@ -377,6 +451,74 @@ export const MapPicker: React.FC<MapPickerProps> = ({ mode, selectedLocation, co
                 <GameResultFitter guess={selectedLocation} target={gameTargetLocation} />
               </>
             )}
+          </>
+        )}
+
+        {/* Review Mode Markers */}
+        {mode === 'review' && reviewRoundData && (
+          <>
+            {/* Correct Target (Flag or Green Marker) */}
+            <Marker 
+              position={[
+                typeof reviewRoundData.city.lat === 'string' ? parseFloat(reviewRoundData.city.lat) : reviewRoundData.city.lat,
+                typeof reviewRoundData.city.lon === 'string' ? parseFloat(reviewRoundData.city.lon) : reviewRoundData.city.lon
+              ]} 
+              icon={flagIcon}
+              zIndexOffset={1000} // Ensure it's on top
+            >
+              <Popup offset={[0, -32]} autoClose={false}>
+                <div className="text-center font-bold text-emerald-600">{reviewRoundData.city.city}</div>
+                <div className="text-xs text-slate-500 text-center">{reviewRoundData.city.country}</div>
+              </Popup>
+            </Marker>
+
+            {/* Players Guesses */}
+            {reviewRoundData.answers.map((answer, index) => {
+              const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
+              const lat = typeof answer.lat === 'string' ? parseFloat(answer.lat) : answer.lat;
+              const lon = typeof answer.lon === 'string' ? parseFloat(answer.lon) : answer.lon;
+              
+              if (!isValidCoordinate(lat, lon)) return null;
+
+              return (
+                <React.Fragment key={`review-${answer.userId}-${index}`}>
+                  <Marker 
+                    position={[lat, lon]} 
+                    icon={createColoredIcon(color, 24)}
+                  >
+                    <Popup offset={[0, -24]}>
+                      <div className="text-xs">
+                        <div className="font-bold mb-1" style={{ color: color }}>{answer.username}</div>
+                        <div className="font-mono text-slate-500 mb-2">Score: {answer.score}</div>
+                        {onAnalyzeGuess && (
+                          <button 
+                            onClick={() => onAnalyzeGuess(lat, lon, answer.username)}
+                            className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[10px] font-bold w-full justify-center transition-colors"
+                          >
+                            <Search className="w-3 h-3" />
+                            <span>Analyze Climate</span>
+                          </button>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                  <Polyline 
+                    positions={[
+                      [lat, lon],
+                      [
+                        typeof reviewRoundData.city.lat === 'string' ? parseFloat(reviewRoundData.city.lat) : reviewRoundData.city.lat,
+                        typeof reviewRoundData.city.lon === 'string' ? parseFloat(reviewRoundData.city.lon) : reviewRoundData.city.lon
+                      ]
+                    ]}
+                    dashArray="5, 10"
+                    color={color}
+                    weight={2}
+                    opacity={0.8}
+                  />
+                </React.Fragment>
+              );
+            })}
+            <ReviewFitter data={reviewRoundData} />
           </>
         )}
 
