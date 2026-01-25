@@ -302,6 +302,37 @@ export const MapPicker: React.FC<MapPickerProps> = ({
     width: '100%' 
   };
 
+  // Helper to safely parse review coordinates
+  const getReviewCoordinates = (): { target: [number, number] | null, answers: { lat: number, lon: number, color: string, username: string, score: number }[] } => {
+    if (!reviewRoundData) return { target: null, answers: [] };
+
+    let target: [number, number] | null = null;
+    const tLat = typeof reviewRoundData.city.lat === 'string' ? parseFloat(reviewRoundData.city.lat) : reviewRoundData.city.lat;
+    const tLon = typeof reviewRoundData.city.lon === 'string' ? parseFloat(reviewRoundData.city.lon) : reviewRoundData.city.lon;
+    if (isValidCoordinate(tLat, tLon)) {
+      target = [tLat, tLon];
+    }
+
+    const answers = reviewRoundData.answers.map((answer, index) => {
+      const lat = typeof answer.lat === 'string' ? parseFloat(answer.lat) : answer.lat;
+      const lon = typeof answer.lon === 'string' ? parseFloat(answer.lon) : answer.lon;
+      if (isValidCoordinate(lat, lon)) {
+        return {
+          lat,
+          lon,
+          color: PLAYER_COLORS[index % PLAYER_COLORS.length],
+          username: answer.username,
+          score: answer.score
+        };
+      }
+      return null;
+    }).filter(a => a !== null) as { lat: number, lon: number, color: string, username: string, score: number }[];
+
+    return { target, answers };
+  };
+
+  const { target: reviewTarget, answers: reviewAnswers } = mode === 'review' ? getReviewCoordinates() : { target: null, answers: [] };
+
   return (
     <div className={containerClasses}>
       <MapContainer
@@ -458,41 +489,37 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         {mode === 'review' && reviewRoundData && (
           <>
             {/* Correct Target (Flag or Green Marker) */}
-            <Marker 
-              position={[
-                typeof reviewRoundData.city.lat === 'string' ? parseFloat(reviewRoundData.city.lat) : reviewRoundData.city.lat,
-                typeof reviewRoundData.city.lon === 'string' ? parseFloat(reviewRoundData.city.lon) : reviewRoundData.city.lon
-              ]} 
-              icon={flagIcon}
-              zIndexOffset={1000} // Ensure it's on top
-            >
-              <Popup offset={[0, -32]} autoClose={false}>
-                <div className="text-center font-bold text-emerald-600">{reviewRoundData.city.city}</div>
-                <div className="text-xs text-slate-500 text-center">{reviewRoundData.city.country}</div>
-              </Popup>
-            </Marker>
+            {reviewTarget && (
+              <Marker 
+                position={reviewTarget} 
+                icon={flagIcon}
+                zIndexOffset={1000} // Ensure it's on top
+              >
+                <Popup offset={[0, -32]} autoClose={false}>
+                  <div className="text-center font-bold text-emerald-600">{reviewRoundData.city.city}</div>
+                  <div className="text-xs text-slate-500 text-center">{reviewRoundData.city.country}</div>
+                </Popup>
+              </Marker>
+            )}
 
             {/* Players Guesses */}
-            {reviewRoundData.answers.map((answer, index) => {
-              const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
-              const lat = typeof answer.lat === 'string' ? parseFloat(answer.lat) : answer.lat;
-              const lon = typeof answer.lon === 'string' ? parseFloat(answer.lon) : answer.lon;
-              
-              if (!isValidCoordinate(lat, lon)) return null;
+            {reviewAnswers.map((answer, index) => {
+              // Target is already validated, but check for safety
+              if (!reviewTarget) return null;
 
               return (
-                <React.Fragment key={`review-${answer.userId}-${index}`}>
+                <React.Fragment key={`review-${answer.username}-${index}`}>
                   <Marker 
-                    position={[lat, lon]} 
-                    icon={createColoredIcon(color, 24)}
+                    position={[answer.lat, answer.lon]} 
+                    icon={createColoredIcon(answer.color, 24)}
                   >
                     <Popup offset={[0, -24]}>
                       <div className="text-xs">
-                        <div className="font-bold mb-1" style={{ color: color }}>{answer.username}</div>
+                        <div className="font-bold mb-1" style={{ color: answer.color }}>{answer.username}</div>
                         <div className="font-mono text-slate-500 mb-2">Score: {answer.score}</div>
                         {onAnalyzeGuess && (
                           <button 
-                            onClick={() => onAnalyzeGuess(lat, lon, answer.username)}
+                            onClick={() => onAnalyzeGuess(answer.lat, answer.lon, answer.username)}
                             className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[10px] font-bold w-full justify-center transition-colors"
                           >
                             <Search className="w-3 h-3" />
@@ -504,14 +531,11 @@ export const MapPicker: React.FC<MapPickerProps> = ({
                   </Marker>
                   <Polyline 
                     positions={[
-                      [lat, lon],
-                      [
-                        typeof reviewRoundData.city.lat === 'string' ? parseFloat(reviewRoundData.city.lat) : reviewRoundData.city.lat,
-                        typeof reviewRoundData.city.lon === 'string' ? parseFloat(reviewRoundData.city.lon) : reviewRoundData.city.lon
-                      ]
+                      [answer.lat, answer.lon],
+                      reviewTarget
                     ]}
                     dashArray="5, 10"
-                    color={color}
+                    color={answer.color}
                     weight={2}
                     opacity={0.8}
                   />

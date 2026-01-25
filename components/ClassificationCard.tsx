@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
-import { ClassificationEntry } from '../types';
-import { Info, MapPin, BookOpen, HelpCircle } from 'lucide-react';
+import React, { useRef, useState, useMemo } from 'react';
+import { ClassificationEntry, MonthlyClimateData } from '../types';
+import { Info, MapPin, BookOpen, HelpCircle, RotateCw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getChineseClimateClassification } from '../services/climateService';
+import { getClimateClassification } from '../services/logic';
 
 interface ClassificationCardProps {
   classificationData: ClassificationEntry[];
@@ -12,6 +13,7 @@ interface ClassificationCardProps {
   masked?: boolean; // New prop for game mode
   hintRevealed?: boolean; // If true, shows code/description even if masked
   onDig?: () => void; // Trigger for digger mode
+  climateData?: MonthlyClimateData[]; // Required for local calculation
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -88,47 +90,74 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   locationName, 
   masked = false, 
   hintRevealed = false,
-  onDig
+  onDig,
+  climateData
 }) => {
   const { t, language } = useLanguage();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [useModifiedLogic, setUseModifiedLogic] = useState(true);
 
-  // Determine actual data
+  // Determine API data
   const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
-  let code = mainClass?.code || 'N/A';
+  const apiCode = mainClass?.code || 'N/A';
+  
+  // Calculate local code if enabled
+  const calculatedCode = useMemo(() => {
+    if (useModifiedLogic && climateData && climateData.length === 12) {
+      const temps = climateData.map(d => d.temp);
+      const precips = climateData.map(d => d.prec);
+      const c = getClimateClassification(temps, precips, lat);
+      return c !== 'N/A' ? c : null;
+    }
+    return null;
+  }, [useModifiedLogic, climateData, lat]);
+
+  const code = calculatedCode || apiCode;
+  
+  // Logic for display text (title)
+  // If we switched to a new code, we try to find the Chinese text if possible.
+  // For English or if match not found, we fallback to the API text or generic.
   let displayText = mainClass?.text;
   
-  if (language === 'zh' && mainClass?.code) {
-    const cnText = getChineseClimateClassification(mainClass.code);
-    if (cnText) displayText = cnText;
+  // If we are using modified logic and the code changed, the API text might be wrong.
+  // Try to update text based on code if possible.
+  if (calculatedCode && calculatedCode !== apiCode) {
+     if (language === 'zh') {
+       const cnText = getChineseClimateClassification(calculatedCode);
+       if (cnText) displayText = cnText;
+     } else {
+       // In English, we don't have a full map, but we can try to be generic or keep using API text
+       // if it shares the same group, otherwise maybe just show Code?
+       // For now, let's append "(Modified)" to title to indicate change if we can't find exact text
+       // Or just leave it as is if it's close enough. 
+       // Ideally we would have a full code->name map.
+     }
+  } else {
+    // Standard API text processing
+    if (language === 'zh' && mainClass?.code) {
+      const cnText = getChineseClimateClassification(mainClass.code);
+      if (cnText) displayText = cnText;
+    }
   }
+
   displayText = displayText || (language === 'zh' ? '未知气候' : 'Unknown Climate');
   
-  const actualDescription = mainClass?.code ? t.climateDescriptions[mainClass.code] : null;
+  const actualDescription = code ? t.climateDescriptions[code] : null;
 
   // Determine display State based on masked & hintRevealed
-  // masked means "Game Playing Mode" -> Location is hidden
-  // hintRevealed means "Show Climate Info anyway"
-  
   const isClimateHidden = masked && !hintRevealed;
-  
-  // If climate is hidden, we use mystery values. 
-  // If hint is revealed, we show actual code/text/color but keep location masked.
   
   const displayCode = isClimateHidden ? "??" : code;
   const displayTitle = isClimateHidden ? t.unknownClimate : displayText;
   const displayDescription = isClimateHidden ? t.gameInstruction : actualDescription;
   
   // Background logic
-  // If hidden, use the dark mystery background.
-  // If revealed, use the actual climate color.
   const bgColor = isClimateHidden ? '#475569' : getClimateColor(code);
   const gradientEnd = isClimateHidden ? '#1e293b' : adjustBrightness(bgColor, -20);
   
   // Brightness check for text contrast
   const isBright = (!isClimateHidden && code) ? BRIGHT_CLIMATE_CODES.includes(code) : false;
   
-  // Location is always masked if masked=true
   const locationHeader = masked ? t.mysteryLocation : (locationName || `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`);
   const locationSubtext = masked ? "??.??°N/S, ??.??°E/W" : `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? 'E' : 'W'}`;
 
@@ -149,6 +178,19 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
 
   const textShadowStyle = (isBright || isClimateHidden) ? {} : {
     textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)'
+  };
+
+  // Golden Glow Effect for Modified Logic
+  const modifiedGlowStyle = (useModifiedLogic && calculatedCode && !isClimateHidden) ? {
+    textShadow: '0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px #f59e0b',
+    color: '#ffffff'
+  } : {};
+
+  const toggleLogic = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isClimateHidden && climateData && climateData.length === 12) {
+      setUseModifiedLogic(prev => !prev);
+    }
   };
 
   const startPress = () => {
@@ -200,9 +242,24 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
              {locationSubtext}
           </p>
         </div>
-        <div className={`${badgeBgClass} p-3 rounded-lg border`}>
-             <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>
-             <span className="text-3xl font-bold" style={textShadowStyle}>{displayCode}</span>
+        
+        <div 
+           className={`${badgeBgClass} p-3 rounded-lg border transition-all duration-300 relative group ${!isClimateHidden && climateData ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
+           onClick={toggleLogic}
+        >
+             <div className="flex items-center justify-between space-x-2 mb-1">
+                <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>
+                {useModifiedLogic && !isClimateHidden && (
+                  <RotateCw className="w-3 h-3 text-amber-300 animate-spin-slow" />
+                )}
+             </div>
+             <span className="text-3xl font-bold" style={{...textShadowStyle, ...modifiedGlowStyle}}>{displayCode}</span>
+             
+             {!isClimateHidden && climateData && (
+               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-black/70 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none">
+                 {useModifiedLogic ? 'Using Modified Logic' : 'Click to Switch Logic'}
+               </div>
+             )}
         </div>
       </div>
       
@@ -213,14 +270,12 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
             <h3 className="text-lg font-semibold">
               {displayTitle}
             </h3>
-            {/* If hint revealed, show basedOn, otherwise show instruction context */}
             <p className={`text-sm mt-1 ${subTextClass}`}>
-              {isClimateHidden ? t.gameInstruction : t.basedOn}
+              {isClimateHidden ? t.gameInstruction : (useModifiedLogic && calculatedCode ? 'Based on Modified Peel et al. 2007 Logic' : t.basedOn)}
             </p>
           </div>
         </div>
 
-        {/* Dynamic Description if available (or game instruction if hidden) */}
         {displayDescription && (
            <div className={`mt-4 rounded-lg p-3 border flex items-start space-x-3 animate-in fade-in slide-in-from-top-2 duration-300 ${descriptionBgClass}`}>
              <BookOpen className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconClass}`} style={(!isBright && !isClimateHidden) ? { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' } : {}} />

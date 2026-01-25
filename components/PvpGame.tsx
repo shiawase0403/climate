@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -36,6 +37,8 @@ interface RoomInfo {
 export const PvpGame: React.FC = () => {
   const { t } = useLanguage();
   const socketRef = useRef<Socket | null>(null);
+  const navigate = useNavigate();
+  const { matchId: paramMatchId } = useParams();
 
   // States
   const [gameState, setGameState] = useState<PvpState>('login');
@@ -106,6 +109,19 @@ export const PvpGame: React.FC = () => {
     currentRoomIdRef.current = currentRoomId;
   }, [currentRoomId]);
 
+  // Handle URL Params for Review
+  useEffect(() => {
+    if (paramMatchId) {
+      loadMatchReviewData(paramMatchId);
+    } else {
+      // If we navigate away from review URL to base /pvp, reset to lobby/login
+      if (gameState === 'review') {
+        setGameState(currentUser ? 'lobby' : 'login');
+        setMatchReviewData(null);
+      }
+    }
+  }, [paramMatchId]);
+
   // Auto-dismiss notifications
   useEffect(() => {
     if (notification) {
@@ -169,8 +185,9 @@ export const PvpGame: React.FC = () => {
                   }
                 }
                 
+                // Only go to lobby if we are not currently reviewing a match via URL
                 setGameState(current => {
-                  if (current === 'login') {
+                  if (!paramMatchId && current === 'login') {
                     showToast(`Welcome back, ${u}!`, 'success');
                     return 'lobby';
                   }
@@ -186,7 +203,10 @@ export const PvpGame: React.FC = () => {
     });
 
     socket.on('connect_error', (err) => {
-        showToast(`Connection failed: ${err.message}`, 'error');
+        // Suppress connection error if we are just viewing a review
+        if (!paramMatchId) {
+           showToast(`Connection failed: ${err.message}`, 'error');
+        }
     });
 
     socket.on('error', (msg: any) => {
@@ -455,19 +475,12 @@ export const PvpGame: React.FC = () => {
     }
   };
 
-  const handleReviewMatch = async (idOverride?: string | number) => {
-    const targetId = idOverride || matchId;
-    
-    if (!targetId) {
-      showToast("Match ID is missing. Cannot review.", 'error');
-      return;
-    }
-    
+  const loadMatchReviewData = async (id: string | number) => {
     setLoadingReview(true);
     setNotification(null);
     
     try {
-      const res = await fetch(`${API_BASE}/match/${targetId}`);
+      const res = await fetch(`${API_BASE}/match/${id}`);
       if (res.ok) {
         const data: MatchReviewData = await res.json();
         if (!data || !data.details || data.details.length === 0) {
@@ -482,12 +495,25 @@ export const PvpGame: React.FC = () => {
         setShowHistoryModal(false);
       } else {
         showToast("Failed to fetch match details. Match may not be archived yet.", 'error');
+        // If failed and we are in URL mode, maybe go back
+        if (paramMatchId) {
+             // Optional: redirect to lobby after timeout?
+        }
       }
     } catch (e) {
       console.error(e);
       showToast("Network error fetching match review.", 'error');
     } finally {
       setLoadingReview(false);
+    }
+  };
+
+  const navigateToReview = (idOverride?: string | number) => {
+    const targetId = idOverride || matchId;
+    if (targetId) {
+      navigate(`/pvp/${targetId}`);
+    } else {
+      showToast("Match ID is missing. Cannot review.", 'error');
     }
   };
 
@@ -1050,7 +1076,7 @@ export const PvpGame: React.FC = () => {
                       </td>
                       <td className="p-4 text-right">
                         <button 
-                          onClick={() => handleReviewMatch(entry.room_id)}
+                          onClick={() => navigateToReview(entry.room_id)}
                           className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition-colors flex items-center ml-auto"
                         >
                           <Eye className="w-3 h-3 mr-1" />
@@ -1391,7 +1417,7 @@ export const PvpGame: React.FC = () => {
                {/* Show Review Match button if matchId is present */}
                {matchId ? (
                  <button 
-                   onClick={() => handleReviewMatch()}
+                   onClick={() => navigateToReview()}
                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center group"
                  >
                    <History className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -1417,27 +1443,23 @@ export const PvpGame: React.FC = () => {
     if (!matchReviewData) return null;
     const currentDetail = matchReviewData.details[activeReviewRound];
 
-    // Responsive Layout:
-    // Mobile: Flex Column (Map on top or middle, Selector horizontal scroller)
-    // Desktop: Flex Row (Selector on left sidebar)
-    
     return (
-      <div className="w-full max-w-7xl mx-auto h-[calc(100dvh-80px)] flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto h-[calc(100dvh-80px)] flex flex-col md:flex-row gap-2 md:gap-6 overflow-hidden">
         {/* Mobile: Match Header */}
-        <div className="md:hidden flex justify-between items-center px-2">
-           <div className="text-xs font-bold text-slate-500">
-             Match ID: <span className="text-slate-800 font-mono">{matchReviewData.room_id}</span>
+        <div className="md:hidden flex-none flex justify-between items-center px-4 py-2 bg-white border-b border-slate-100">
+           <div className="text-sm font-bold text-slate-700">
+             Match <span className="font-mono text-indigo-600">#{matchReviewData.room_id}</span>
            </div>
            <button 
-              onClick={() => setGameState('game_over')}
-              className="text-xs bg-slate-200 px-3 py-1 rounded-full font-bold text-slate-600"
+              onClick={() => navigate('/pvp')}
+              className="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full font-bold text-slate-600 transition-colors"
             >
               Exit
             </button>
         </div>
 
-        {/* Sidebar / Top Bar */}
-        <div className="md:w-1/4 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col flex-shrink-0">
+        {/* Sidebar (Desktop) / Top Bar (Mobile) - Round Selector */}
+        <div className="flex-none md:w-1/4 bg-white md:rounded-xl md:shadow-lg md:border border-slate-200 overflow-hidden flex flex-col">
           <div className="hidden md:flex p-4 bg-slate-50 border-b border-slate-100 font-bold text-slate-700 items-center justify-between">
             <div className="flex items-center">
               <History className="w-4 h-4 mr-2" />
@@ -1447,44 +1469,47 @@ export const PvpGame: React.FC = () => {
           </div>
           
           {/* Round Selector */}
-          <div className="flex md:flex-col overflow-x-auto md:overflow-y-auto p-2 space-x-2 md:space-x-0 md:space-y-2 no-scrollbar">
+          <div className="flex md:flex-col overflow-x-auto md:overflow-y-auto p-2 space-x-2 md:space-x-0 md:space-y-2 no-scrollbar bg-slate-50 md:bg-white">
             {matchReviewData.details.map((detail, index) => (
               <button
                 key={index}
                 onClick={() => handleSelectReviewRound(index, detail)}
-                className={`flex-shrink-0 md:w-full p-3 rounded-lg border text-left transition-all min-w-[140px] md:min-w-0 ${
+                className={`flex-shrink-0 md:w-full p-2 md:p-3 rounded-lg border text-left transition-all min-w-[120px] md:min-w-0 flex flex-col justify-center ${
                   activeReviewRound === index 
-                    ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-200' 
-                    : 'bg-white border-slate-100 hover:border-slate-300'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105 md:scale-100' 
+                    : 'bg-white border-slate-200 hover:border-indigo-300 text-slate-600'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                    activeReviewRound === index ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-200 text-slate-600'
+                <div className="flex justify-between items-center mb-0.5">
+                  <span className={`text-[10px] font-bold px-1.5 rounded-full uppercase tracking-wider ${
+                    activeReviewRound === index ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                   }`}>
-                    Round {detail.round}
+                    R{detail.round}
                   </span>
                 </div>
-                <div className="font-bold text-slate-800 text-sm truncate">{detail.city.city}</div>
-                <div className="text-xs text-slate-500 truncate">{detail.city.country}</div>
+                <div className={`font-bold text-sm truncate ${activeReviewRound === index ? 'text-white' : 'text-slate-800'}`}>{detail.city.city}</div>
+                <div className={`text-[10px] truncate ${activeReviewRound === index ? 'text-indigo-100' : 'text-slate-400'}`}>{detail.city.country}</div>
               </button>
             ))}
           </div>
 
           <div className="hidden md:block p-4 border-t border-slate-200 mt-auto">
             <button 
-              onClick={() => setGameState('game_over')}
-              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium text-sm"
+              onClick={() => navigate('/pvp')}
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium text-sm transition-colors"
             >
-              Back to Results
+              Back to Lobby
             </button>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col gap-4 md:gap-6 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-2 md:gap-6 overflow-hidden relative">
+          
+          {/* Mobile Tabs/Toggle could go here, but let's try a split view first */}
+          
           {/* Map Section */}
-          <div className="flex-none h-[40vh] md:h-[45%] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
+          <div className="flex-none h-[35vh] md:h-[45%] bg-white md:rounded-xl shadow-sm border-b md:border border-slate-200 overflow-hidden relative z-0">
              <MapPicker 
                mode="review"
                selectedLocation={null}
@@ -1492,45 +1517,48 @@ export const PvpGame: React.FC = () => {
                onLocationSelect={() => {}}
                onAnalyzeGuess={handleAnalyzeGuess}
              />
-             
-             {/* Map Overlay Legend */}
-             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur p-2 rounded-lg border border-slate-200 shadow-sm text-xs space-y-1 z-[400]">
+             {/* Map Overlay Legend moved to corner */}
+             <div className="absolute top-2 right-2 bg-white/90 backdrop-blur p-1.5 rounded-md border border-slate-200 shadow-sm text-[10px] space-y-1 z-[400]">
                 <div className="flex items-center">
-                   <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2 border border-white shadow-sm"></div>
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 border border-white shadow-sm"></div>
                    <span className="font-bold text-slate-700">Target</span>
                 </div>
                 <div className="flex items-center">
-                   <div className="w-3 h-3 rounded-full bg-red-500 mr-2 border border-white shadow-sm"></div>
+                   <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5 border border-white shadow-sm"></div>
                    <span className="font-bold text-slate-700">Players</span>
                 </div>
              </div>
           </div>
 
           {/* Climate Info Section */}
-          <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:p-6 custom-scrollbar">
-             <h3 className="font-bold text-lg mb-4 text-slate-800 flex items-center border-b border-slate-100 pb-3 sticky top-0 bg-white z-10">
-               <CheckCircle className="w-5 h-5 text-emerald-500 mr-2" />
-               Correct Answer: <span className="ml-1 text-indigo-700">{currentDetail.city.city}, {currentDetail.city.country}</span>
-             </h3>
+          <div className="flex-1 overflow-y-auto bg-white md:rounded-xl md:shadow-lg md:border border-slate-200 relative">
              
-             {reviewClimateData && reviewClassification ? (
-               <div className="space-y-6">
-                 <ClassificationCard 
-                   classificationData={reviewClassification.data}
-                   lat={typeof currentDetail.city.lat === 'string' ? parseFloat(currentDetail.city.lat) : currentDetail.city.lat}
-                   lng={typeof currentDetail.city.lon === 'string' ? parseFloat(currentDetail.city.lon) : currentDetail.city.lon}
-                   locationName={`${currentDetail.city.city}`}
-                 />
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ClimateChart data={reviewClimateData.data} />
-                    <ClimateTable data={reviewClimateData.data} />
+             <div className="p-4 space-y-4 md:p-6 md:space-y-6">
+               {reviewClimateData && reviewClassification ? (
+                 <>
+                   {/* Compact Classification Card for Review */}
+                   <ClassificationCard 
+                     classificationData={reviewClassification.data}
+                     lat={typeof currentDetail.city.lat === 'string' ? parseFloat(currentDetail.city.lat) : currentDetail.city.lat}
+                     lng={typeof currentDetail.city.lon === 'string' ? parseFloat(currentDetail.city.lon) : currentDetail.city.lon}
+                     locationName={`${currentDetail.city.city}, ${currentDetail.city.country}`}
+                     masked={false}
+                     climateData={reviewClimateData.data}
+                   />
+
+                   {/* Charts Grid */}
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-4">
+                      <ClimateChart data={reviewClimateData.data} />
+                      <ClimateTable data={reviewClimateData.data} />
+                   </div>
+                 </>
+               ) : (
+                 <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                   <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                   <span className="text-xs">Loading climate data...</span>
                  </div>
-               </div>
-             ) : (
-               <div className="flex justify-center items-center h-40">
-                 <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
-               </div>
-             )}
+               )}
+             </div>
           </div>
         </div>
 
@@ -1564,6 +1592,7 @@ export const PvpGame: React.FC = () => {
                          classificationData={guessAnalysis.classification.data}
                          lat={guessAnalysis.lat} lng={guessAnalysis.lon} // CORRECT COORDINATES
                          locationName={`${guessAnalysis.username}'s Selected Location`}
+                         climateData={guessAnalysis.climate.data}
                        />
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
@@ -1580,87 +1609,45 @@ export const PvpGame: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 relative">
-       {/* New Notification Toast System (Replaces old red Error banner) */}
-       {notification && (
-         <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-[2000] px-6 py-4 rounded-xl shadow-2xl flex items-center max-w-[90vw] md:max-w-[500px] animate-in slide-in-from-top-4 border-l-4 bg-white ${
-           notification.type === 'error' ? 'border-red-500' : 
-           notification.type === 'success' ? 'border-emerald-500' : 
-           'border-indigo-500'
-         }`}>
-           {notification.type === 'error' && <AlertCircle className="w-6 h-6 mr-3 text-red-500 flex-shrink-0" />}
-           {notification.type === 'success' && <CheckCircle className="w-6 h-6 mr-3 text-emerald-500 flex-shrink-0" />}
-           {notification.type === 'info' && <Info className="w-6 h-6 mr-3 text-indigo-500 flex-shrink-0" />}
-           
-           <div className="flex-1 text-sm font-medium break-words text-slate-800">
-             {notification.message}
-           </div>
-           <button onClick={() => setNotification(null)} className="ml-4 p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
-             <X className="w-4 h-4" />
-           </button>
+    <div className="w-full min-h-[calc(100vh-100px)]">
+      {statusInfo && statusInfo.type === 'loading' && (
+         <div className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 shadow-2xl flex flex-col items-center max-w-sm w-full animate-in zoom-in-95">
+               <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
+               <h3 className="text-lg font-bold text-slate-800 mb-1">Please wait...</h3>
+               <p className="text-center text-slate-600">{statusInfo.message}</p>
+            </div>
          </div>
-       )}
-       
-       {/* Status Info Overlay (Strictly for Blocking/Loading states) */}
-       {statusInfo && statusInfo.type === 'loading' && (
-          <div className="fixed inset-0 z-[3000] bg-black/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
-             <div className="bg-white px-10 py-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm text-center transform scale-100 animate-in zoom-in-95 duration-200">
-                <div className="relative mb-6">
-                   <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                   <div className="absolute inset-0 flex items-center justify-center">
-                       <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-                   </div>
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">{statusInfo.message}</h3>
-                <p className="text-slate-500 text-sm animate-pulse">Please wait...</p>
-             </div>
-          </div>
-       )}
+      )}
 
-       {/* Rejoin Modal */}
-       {showRejoinModal && rejoinRoomId && (
-         <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border-2 border-indigo-100 relative animate-in zoom-in-95">
-               <div className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={handleDeclineRejoin}>
-                 <X className="w-5 h-5" />
+      {showRejoinModal && (
+         <div className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 shadow-2xl max-w-md w-full animate-in zoom-in-95">
+               <div className="flex flex-col items-center text-center mb-6">
+                  <RotateCcw className="w-12 h-12 text-indigo-600 mb-3" />
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">Rejoin Match?</h3>
+                  <p className="text-slate-600">You have an active match in progress (Room: {rejoinRoomId}). Rejoin?</p>
                </div>
-               
-               <div className="flex flex-col items-center text-center">
-                  <div className="bg-blue-100 p-4 rounded-full mb-6">
-                     <RotateCcw className="w-8 h-8 text-blue-600" />
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Rejoin Previous Game?</h3>
-                  <p className="text-slate-600 mb-6">
-                    You seem to have been disconnected from room <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded">{rejoinRoomId}</span>. Would you like to rejoin?
-                  </p>
-                  
-                  <div className="flex space-x-4 w-full">
-                     <button 
-                       onClick={handleDeclineRejoin}
-                       className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-                     >
-                       Cancel
-                     </button>
-                     <button 
-                       onClick={handleRejoin}
-                       className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
-                     >
-                       Rejoin Game
-                     </button>
-                  </div>
+               <div className="flex space-x-3 w-full">
+                  <button onClick={handleDeclineRejoin} className="flex-1 py-2.5 border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                  No
+                  </button>
+                  <button onClick={handleRejoin} className="flex-1 py-2.5 bg-indigo-600 rounded-lg font-bold text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                  Yes, Rejoin
+                  </button>
                </div>
             </div>
          </div>
-       )}
+      )}
+      
+      {renderHistoryModal()}
 
-       {gameState === 'login' && renderLogin()}
-       {gameState === 'lobby' && renderLobby()}
-       {gameState === 'waiting' && renderWaiting()}
-       {(gameState === 'playing' || gameState === 'countdown' || gameState === 'round_result') && renderGame()}
-       {gameState === 'game_over' && renderGameOver()}
-       {gameState === 'review' && renderReview()}
-       {renderHistoryModal()}
+      {gameState === 'login' && renderLogin()}
+      {gameState === 'lobby' && renderLobby()}
+      {gameState === 'waiting' && renderWaiting()}
+      {(gameState === 'playing' || gameState === 'countdown' || gameState === 'round_result') && renderGame()}
+      {gameState === 'game_over' && renderGameOver()}
+      {gameState === 'review' && renderReview()}
     </div>
   );
 };
