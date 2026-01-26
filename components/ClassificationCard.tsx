@@ -126,11 +126,9 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
        const cnText = getChineseClimateClassification(calculatedCode);
        if (cnText) displayText = cnText;
      } else {
-       // In English, we don't have a full map, but we can try to be generic or keep using API text
-       // if it shares the same group, otherwise maybe just show Code?
-       // For now, let's append "(Modified)" to title to indicate change if we can't find exact text
-       // Or just leave it as is if it's close enough. 
-       // Ideally we would have a full code->name map.
+       // In English, use the description as the title since it's the class name
+       const enText = t.climateDescriptions[calculatedCode];
+       if (enText) displayText = enText;
      }
   } else {
     // Standard API text processing
@@ -276,7 +274,7 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
           </div>
         </div>
 
-        {displayDescription && (
+        {displayDescription && displayDescription !== displayTitle && (
            <div className={`mt-4 rounded-lg p-3 border flex items-start space-x-3 animate-in fade-in slide-in-from-top-2 duration-300 ${descriptionBgClass}`}>
              <BookOpen className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconClass}`} style={(!isBright && !isClimateHidden) ? { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' } : {}} />
              <p className="text-sm leading-relaxed font-medium" style={textShadowStyle}>
