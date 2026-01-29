@@ -53,6 +53,20 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 5.8667,
         lng: -55.1667,
         description: '位于南美洲东北部的圭亚那地盾边缘。这里受北大西洋信风带的控制，且由于亚马逊雨林的蒸腾作用提供了背景湿度，使得该区域全年湿润。赤道低气压带的南北移动虽然带来降水波动，但即使在“干季”降水也依然丰富。'
+      },      
+      {
+        name: 'Iquitos (伊基托斯)',
+        country: 'Peru',
+        lat: -3.7406,
+        lng: -73.2456,
+        description: '位于亚马孙雨林腹地降水最多处，盆地三面环山，东南东北信风水汽积聚难以逃逸，森林蒸腾保持湿度，全年恒温，日较差年较差极小，湿度很大，降水超过3000mm。'
+      },
+      {
+        name: 'Kisangani (基桑加尼)',
+        country: 'Congo(Kinshasa)',
+        lat: 0.5230,
+        lng: 25.1738,
+        description: '位于刚果盆地，信风与大西洋西南季风带来水汽在此汇集，降水相比亚马孙地区较少，降水类型为双峰型（太阳直射点移动导致赤道低气压带摆动）。'
       },
       {
         name: 'Georgetown (乔治敦)',
@@ -67,6 +81,27 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     code: 'Am',
     title: '热带季风气候 (Tropical Monsoon)',
     cities: [
+      {
+        name: 'Mumbai (孟买)',
+        country: 'India',
+        lat: 19.0411,
+        lng: 72.8715,
+        description: '西高止山脉迎风坡，降水集中的热带季风气候，7月降水量接近1000mm，年降水量超过2500毫米，但是纬度略高，雨季时间仅有4个月左右'
+      },
+      {
+        name: 'Hengchun (恒春)',
+        country: 'China',
+        lat: 22.0039,
+        lng: 120.7465,
+        description: '台湾省最南端，海洋调节显著，受到季风和黑潮暖流的影响，夏秋季的西南季风和台风带来极为充沛的降水，冬季处于东北季风背风处，有“落山风”现象，降水相较于台湾省东部略少'
+      },
+      {
+        name: 'Wanning (万宁)',
+        country: 'China',
+        lat: 18.7944,
+        lng: 110.3883,
+        description: '海南省东南部，位于夏季风迎风坡，叠加台风影响，降水充沛'
+      },
       {
         name: 'Malé (马累)',
         country: 'Maldives',
@@ -122,6 +157,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     code: 'Aw',
     title: '热带稀树草原气候 (Tropical Savanna - Winter Dry)',
     cities: [
+ {
+        name: 'Bamako (巴马科)',
+        country: 'Mali',
+        lat: 12.6000,
+        lng: -8.0000,
+        description: '深居内陆，无海洋调节，干湿分明，热季（3-5）月盛行撒哈拉吹来的东北信风（哈马丹风），极端炎热干燥，6-9月受北移的赤道低气压带控制，降水较多。'
+      },
       {
         name: 'Maputo (马普托)',
         country: 'Mozambique',
@@ -444,7 +486,21 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 37.9700,
         lng: 23.7200,
         description: '更低纬度的Csa，降水模式更为典型'
-      }
+      },     
+      {
+        name: 'Istanbul (伊斯坦布尔)',
+        country: 'Turkey',
+        lat: 41.0145,
+        lng: 28.9385,
+        description: '黑海与海峡的双重海洋调节，夏季相比于雅典更为凉爽湿润，气候更复杂多变'
+      },     
+      {
+        name: 'Santiago (圣地亚哥)',
+        country: 'Chile',
+        lat: -33.4450,
+        lng: -70.6444,
+        description: '南半球Csa的典型代表，虽有秘鲁寒流流经，但是圣地亚哥处于内陆盆地，夏季相比沿海更加干热，导致沿海为凉夏型地中海气候，而圣地亚哥形成热夏'
+      }    
     ]
   },
   {
@@ -623,6 +679,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '赤道低气压季节性迁移： 赤道低气压带北移，叠加海拔较高，带来大雨季，高原地形冷却热带气团。'
       },
       {
+        name: 'Antananarivo (塔那那利佛)',
+        country: 'Madagascar',
+        lat: -18.9203,
+        lng: 47.5351,
+        description: '位于马达加斯加岛的中部高原上，气候凉爽，夏季受赤道低气压带和热带气旋影响多雨，冬季信风难以渗透，温和少雨。'
+      },
+      {
         name: 'Salta (萨尔塔)',
         country: 'Argentina',
         lat: -24.7833,
@@ -664,8 +727,8 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       {
         name: 'Balmaceda (巴尔马赛达)',
         country: 'Chile',
-        lat: -45.9754,
-        lng: -71.6988,
+        lat: -45.60,
+        lng: -71.59,
         description: '位于安第斯背风坡，阻挡西风水汽。夏季副高南移抑制降水，形成冷干夏；冬季西风强劲，渗透带来降雪。'
       }
     ]
@@ -721,6 +784,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 55.7558,
         lng: 37.6173,
         description: '莫斯科是Dfb气候的教科书式代表。受大西洋暖湿气流的影响比西伯利亚强，因此冬季虽冷但极端低温较少。夏季温暖舒适，降水分布均匀，夏季略多。'
+      },
+      {
+        name: 'Altay (阿勒泰)',
+        country: 'China',
+        lat: 47.8234,
+        lng: 88.1268,
+        description: '大陆性较强的Dfb，西风带的剩余水汽和北冰洋南下的气旋遇到阿尔泰山的地形抬升，成为新疆的“湿岛”，山坡降水可有400mm左右。'
       },
       {
         name: 'Saint Petersburg (圣彼得堡)',
@@ -833,7 +903,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       {
         name: 'Sivas (锡瓦斯)',
         country: 'Turkey',
-        lat: 39.69
+        lat: 39.69,
         lng: 37.02,
         description: '土耳其安纳托利亚高原中部城市。海拔约1200米，使得其夏季比周边低地凉爽，冬季寒冷。降水呈夏干冬湿特征，符合Dsb。'
       }
@@ -950,6 +1020,13 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     code: 'ET',
     title: '苔原气候 (Tundra)',
     cities: [
+       {
+        name: 'Kilimanjaro (乞力马扎罗山)',
+        country: 'Tanzania',
+        lat: -3.0706,
+        lng: 37.3577,
+        description: '赤道附近的火山，海拔5893米，山顶有永久积雪'
+      },
       {
         name: 'Macquarie Island (麦夸里岛)',
         country: 'Australia',

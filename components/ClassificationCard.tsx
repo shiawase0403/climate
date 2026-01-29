@@ -1,4 +1,5 @@
-import React, { useRef, useState, useMemo } from 'react';
+
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { ClassificationEntry, MonthlyClimateData } from '../types';
 import { Info, MapPin, BookOpen, HelpCircle, RotateCw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -6,7 +7,7 @@ import { getChineseClimateClassification } from '../services/climateService';
 import { getClimateClassification } from '../services/logic';
 
 interface ClassificationCardProps {
-  classificationData: ClassificationEntry[];
+  classificationData: ClassificationEntry[] | null;
   lat: number;
   lng: number;
   locationName?: string | null;
@@ -14,6 +15,7 @@ interface ClassificationCardProps {
   hintRevealed?: boolean; // If true, shows code/description even if masked
   onDig?: () => void; // Trigger for digger mode
   climateData?: MonthlyClimateData[]; // Required for local calculation
+  isFastMode?: boolean; // If true, forces local calculation and ignores API classification
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -91,53 +93,53 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   masked = false, 
   hintRevealed = false,
   onDig,
-  climateData
+  climateData,
+  isFastMode = false
 }) => {
   const { t, language } = useLanguage();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [useModifiedLogic, setUseModifiedLogic] = useState(true);
 
-  // Determine API data
-  const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
+  // In Fast Mode, we always use modified logic
+  useEffect(() => {
+    if (isFastMode) {
+      setUseModifiedLogic(true);
+    }
+  }, [isFastMode]);
+
+  // Determine API data (Only relevant if not in Fast Mode or as fallback)
+  const mainClass = classificationData?.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || (classificationData ? classificationData[0] : null);
   const apiCode = mainClass?.code || 'N/A';
   
   // Calculate local code if enabled
   const calculatedCode = useMemo(() => {
-    if (useModifiedLogic && climateData && climateData.length === 12) {
+    if ((useModifiedLogic || isFastMode) && climateData && climateData.length === 12) {
       const temps = climateData.map(d => d.temp);
       const precips = climateData.map(d => d.prec);
       const c = getClimateClassification(temps, precips, lat);
       return c !== 'N/A' ? c : null;
     }
     return null;
-  }, [useModifiedLogic, climateData, lat]);
+  }, [useModifiedLogic, isFastMode, climateData, lat]);
 
-  const code = calculatedCode || apiCode;
+  const code = isFastMode ? (calculatedCode || 'N/A') : (calculatedCode || apiCode);
   
   // Logic for display text (title)
-  // If we switched to a new code, we try to find the Chinese text if possible.
-  // For English or if match not found, we fallback to the API text or generic.
-  let displayText = mainClass?.text;
+  let displayText = (!isFastMode && mainClass?.text) ? mainClass.text : null;
   
-  // If we are using modified logic and the code changed, the API text might be wrong.
-  // Try to update text based on code if possible.
-  if (calculatedCode && calculatedCode !== apiCode) {
+  // If we rely on calculated code (Fast Mode OR Logic Toggle), derive text
+  if ((isFastMode || calculatedCode) && code) {
      if (language === 'zh') {
-       const cnText = getChineseClimateClassification(calculatedCode);
+       const cnText = getChineseClimateClassification(code);
        if (cnText) displayText = cnText;
      } else {
-       // In English, use the description as the title since it's the class name
-       const enText = t.climateDescriptions[calculatedCode];
+       // In English, use the description map
+       const enText = t.climateDescriptions[code];
        if (enText) displayText = enText;
      }
-  } else {
-    // Standard API text processing
-    if (language === 'zh' && mainClass?.code) {
-      const cnText = getChineseClimateClassification(mainClass.code);
-      if (cnText) displayText = cnText;
-    }
   }
 
+  // Fallback title
   displayText = displayText || (language === 'zh' ? '未知气候' : 'Unknown Climate');
   
   const actualDescription = code ? t.climateDescriptions[code] : null;
@@ -179,13 +181,14 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   };
 
   // Golden Glow Effect for Modified Logic
-  const modifiedGlowStyle = (useModifiedLogic && calculatedCode && !isClimateHidden) ? {
+  const modifiedGlowStyle = ((useModifiedLogic || isFastMode) && !isClimateHidden) ? {
     textShadow: '0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px #f59e0b',
     color: '#ffffff'
   } : {};
 
   const toggleLogic = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isFastMode) return; // Disable toggle in Fast Mode
     if (!isClimateHidden && climateData && climateData.length === 12) {
       setUseModifiedLogic(prev => !prev);
     }
@@ -242,20 +245,26 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
         </div>
         
         <div 
-           className={`${badgeBgClass} p-3 rounded-lg border transition-all duration-300 relative group ${!isClimateHidden && climateData ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
+           className={`${badgeBgClass} p-3 rounded-lg border transition-all duration-300 relative group ${!isClimateHidden && !isFastMode && climateData ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
            onClick={toggleLogic}
         >
              <div className="flex items-center justify-between space-x-2 mb-1">
                 <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>
-                {useModifiedLogic && !isClimateHidden && (
+                {useModifiedLogic && !isClimateHidden && !isFastMode && (
                   <RotateCw className="w-3 h-3 text-amber-300 animate-spin-slow" />
                 )}
              </div>
              <span className="text-3xl font-bold" style={{...textShadowStyle, ...modifiedGlowStyle}}>{displayCode}</span>
              
-             {!isClimateHidden && climateData && (
+             {!isClimateHidden && climateData && !isFastMode && (
                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-black/70 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none">
                  {useModifiedLogic ? 'Using Modified Logic' : 'Click to Switch Logic'}
+               </div>
+             )}
+             
+             {isFastMode && (
+               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-black/40 text-white px-2 py-0.5 rounded whitespace-nowrap opacity-60">
+                 Fast Mode
                </div>
              )}
         </div>
@@ -269,7 +278,11 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
               {displayTitle}
             </h3>
             <p className={`text-sm mt-1 ${subTextClass}`}>
-              {isClimateHidden ? t.gameInstruction : (useModifiedLogic && calculatedCode ? 'Based on Modified Peel et al. 2007 Logic' : t.basedOn)}
+              {isClimateHidden 
+                ? t.gameInstruction 
+                : ((useModifiedLogic || isFastMode) && calculatedCode 
+                    ? 'Based on Modified Peel et al. 2007 Logic' 
+                    : t.basedOn)}
             </p>
           </div>
         </div>

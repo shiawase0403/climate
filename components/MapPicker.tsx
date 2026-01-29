@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { Shovel, Search } from 'lucide-react';
+import { Shovel, Search, Layers } from 'lucide-react';
 import { GeoLocation, MatchReviewDetail } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -25,6 +26,7 @@ interface MapPickerProps {
   isDigging?: boolean;
   onDig?: () => void;
   onAnalyzeGuess?: (lat: number, lng: number, name: string) => void; // New callback for review mode
+  isFullScreen?: boolean; // New prop for full screen mode
 }
 
 // Custom TileLayer to support QuadKeys for Bing Maps
@@ -264,9 +266,11 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   isRetroMode, 
   isDigging = false, 
   onDig,
-  onAnalyzeGuess 
+  onAnalyzeGuess,
+  isFullScreen = false
 }) => {
   const { t } = useLanguage();
+  const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
 
   const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
     if (e.originalEvent.shiftKey && selectedLocation) {
@@ -277,18 +281,27 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   // Construct border/shadow classes based on mode
-  let containerClasses = "h-[400px] w-full rounded-xl overflow-hidden shadow-lg border relative z-0";
-  // Adjust height for review mode to fill container
-  if (mode === 'review') {
-    containerClasses = "h-full w-full rounded-none overflow-hidden relative z-0";
-  }
+  let containerClasses = "w-full overflow-hidden relative z-0 transition-all duration-300";
+  
+  if (isFullScreen) {
+    // Full screen mode style: Fixed covering the viewport
+    // Z-Index must be high enough to cover layout (header/footer)
+    containerClasses += " fixed inset-0 h-screen w-screen z-[2000] rounded-none border-0";
+  } else {
+    // Normal mode style
+    containerClasses += " h-[400px] rounded-xl shadow-lg border";
+    
+    if (mode === 'review') {
+      containerClasses = "h-full w-full rounded-none overflow-hidden relative z-0";
+    }
 
-  if (isRetroMode) {
-    containerClasses += " border-4 border-black shadow-none grayscale-[0.2]";
-  } else if (isMarsMode) {
-    containerClasses += " border-orange-500 shadow-orange-200";
-  } else if (mode !== 'review') {
-    containerClasses += " border-slate-200";
+    if (isRetroMode) {
+      containerClasses += " border-4 border-black shadow-none grayscale-[0.2]";
+    } else if (isMarsMode) {
+      containerClasses += " border-orange-500 shadow-orange-200";
+    } else if (mode !== 'review') {
+      containerClasses += " border-slate-200";
+    }
   }
 
   // Retro map filter
@@ -333,23 +346,58 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
   const { target: reviewTarget, answers: reviewAnswers } = mode === 'review' ? getReviewCoordinates() : { target: null, answers: [] };
 
+  // Helper to toggle overlays mutually exclusively
+  const toggleOverlay = (type: 'climate' | 'precip') => {
+    setActiveOverlay(current => current === type ? 'none' : type);
+  };
+
   return (
     <div className={containerClasses}>
+      {/* Custom Overlay Controls - Only show in single/compare modes and when not on Mars */}
+      {!isMarsMode && (mode === 'single' || mode === 'compare') && (
+        <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-2">
+          <div className="bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-md border border-slate-300 flex flex-col gap-1">
+            <div className="text-[10px] font-bold text-slate-500 px-1 uppercase tracking-wider flex items-center">
+              <Layers className="w-3 h-3 mr-1" /> Overlays
+            </div>
+            <button 
+              onClick={() => toggleOverlay('climate')}
+              className={`text-xs px-2 py-1.5 rounded font-medium transition-colors text-left ${
+                activeOverlay === 'climate' 
+                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
+                  : 'hover:bg-slate-100 text-slate-700 border border-transparent'
+              }`}
+            >
+              {t.mapLayers.climateLayer}
+            </button>
+            <button 
+              onClick={() => toggleOverlay('precip')}
+              className={`text-xs px-2 py-1.5 rounded font-medium transition-colors text-left ${
+                activeOverlay === 'precip' 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'hover:bg-slate-100 text-slate-700 border border-transparent'
+              }`}
+            >
+              {t.mapLayers.precipLayer}
+            </button>
+          </div>
+        </div>
+      )}
+
       <MapContainer
         center={[20, 0]}
         zoom={2}
         minZoom={2}
         style={mapStyle}
         scrollWheelZoom={true}
-        // Removed maxBounds to allow infinite horizontal scrolling
-        // Added worldCopyJump to keep markers in view when panning across worlds
         worldCopyJump={true}
         attributionControl={false}
-        doubleClickZoom={!isDigging} // Temporarily disable default dblclick zoom
+        doubleClickZoom={!isDigging} 
+        zoomControl={false} 
       >
         <AttributionControl position="bottomright" prefix={false} />
         
-        <LayersControl position="topright">
+        <LayersControl key={isFullScreen ? "fs-layers" : "norm-layers"} position={isFullScreen ? "bottomright" : "topright"}>
           {isMarsMode ? (
             <LayersControl.BaseLayer checked name="Mars Surface">
               <TileLayer
@@ -410,6 +458,24 @@ export const MapPicker: React.FC<MapPickerProps> = ({
           )}
         </LayersControl>
 
+        {/* Active Overlay (Rendered outside LayersControl to manage exclusivity via state) */}
+        {!isMarsMode && activeOverlay === 'climate' && (
+           <TileLayer 
+              url="https://climate.hywiki.org/static/maptiles/koeppen/{z}/{x}/{y}.png" 
+              maxNativeZoom={7}
+              opacity={0.6}
+              zIndex={500}
+           />
+        )}
+        {!isMarsMode && activeOverlay === 'precip' && (
+           <TileLayer 
+              url="https://climate.hywiki.org/static/maptiles/precipitation/{z}/{x}/{y}.png" 
+              maxNativeZoom={7}
+              opacity={0.6}
+              zIndex={500}
+           />
+        )}
+
         <ScaleControl position="bottomleft" />
         
         {/* Disable click to select if game is already revealed or in review mode */}
@@ -434,20 +500,35 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         {/* Compare Mode OR Game Mode with other players: Render Comparison Points */}
         {(mode === 'compare' || mode === 'game') && comparisonPoints && comparisonPoints.map((point) => (
            isValidCoordinate(point.location.lat, point.location.lng) && (
-             <Marker 
-               key={point.id} 
-               position={[point.location.lat, point.location.lng]} 
-               icon={createColoredIcon(point.color)}
-             >
-                <Popup closeButton={false} offset={[0, -28]}>
-                  <div className="text-xs">
-                    {point.name && <div className="font-bold mb-1">{point.name}</div>}
-                    <div className="font-mono text-slate-500">
-                      {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
+             <React.Fragment key={point.id}>
+               <Marker 
+                 position={[point.location.lat, point.location.lng]} 
+                 icon={createColoredIcon(point.color)}
+               >
+                  <Popup closeButton={false} offset={[0, -28]}>
+                    <div className="text-xs">
+                      {point.name && <div className="font-bold mb-1">{point.name}</div>}
+                      <div className="font-mono text-slate-500">
+                        {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
+                      </div>
                     </div>
-                  </div>
-                </Popup>
-             </Marker>
+                  </Popup>
+               </Marker>
+               
+               {/* Draw dotted line to target if in game mode and target is revealed (for opponents) */}
+               {mode === 'game' && gameTargetLocation && isValidCoordinate(gameTargetLocation.lat, gameTargetLocation.lng) && (
+                  <Polyline 
+                    positions={[
+                      [point.location.lat, point.location.lng],
+                      [gameTargetLocation.lat, gameTargetLocation.lng]
+                    ]}
+                    dashArray="5, 10"
+                    color={point.color}
+                    weight={2}
+                    opacity={0.5}
+                  />
+               )}
+             </React.Fragment>
            )
         ))}
 
@@ -464,8 +545,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
             {/* Actual Target (Revealed) */}
             {gameTargetLocation && isValidCoordinate(gameTargetLocation.lat, gameTargetLocation.lng) && (
               <>
-                <Marker position={[gameTargetLocation.lat, gameTargetLocation.lng]} icon={greenIcon}>
-                  <Popup offset={[0, -28]} autoClose={false} closeOnClick={false}>Actual Location</Popup>
+                <Marker position={[gameTargetLocation.lat, gameTargetLocation.lng]} icon={flagIcon}>
+                  <Popup offset={[0, -32]} autoClose={false} closeOnClick={false}>Actual Location</Popup>
                 </Marker>
                 
                 {/* Line connecting them */}
@@ -548,6 +629,30 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
       </MapContainer>
       
+      {/* Precipitation Legend Overlay */}
+      {!isMarsMode && activeOverlay === 'precip' && (
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '30px', 
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '600px',
+            maxWidth: '90%',
+            height: 'auto',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            borderRadius: '8px',
+            padding: '10px',
+            backdropFilter: 'blur(5px)',
+            pointerEvents: 'none',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            zIndex: 1000
+          }}
+        >
+          <img src="/prec_legend_bar.png" alt="Precipitation Legend" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        </div>
+      )}
+
       {/* Hint Overlay */}
       <div className={`absolute bottom-6 right-14 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 pointer-events-none z-[400] hidden sm:block border ${isRetroMode ? 'border-2 border-black font-[inherit]' : 'border border-slate-200'}`}>
         {mode === 'game' && !gameTargetLocation ? t.gameInstructionGuess : t.clickMapHint}
@@ -555,7 +660,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
       {/* Digging Animation Overlay */}
       {isDigging && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-[3000] flex items-center justify-center bg-black/30 backdrop-blur-sm pointer-events-none animate-in fade-in duration-300">
            <div className="flex flex-col items-center">
               <div className="bg-amber-500 p-6 rounded-full shadow-2xl animate-bounce border-4 border-white">
                  <Shovel className="w-12 h-12 text-white" />

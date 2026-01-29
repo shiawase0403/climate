@@ -1,6 +1,8 @@
+
 import { ClimateDataResponse, ClassificationResponse } from '../types';
 
-const BASE_URL = 'https://climate.mapresso.com/api';
+// Centralize API base. HyWiki acts as a reliable forwarder/cache.
+const HYWIKI_API_URL = 'https://api-forward.hywiki.org/climate';
 
 /**
  * Tries to fetch a URL using multiple CORS proxies.
@@ -47,33 +49,68 @@ export const fetchWithFallback = async (targetUrl: string) => {
   throw lastError || new Error('Network request failed after multiple attempts');
 };
 
-export const fetchClimateData = async (lat: number, lon: number): Promise<ClimateDataResponse> => {
-  // Limit precision to 4 decimal places to ensure API compatibility
-  const latParam = lat.toFixed(4);
-  const lonParam = lon.toFixed(4);
-  const url = `${BASE_URL}/data/?lat=${latParam}&lon=${lonParam}`;
+export const fetchClimateData = async (lat: number, lon: number, useLegacy: boolean = false): Promise<ClimateDataResponse> => {
+  // precise=0 uses enhanced data (elev, max/min temp)
+  // precise=1 uses mapresso data (legacy)
+  const precise = useLegacy ? 1 : 0;
   
-  const response = await fetchWithFallback(url);
+  // Use the HyWiki forwarding API for reliable data access
+  const url = `${HYWIKI_API_URL}/data/?lat=${lat}&lon=${lon}&precise=${precise}`;
   
-  // Handle case where proxy returns OK but body is not JSON (e.g. proxy error page)
   try {
+    // Try direct fetch first as the forwarding service likely enables CORS
+    let response = await fetch(url);
+    
+    // Fallback logic for network errors or specific CORS issues not handled by forwarder
+    if (!response.ok && response.status === 0) { 
+       response = await fetchWithFallback(url);
+    } else if (!response.ok) {
+       // If it's a 4xx/5xx from the API itself, throwing here lets the caller handle it.
+       // Only try fallback if it looks like a block (403)
+       if (response.status === 403) {
+          response = await fetchWithFallback(url);
+       }
+    }
+
     return await response.json();
   } catch (e) {
-    throw new Error('Invalid JSON response from server');
+    // Last resort fallback
+    try {
+      const response = await fetchWithFallback(url);
+      return await response.json();
+    } catch (fallbackError) {
+      throw new Error('Invalid JSON response from server');
+    }
   }
 };
 
 export const fetchClassification = async (lat: number, lon: number): Promise<ClassificationResponse> => {
   const latParam = lat.toFixed(4);
   const lonParam = lon.toFixed(4);
-  const url = `${BASE_URL}/koeppen/?lat=${latParam}&lon=${lonParam}`;
   
-  const response = await fetchWithFallback(url);
+  // Use HyWiki forwarder for classification as well to consolidate requests and reduce distinct domain lookups
+  // This avoids calling Mapresso directly via proxy, reducing total request overhead/failure points.
+  const url = `${HYWIKI_API_URL}/koeppen/?lat=${latParam}&lon=${lonParam}`;
   
   try {
+    let response = await fetch(url);
+    
+    if (!response.ok && response.status === 0) {
+        response = await fetchWithFallback(url);
+    } else if (!response.ok && response.status === 403) {
+        response = await fetchWithFallback(url);
+    }
+    
     return await response.json();
   } catch (e) {
-    throw new Error('Invalid JSON response from server');
+    // Fallback to original proxy method if the new endpoint fails completely
+    const legacyUrl = `https://climate.mapresso.com/api/koeppen/?lat=${latParam}&lon=${lonParam}`;
+    try {
+        const response = await fetchWithFallback(legacyUrl);
+        return await response.json();
+    } catch (finalError) {
+        throw new Error('Invalid JSON response from server');
+    }
   }
 };
 

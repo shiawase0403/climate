@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { MonthlyClimateData } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ClimateTableProps {
   data: MonthlyClimateData[];
@@ -44,8 +46,17 @@ export const ClimateTable: React.FC<ClimateTableProps> = ({ data, locationName }
                 <td className="px-3 sm:px-6 py-2 sm:py-3 text-sm font-medium text-slate-900 whitespace-nowrap">
                   {t.monthsShort[row.month - 1]}
                 </td>
-                <td className="px-3 sm:px-6 py-2 sm:py-3 text-sm text-slate-600 text-right whitespace-nowrap">
-                  {row.temp.toFixed(1)}
+                <td className="px-3 sm:px-6 py-2 sm:py-3 text-right whitespace-nowrap">
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm text-slate-800 font-medium">{row.temp.toFixed(1)}</span>
+                    {(row.tempmax !== undefined && row.tempmin !== undefined) && (
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                        <span className="flex items-center" title="Min"><ArrowDown className="w-2.5 h-2.5 mr-0.5" />{row.tempmin.toFixed(1)}</span>
+                        <span className="text-slate-300">|</span>
+                        <span className="flex items-center" title="Max"><ArrowUp className="w-2.5 h-2.5 mr-0.5" />{row.tempmax.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 sm:px-6 py-2 sm:py-3 text-sm text-slate-600 text-right whitespace-nowrap">
                   {row.prec.toFixed(1)}

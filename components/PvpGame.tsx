@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
@@ -7,6 +8,7 @@ import { ClimateChart } from './ClimateChart';
 import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
 import { ClassificationCard } from './ClassificationCard';
+import { MobileDataViewer } from './MobileDataViewer';
 import { fetchClimateData, fetchClassification } from '../services/climateService';
 import { PvpPlayer, ClimateDataResponse, ClassificationResponse, GeoLocation, PvpRoundResult, PvpGameResult, MatchReviewData, MatchReviewDetail, RankingEntry, UserHistoryEntry, UserRankInfo } from '../types';
 import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw, History, Search, Calendar, MapPin, Crown, TrendingUp, TrendingDown, Eye, Star, Info } from 'lucide-react';
@@ -1352,10 +1354,10 @@ export const PvpGame: React.FC = () => {
            ) : (
              <div className="space-y-6 overflow-y-auto pr-1 custom-scrollbar">
                 {currentClimate && (
-                  <>
+                  <MobileDataViewer>
                     <ClimateChart data={climateData} />
                     <ClimateTable data={climateData} />
-                  </>
+                  </MobileDataViewer>
                 )}
              </div>
            )}
@@ -1506,8 +1508,6 @@ export const PvpGame: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col gap-2 md:gap-6 overflow-hidden relative">
           
-          {/* Mobile Tabs/Toggle could go here, but let's try a split view first */}
-          
           {/* Map Section */}
           <div className="flex-none h-[35vh] md:h-[45%] bg-white md:rounded-xl shadow-sm border-b md:border border-slate-200 overflow-hidden relative z-0">
              <MapPicker 
@@ -1548,8 +1548,10 @@ export const PvpGame: React.FC = () => {
 
                    {/* Charts Grid */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-4">
-                      <ClimateChart data={reviewClimateData.data} />
-                      <ClimateTable data={reviewClimateData.data} />
+                      <MobileDataViewer>
+                        <ClimateChart data={reviewClimateData.data} />
+                        <ClimateTable data={reviewClimateData.data} />
+                      </MobileDataViewer>
                    </div>
                  </>
                ) : (
@@ -1595,8 +1597,10 @@ export const PvpGame: React.FC = () => {
                          climateData={guessAnalysis.climate.data}
                        />
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
-                          <ClimateTable data={guessAnalysis.climate.data} />
+                          <MobileDataViewer>
+                            <ClimateChart data={guessAnalysis.climate.data} locationName="Guess Data" />
+                            <ClimateTable data={guessAnalysis.climate.data} />
+                          </MobileDataViewer>
                        </div>
                     </>
                  )}

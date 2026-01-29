@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 export type Language = 'en' | 'zh';
@@ -43,6 +44,12 @@ export interface Translations {
   invalidLat: string;
   invalidLng: string;
   manualInputTitle: string;
+  enterFullScreen: string;
+  exitFullScreen: string;
+  // Data Source
+  dataSource: string;
+  dataFast: string;
+  dataLegacy: string;
   mapLayers: {
     osm: string;
     gaode: string;
@@ -51,6 +58,8 @@ export interface Translations {
     bingSat: string;
     bingHybrid: string; // New
     bingStreet: string;
+    climateLayer: string; // New overlay
+    precipLayer: string; // New overlay
   };
   // City Search
   searchCity: string;
@@ -186,7 +195,7 @@ export const translations: Record<Language, Translations> = {
     appTitle: "Global Climate Explorer",
     providedBy: "Data provided by Mapresso",
     selectLocation: "Select Location",
-    instructionMap: "Click on any landmass to view its climate classification and monthly weather averages.",
+    instructionMap: "Click on any landmass to view its climate classification and monthly averages.",
     noLocationTitle: "No Location Selected",
     noLocationText: "Explore the world map on the left and click on a location to reveal its climate secrets.",
     loading: "Fetching climate intelligence...",
@@ -223,6 +232,11 @@ export const translations: Record<Language, Translations> = {
     invalidLat: "Invalid latitude (-90 to 90)",
     invalidLng: "Invalid longitude (-180 to 180)",
     manualInputTitle: "Manual Input",
+    enterFullScreen: "Full Screen Map",
+    exitFullScreen: "Exit Full Screen",
+    dataSource: "Data Source",
+    dataFast: "Fast",
+    dataLegacy: "Legacy",
     mapLayers: {
       osm: "OpenStreetMap",
       gaode: "GaoDe Map",
@@ -230,7 +244,9 @@ export const translations: Record<Language, Translations> = {
       gaodeEn: "GaoDe English/Chinese",
       bingSat: "Bing Satellite",
       bingHybrid: "Bing Hybrid (Labels)",
-      bingStreet: "Bing Street (CN)"
+      bingStreet: "Bing Street (CN)",
+      climateLayer: "Climate Overlay",
+      precipLayer: "Precipitation Overlay"
     },
     searchCity: "City Search",
     searchCityPlaceholder: "Enter city name...",
@@ -423,6 +439,11 @@ export const translations: Record<Language, Translations> = {
     invalidLat: "无效纬度 (-90 到 90)",
     invalidLng: "无效经度 (-180 到 180)",
     manualInputTitle: "手动输入",
+    enterFullScreen: "全屏地图模式",
+    exitFullScreen: "退出全屏",
+    dataSource: "数据源",
+    dataFast: "极速版",
+    dataLegacy: "经典版",
     mapLayers: {
       osm: "OpenStreetMap",
       gaode: "高德地图",
@@ -430,7 +451,9 @@ export const translations: Record<Language, Translations> = {
       gaodeEn: "高德中英地图",
       bingSat: "必应卫星 (Bing)",
       bingHybrid: "必应混合 (Bing Hybrid)",
-      bingStreet: "必应街道 (Bing CN)"
+      bingStreet: "必应街道 (Bing CN)",
+      climateLayer: "气候分类覆盖层",
+      precipLayer: "降水量覆盖层"
     },
     searchCity: "城市搜索",
     searchCityPlaceholder: "输入城市名称...",

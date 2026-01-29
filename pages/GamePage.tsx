@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { MapPicker } from '../components/MapPicker';
 import { ClimateChart } from '../components/ClimateChart';
 import { ClimateTable } from '../components/ClimateTable';
 import { ClassificationCard } from '../components/ClassificationCard';
+import { MobileDataViewer } from '../components/MobileDataViewer';
 import { fetchClimateData, fetchClassification } from '../services/climateService';
 import { fetchRandomCity } from '../services/csvService';
 import { GeoLocation, ClimateDataResponse, ClassificationResponse, RandomCityResponse, GameStatus, ChallengeRoundResult } from '../types';
@@ -435,23 +437,25 @@ export const GamePage: React.FC = () => {
 
         {targetCity && !loading && !error && climateData && classification && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <ClassificationCard 
-               classificationData={classification.data} 
-               lat={typeof targetCity.lat === 'string' ? parseFloat(targetCity.lat) : targetCity.lat} 
-               lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
-               locationName={`${targetCity.city}, ${targetCity.country}`}
-               masked={gameStatus === 'playing'}
-               hintRevealed={hintRevealed}
-               climateData={climateData.data}
-             />
-             <ClimateChart 
-               data={climateData.data} 
-               locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
-             />
-             <ClimateTable 
-               data={climateData.data} 
-               locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
-             />
+             <MobileDataViewer>
+               <ClassificationCard 
+                 classificationData={classification.data} 
+                 lat={typeof targetCity.lat === 'string' ? parseFloat(targetCity.lat) : targetCity.lat} 
+                 lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
+                 locationName={`${targetCity.city}, ${targetCity.country}`}
+                 masked={gameStatus === 'playing'}
+                 hintRevealed={hintRevealed}
+                 climateData={climateData.data}
+               />
+               <ClimateChart 
+                 data={climateData.data} 
+                 locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
+               />
+               <ClimateTable 
+                 data={climateData.data} 
+                 locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
+               />
+             </MobileDataViewer>
           </div>
         )}
       </div>

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { TutorialModal } from '../components/TutorialModal';
-import { CloudRain, Rocket, MousePointerClick, SplitSquareHorizontal, Gamepad2, Swords, Languages, BookOpen, HelpCircle, Waves, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { CloudRain, Rocket, MousePointerClick, SplitSquareHorizontal, Gamepad2, Swords, Languages, BookOpen, HelpCircle, Waves, CheckCircle, X, AlertCircle, ChevronDown, Menu } from 'lucide-react';
 
 // Footer Notice Component (Moved here)
 const NoticeFooter: React.FC<{ onOpenTutorial: () => void; isChallengeMode: boolean }> = ({ onOpenTutorial, isChallengeMode }) => {
@@ -89,10 +90,36 @@ export const MainLayout: React.FC = () => {
   const { isMarsMode, isRetroMode, primaryColor, primaryBg, appBg } = useTheme();
   const { notification, clearNotification } = useNotification();
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Basic check for Challenge mode to hide tutorial button if needed
-  const isGameRoute = location.pathname === '/game';
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  const getCurrentModeLabel = () => {
+    if (location.pathname.startsWith('/compare')) return { icon: <SplitSquareHorizontal className="w-4 h-4" />, label: t.modeCompare };
+    if (location.pathname.startsWith('/game')) return { icon: <Gamepad2 className="w-4 h-4" />, label: t.modeGame };
+    if (location.pathname.startsWith('/pvp')) return { icon: <Swords className="w-4 h-4" />, label: t.modePvp };
+    return { icon: <MousePointerClick className="w-4 h-4" />, label: t.modeSingle };
+  };
+
+  const currentMode = getCurrentModeLabel();
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-1000 ${appBg} relative ${isRetroMode ? 'retro-mode' : ''}`}>
@@ -108,9 +135,9 @@ export const MainLayout: React.FC = () => {
 
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
 
-      {/* Toast */}
+      {/* Toast - Increased z-index to ensure visibility */}
       {notification && (
-        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 fade-in duration-300 w-full max-w-md px-4">
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[10000] animate-in slide-in-from-top-4 fade-in duration-300 w-full max-w-md px-4">
           <div className={`p-4 rounded-xl shadow-2xl flex items-start space-x-3 border-l-4 ${
             notification.type === 'ocean' ? 'bg-blue-600 text-white border-blue-300' : 
             notification.type === 'error' ? 'bg-white text-slate-800 border-red-500' :
@@ -141,7 +168,9 @@ export const MainLayout: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex p-1 rounded-lg bg-slate-100 overflow-x-auto">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex p-1 rounded-lg bg-slate-100 overflow-x-auto">
               <NavLink to="/" className={({ isActive }) => `px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-2 whitespace-nowrap ${isActive ? `bg-white shadow-sm ${primaryColor}` : 'text-slate-500 hover:text-slate-700'}`}>
                 <MousePointerClick className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.modeSingle}</span>
@@ -158,6 +187,41 @@ export const MainLayout: React.FC = () => {
                 <Swords className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.modePvp}</span>
               </NavLink>
+            </div>
+
+            {/* Mobile Navigation Dropdown */}
+            <div className="sm:hidden relative" ref={mobileMenuRef}>
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm border border-slate-200"
+              >
+                {currentMode.icon}
+                <span>{currentMode.label}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isMobileMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-1">
+                    <NavLink to="/" className={({ isActive }) => `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                      <MousePointerClick className="w-4 h-4" />
+                      <span>{t.modeSingle}</span>
+                    </NavLink>
+                    <NavLink to="/compare" className={({ isActive }) => `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                      <SplitSquareHorizontal className="w-4 h-4" />
+                      <span>{t.modeCompare}</span>
+                    </NavLink>
+                    <NavLink to="/game" className={({ isActive }) => `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                      <Gamepad2 className="w-4 h-4" />
+                      <span>{t.modeGame}</span>
+                    </NavLink>
+                    <NavLink to="/pvp" className={({ isActive }) => `flex items-center space-x-3 px-4 py-3 rounded-lg text-sm transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                      <Swords className="w-4 h-4" />
+                      <span>{t.modePvp}</span>
+                    </NavLink>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="h-6 w-px hidden md:block bg-slate-200"></div>

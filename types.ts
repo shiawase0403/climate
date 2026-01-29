@@ -1,15 +1,20 @@
+
 // Raw Climate Data Types
 export interface MonthlyClimateData {
   month: number;
   temp: number; // Temperature in Celsius
   prec: number; // Precipitation in mm
+  tempmax?: number; // Max Temperature
+  tempmin?: number; // Min Temperature
+  wind?: number; // Wind speed
 }
 
 export interface ClimateDataResponse {
   results: {
     location: {
-      lat: string;
-      lon: string;
+      lat: string | number;
+      lon: string | number;
+      elev?: number; // Elevation in meters
     };
   };
   status: string;

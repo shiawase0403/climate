@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ComposedChart,
@@ -13,13 +14,15 @@ import {
 } from 'recharts';
 import { MonthlyClimateData } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Mountain } from 'lucide-react';
 
 interface ClimateChartProps {
   data: MonthlyClimateData[];
   locationName?: string | null;
+  elevation?: number;
 }
 
-export const ClimateChart: React.FC<ClimateChartProps> = ({ data, locationName }) => {
+export const ClimateChart: React.FC<ClimateChartProps> = ({ data, locationName, elevation }) => {
   const { t } = useLanguage();
 
   if (!data || data.length === 0) {
@@ -40,9 +43,17 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({ data, locationName }
   
   return (
     <div id="climate-chart-container" className="w-full h-[450px] bg-white rounded-xl shadow-sm border border-slate-200 p-4 pb-8">
-      <h3 className="text-lg font-semibold text-slate-800 mb-4 pl-2">
-        {locationName ? `${locationName} - ` : ''}{t.climateGraph}
-      </h3>
+      <div className="flex justify-between items-center mb-4 pl-2 pr-2">
+        <h3 className="text-lg font-semibold text-slate-800">
+          {locationName ? `${locationName} - ` : ''}{t.climateGraph}
+        </h3>
+        {elevation !== undefined && elevation !== null && (
+          <div className="flex items-center space-x-1 text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
+            <Mountain className="w-4 h-4" />
+            <span>{Math.round(elevation)} m</span>
+          </div>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height="90%">
         <ComposedChart
           data={chartData}
