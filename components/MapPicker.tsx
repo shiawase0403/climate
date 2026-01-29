@@ -649,7 +649,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
             zIndex: 1000
           }}
         >
-          <img src="/prec_legend_bar.png" alt="Precipitation Legend" style={{ width: '100%', height: 'auto', display: 'block' }} />
+          <img src="./prec_legend_bar.png" alt="Precipitation Legend" style={{ width: '100%', height: 'auto', display: 'block' }} />
         </div>
       )}
 
