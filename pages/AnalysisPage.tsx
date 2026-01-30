@@ -63,9 +63,15 @@ export const AnalysisPage: React.FC = () => {
   // Extract params to variables for stable dependency usage
   const latParam = searchParams.get('lat');
   const lngParam = searchParams.get('lng') ?? searchParams.get('lon');
+  const isMarsParam = searchParams.get('isMars') === '1';
 
   // Sync URL params to State
   useEffect(() => {
+    // Sync Mode
+    if (isMarsParam !== isMarsMode) {
+      setIsMarsMode(isMarsParam);
+    }
+
     if (latParam && lngParam) {
       const lat = parseFloat(latParam);
       const lng = parseFloat(lngParam);
@@ -76,13 +82,18 @@ export const AnalysisPage: React.FC = () => {
                                 Math.abs(selectedLocation.lat - lat) > 0.0001 || 
                                 Math.abs(selectedLocation.lng - lng) > 0.0001;
         
-        if (locationChanged) {
-             // If navigating via URL, ensure we are in Earth mode unless handled otherwise
-             if (isMarsMode) setIsMarsMode(false);
-             
+        // Update if location changed OR if mode changed (to update name/data)
+        if (locationChanged || isMarsParam !== isMarsMode) {
              setSelectedLocation({ lat, lng });
-             // Clear name to trigger auto-lookup in data fetch
-             setLocationName(null);
+             
+             // If Mars, set default name, else clear to let fetcher find city
+             if (isMarsParam) {
+                setLocationName("Mars, The Red Planet");
+             } else if (locationChanged) {
+                // Only clear name if location actually changed, otherwise we might wipe a manually set name
+                setLocationName(null);
+             }
+             
              // If navigating via URL, we likely don't have the rich city object
              setSelectedCity(null);
         }
@@ -96,7 +107,7 @@ export const AnalysisPage: React.FC = () => {
         setClassification(null);
       }
     }
-  }, [latParam, lngParam, isMarsMode, setIsMarsMode, selectedLocation]);
+  }, [latParam, lngParam, isMarsParam, isMarsMode, setIsMarsMode, selectedLocation]);
 
   // Screen Width Check for Full Screen Eligibility
   useEffect(() => {
@@ -121,6 +132,8 @@ export const AnalysisPage: React.FC = () => {
       if (isMarsMode) {
         setClimateData(generateMarsData());
         setClassification(MARS_CLASSIFICATION);
+        // Explicitly set name if not set (e.g. initial load)
+        if (!locationName) setLocationName('Mars, The Red Planet');
         return;
       }
 
@@ -192,9 +205,16 @@ export const AnalysisPage: React.FC = () => {
     if (location.name === 'Mars' || location.name === 'Mars, The Red Planet') {
        params.lat = '0';
        params.lng = '0';
+       params.isMars = '1';
     } else {
        params.lat = location.lat.toFixed(4);
        params.lng = location.lng.toFixed(4);
+       
+       // If currently in Mars mode and clicking the map (no name implies map click), keep Mars mode.
+       // If location has a name (from search), assume user wants to go to that Earth location.
+       if (isMarsMode && !location.name) {
+          params.isMars = '1';
+       }
     }
     
     setSearchParams(params);
@@ -237,9 +257,6 @@ export const AnalysisPage: React.FC = () => {
   const handleDownloadReport = async () => {
     if (!selectedLocation || !climateData) return;
     // For report generation in fast mode, construct a basic classification object
-    // Note: PDF service might need update to handle missing classification, 
-    // but we can pass an empty object if needed or let the service fail gracefully.
-    // For now, if classification is null, the PDF might show "N/A".
     
     setGeneratingPdf(true);
     try {
