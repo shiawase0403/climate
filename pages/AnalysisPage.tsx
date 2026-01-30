@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MapPicker, ClimateLegend } from '../components/MapPicker';
 import { ClimateChart } from '../components/ClimateChart';
 import { ClimateTable } from '../components/ClimateTable';
@@ -40,6 +41,7 @@ export const AnalysisPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { isMarsMode, setIsMarsMode, isRetroMode, primaryColor } = useTheme();
   const { showNotification } = useNotification();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
   const [locationName, setLocationName] = useState<string | null>(null);
@@ -57,6 +59,56 @@ export const AnalysisPage: React.FC = () => {
   
   // Map Overlay State
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
+
+  // Sync URL params to State
+  useEffect(() => {
+    const latParam = searchParams.get('lat');
+    const lngParam = searchParams.get('lng') ?? searchParams.get('lon');
+    const nameParam = searchParams.get('name');
+
+    if (latParam && lngParam) {
+      const lat = parseFloat(latParam);
+      const lng = parseFloat(lngParam);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        // Determine if this is Mars based on name param
+        const isMars = nameParam === 'Mars' || nameParam === 'Mars, The Red Planet';
+        
+        // Check if we need to update state to avoid loops/redundant fetches
+        const locationChanged = !selectedLocation || 
+                                Math.abs(selectedLocation.lat - lat) > 0.0001 || 
+                                Math.abs(selectedLocation.lng - lng) > 0.0001;
+        
+        const modeChanged = isMars !== isMarsMode;
+
+        if (locationChanged || modeChanged) {
+           if (isMars) {
+             if (!isMarsMode) setIsMarsMode(true);
+             setSelectedLocation({ lat, lng, name: 'Mars' });
+             setLocationName('Mars, The Red Planet');
+           } else {
+             if (isMarsMode) setIsMarsMode(false);
+             setSelectedLocation({ lat, lng });
+             if (nameParam) {
+               setLocationName(nameParam);
+             } else {
+               setLocationName(null); // Will trigger auto-lookup in data fetch
+             }
+             // If navigating via URL, we likely don't have the rich city object
+             setSelectedCity(null);
+           }
+        }
+      }
+    } else {
+      // Clear location if URL params are removed (e.g. back to root)
+      if (selectedLocation) {
+        setSelectedLocation(null);
+        setLocationName(null);
+        setClimateData(null);
+        setClassification(null);
+      }
+    }
+  }, [searchParams, isMarsMode, setIsMarsMode]); // Intentionally not including selectedLocation to avoid loops, relying on checks inside
 
   // Screen Width Check for Full Screen Eligibility
   useEffect(() => {
@@ -146,27 +198,32 @@ export const AnalysisPage: React.FC = () => {
   }, [selectedLocation, isMarsMode, useLegacySource]);
 
   const handleManualLocationSelect = (location: GeoLocation) => {
-    if (location.name === 'Mars') {
-      setIsMarsMode(true);
-      setSelectedLocation(location);
-      setLocationName('Mars, The Red Planet');
-      return;
+    // Handle URL Update instead of direct State update
+    const params: any = {};
+    
+    if (location.name === 'Mars' || location.name === 'Mars, The Red Planet') {
+       params.lat = '0';
+       params.lng = '0';
+       params.name = 'Mars';
+    } else {
+       params.lat = location.lat.toFixed(4);
+       params.lng = location.lng.toFixed(4);
+       if (location.name) params.name = location.name;
     }
-    if (isMarsMode) setIsMarsMode(false);
-
-    setSelectedLocation(location);
-    setSelectedCity(null);
-    if (location.name) setLocationName(location.name);
-    else setLocationName(null);
+    
+    setSearchParams(params);
   };
 
   const handleExploreCitySelect = (city: CityDefinition) => {
-    setIsMarsMode(false);
-    const location = { lat: city.lat, lng: city.lng };
-    setSelectedLocation(location);
+    // Set UI specific state that can't be in URL (Description card)
     setSelectedCity(city);
-    setLocationName(`${city.name}, ${city.country}`);
-    findNearestCity(city.lat, city.lng); // ping tracking
+    
+    // Update URL to trigger location change
+    setSearchParams({
+        lat: city.lat.toFixed(4),
+        lng: city.lng.toFixed(4),
+        name: `${city.name}, ${city.country}`
+    });
   };
 
   const handleDig = () => {
@@ -180,7 +237,11 @@ export const AnalysisPage: React.FC = () => {
       const antiLat = -lat;
       let antiLng = lng + 180;
       if (antiLng > 180) antiLng -= 360;
-      handleManualLocationSelect({ lat: antiLat, lng: antiLng });
+      
+      setSearchParams({
+          lat: antiLat.toFixed(4),
+          lng: antiLng.toFixed(4)
+      });
     }, 1500);
   };
 
