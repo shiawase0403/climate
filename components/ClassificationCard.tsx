@@ -50,7 +50,8 @@ const CLIMATE_COLORS: Record<string, string> = {
   'Dfc': '#007E7E',
   'Dfd': '#004545',
   'ET': '#B2B2B2',
-  'EF': '#686868'
+  'EF': '#686868',
+  'Alien-X': '#f97316' // Orange for Mars
 };
 
 const getClimateColor = (code: string | undefined): string => {
@@ -110,9 +111,13 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   // Determine API data (Only relevant if not in Fast Mode or as fallback)
   const mainClass = classificationData?.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || (classificationData ? classificationData[0] : null);
   const apiCode = mainClass?.code || 'N/A';
+  const isMars = apiCode === 'Alien-X';
   
   // Calculate local code if enabled
   const calculatedCode = useMemo(() => {
+    // If it's Mars, skip calculation to preserve Alien-X
+    if (isMars) return null;
+
     if ((useModifiedLogic || isFastMode) && climateData && climateData.length === 12) {
       const temps = climateData.map(d => d.temp);
       const precips = climateData.map(d => d.prec);
@@ -120,15 +125,16 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
       return c !== 'N/A' ? c : null;
     }
     return null;
-  }, [useModifiedLogic, isFastMode, climateData, lat]);
+  }, [useModifiedLogic, isFastMode, climateData, lat, isMars]);
 
-  const code = isFastMode ? (calculatedCode || 'N/A') : (calculatedCode || apiCode);
+  // If Mars, always return apiCode (Alien-X). Otherwise follow mode logic.
+  const code = isMars ? apiCode : (isFastMode ? (calculatedCode || 'N/A') : (calculatedCode || apiCode));
   
   // Logic for display text (title)
   let displayText = (!isFastMode && mainClass?.text) ? mainClass.text : null;
   
   // If we rely on calculated code (Fast Mode OR Logic Toggle), derive text
-  if ((isFastMode || calculatedCode) && code) {
+  if (!isMars && (isFastMode || calculatedCode) && code) {
      if (language === 'zh') {
        const cnText = getChineseClimateClassification(code);
        if (cnText) displayText = cnText;
@@ -137,6 +143,8 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
        const enText = t.climateDescriptions[code];
        if (enText) displayText = enText;
      }
+  } else if (isMars) {
+     displayText = mainClass?.text || 'Martian Desert';
   }
 
   // Fallback title
@@ -181,14 +189,14 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
   };
 
   // Golden Glow Effect for Modified Logic
-  const modifiedGlowStyle = ((useModifiedLogic || isFastMode) && !isClimateHidden) ? {
+  const modifiedGlowStyle = ((useModifiedLogic || isFastMode) && !isClimateHidden && !isMars) ? {
     textShadow: '0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px #f59e0b',
     color: '#ffffff'
   } : {};
 
   const toggleLogic = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isFastMode) return; // Disable toggle in Fast Mode
+    if (isFastMode || isMars) return; // Disable toggle in Fast Mode or Mars Mode
     if (!isClimateHidden && climateData && climateData.length === 12) {
       setUseModifiedLogic(prev => !prev);
     }
@@ -245,24 +253,24 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
         </div>
         
         <div 
-           className={`${badgeBgClass} p-3 rounded-lg border transition-all duration-300 relative group ${!isClimateHidden && !isFastMode && climateData ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
+           className={`${badgeBgClass} p-3 rounded-lg border transition-all duration-300 relative group ${!isClimateHidden && !isFastMode && climateData && !isMars ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}`}
            onClick={toggleLogic}
         >
              <div className="flex items-center justify-between space-x-2 mb-1">
                 <span className={`block text-xs uppercase tracking-wider font-semibold ${subTextClass}`} style={textShadowStyle}>{t.code}</span>
-                {useModifiedLogic && !isClimateHidden && !isFastMode && (
+                {useModifiedLogic && !isClimateHidden && !isFastMode && !isMars && (
                   <RotateCw className="w-3 h-3 text-amber-300 animate-spin-slow" />
                 )}
              </div>
              <span className="text-3xl font-bold" style={{...textShadowStyle, ...modifiedGlowStyle}}>{displayCode}</span>
              
-             {!isClimateHidden && climateData && !isFastMode && (
+             {!isClimateHidden && climateData && !isFastMode && !isMars && (
                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-black/70 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none">
                  {useModifiedLogic ? 'Using Modified Logic' : 'Click to Switch Logic'}
                </div>
              )}
              
-             {isFastMode && (
+             {isFastMode && !isMars && (
                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-black/40 text-white px-2 py-0.5 rounded whitespace-nowrap opacity-60">
                  Fast Mode
                </div>
@@ -280,9 +288,11 @@ export const ClassificationCard: React.FC<ClassificationCardProps> = ({
             <p className={`text-sm mt-1 ${subTextClass}`}>
               {isClimateHidden 
                 ? t.gameInstruction 
-                : ((useModifiedLogic || isFastMode) && calculatedCode 
-                    ? 'Based on Modified Peel et al. 2007 Logic' 
-                    : t.basedOn)}
+                : (isMars 
+                    ? 'Extraterrestrial Climate' 
+                    : ((useModifiedLogic || isFastMode) && calculatedCode 
+                        ? 'Based on Modified Peel et al. 2007 Logic' 
+                        : t.basedOn))}
             </p>
           </div>
         </div>
