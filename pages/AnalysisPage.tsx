@@ -60,43 +60,31 @@ export const AnalysisPage: React.FC = () => {
   // Map Overlay State
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
 
+  // Extract params to variables for stable dependency usage
+  const latParam = searchParams.get('lat');
+  const lngParam = searchParams.get('lng') ?? searchParams.get('lon');
+
   // Sync URL params to State
   useEffect(() => {
-    const latParam = searchParams.get('lat');
-    const lngParam = searchParams.get('lng') ?? searchParams.get('lon');
-    const nameParam = searchParams.get('name');
-
     if (latParam && lngParam) {
       const lat = parseFloat(latParam);
       const lng = parseFloat(lngParam);
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        // Determine if this is Mars based on name param
-        const isMars = nameParam === 'Mars' || nameParam === 'Mars, The Red Planet';
-        
         // Check if we need to update state to avoid loops/redundant fetches
         const locationChanged = !selectedLocation || 
                                 Math.abs(selectedLocation.lat - lat) > 0.0001 || 
                                 Math.abs(selectedLocation.lng - lng) > 0.0001;
         
-        const modeChanged = isMars !== isMarsMode;
-
-        if (locationChanged || modeChanged) {
-           if (isMars) {
-             if (!isMarsMode) setIsMarsMode(true);
-             setSelectedLocation({ lat, lng, name: 'Mars' });
-             setLocationName('Mars, The Red Planet');
-           } else {
+        if (locationChanged) {
+             // If navigating via URL, ensure we are in Earth mode unless handled otherwise
              if (isMarsMode) setIsMarsMode(false);
+             
              setSelectedLocation({ lat, lng });
-             if (nameParam) {
-               setLocationName(nameParam);
-             } else {
-               setLocationName(null); // Will trigger auto-lookup in data fetch
-             }
+             // Clear name to trigger auto-lookup in data fetch
+             setLocationName(null);
              // If navigating via URL, we likely don't have the rich city object
              setSelectedCity(null);
-           }
         }
       }
     } else {
@@ -108,7 +96,7 @@ export const AnalysisPage: React.FC = () => {
         setClassification(null);
       }
     }
-  }, [searchParams, isMarsMode, setIsMarsMode]); // Intentionally not including selectedLocation to avoid loops, relying on checks inside
+  }, [latParam, lngParam, isMarsMode, setIsMarsMode, selectedLocation]);
 
   // Screen Width Check for Full Screen Eligibility
   useEffect(() => {
@@ -204,11 +192,9 @@ export const AnalysisPage: React.FC = () => {
     if (location.name === 'Mars' || location.name === 'Mars, The Red Planet') {
        params.lat = '0';
        params.lng = '0';
-       params.name = 'Mars';
     } else {
        params.lat = location.lat.toFixed(4);
        params.lng = location.lng.toFixed(4);
-       if (location.name) params.name = location.name;
     }
     
     setSearchParams(params);
@@ -221,8 +207,7 @@ export const AnalysisPage: React.FC = () => {
     // Update URL to trigger location change
     setSearchParams({
         lat: city.lat.toFixed(4),
-        lng: city.lng.toFixed(4),
-        name: `${city.name}, ${city.country}`
+        lng: city.lng.toFixed(4)
     });
   };
 
