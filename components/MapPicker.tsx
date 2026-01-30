@@ -1,10 +1,140 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { Shovel, Search, Layers } from 'lucide-react';
+import { Shovel, Search, Layers, ChevronDown, ChevronRight, Info, X } from 'lucide-react';
 import { GeoLocation, MatchReviewDetail } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { EXPLORE_DATA } from '../data/cityData';
+
+// --- Constants & Helpers ---
+
+const CLIMATE_COLORS: Record<string, string> = {
+  'Af': '#0000FF', 'Am': '#0077FF', 'Aw': '#46A9FA', 'As': '#46A9FA', 'As/Aw': '#46A9FA',
+  'BWh': '#FF0000', 'BWk': '#FF9696', 'BSh': '#F5A500', 'BSk': '#FFDC64',
+  'Csa': '#FFFF00', 'Csb': '#C6C700', 'Csc': '#969600',
+  'Cwa': '#96FF96', 'Cwb': '#63C764', 'Cwc': '#329633',
+  'Cfa': '#C6FFC7', 'Cfb': '#66FF66', 'Cfc': '#33C733',
+  'Dsa': '#FF00FF', 'Dsb': '#C700C7', 'Dsc': '#963295', 'Dsd': '#966495',
+  'Dwa': '#ABBAD9', 'Dwb': '#5A77DB', 'Dwc': '#4C5169', 'Dwd': '#380094',
+  'Dfa': '#00FFFF', 'Dfb': '#38C7FF', 'Dfc': '#007E7E', 'Dfd': '#004545',
+  'ET': '#B2B2B2', 'EF': '#686868'
+};
+
+const CLIMATE_GROUPS = {
+  'A': { color: '#0000FF', codes: ['Af', 'Am', 'Aw', 'As'] },
+  'B': { color: '#FF0000', codes: ['BWh', 'BWk', 'BSh', 'BSk'] },
+  'C': { color: '#C6FFC7', codes: ['Cfa', 'Cfb', 'Cfc', 'Csa', 'Csb', 'Csc', 'Cwa', 'Cwb', 'Cwc'] },
+  'D': { color: '#00FFFF', codes: ['Dfa', 'Dfb', 'Dfc', 'Dfd', 'Dwa', 'Dwb', 'Dwc', 'Dwd', 'Dsa', 'Dsb', 'Dsc'] },
+  'E': { color: '#B2B2B2', codes: ['ET', 'EF'] }
+};
+
+const GROUP_LABELS: Record<string, { en: string, zh: string }> = {
+  'A': { en: 'Tropical (A)', zh: '热带气候 (A)' },
+  'B': { en: 'Arid (B)', zh: '干旱半干旱气候 (B)' },
+  'C': { en: 'Temperate (C)', zh: '亚热带/温带气候 (C)' },
+  'D': { en: 'Continental (D)', zh: '温带亚寒带气候 (D)' },
+  'E': { en: 'Polar (E)', zh: '极地气候 (E)' },
+};
+
+// Helper to get description from EXPLORE_DATA
+const getClimateTitle = (code: string) => {
+  const entry = EXPLORE_DATA.find(item => item.code === code);
+  return entry ? entry.title : code;
+};
+
+// --- Sub-components ---
+
+export const ClimateLegend: React.FC<{ className?: string }> = ({ className }) => {
+  const { t, language } = useLanguage();
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [selectedInfo, setSelectedInfo] = useState<{code: string, title: string} | null>(null);
+
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroup(curr => curr === groupKey ? null : groupKey);
+    setSelectedInfo(null); // Close info when switching groups
+  };
+
+  const handleCodeClick = (code: string) => {
+    setSelectedInfo({
+      code,
+      title: getClimateTitle(code)
+    });
+  };
+
+  // Default to absolute positioning if no className provided
+  const containerClasses = className || "absolute bottom-8 left-3 z-[1000] max-w-[200px] sm:max-w-[250px]";
+
+  return (
+    <div className={`flex flex-col items-start gap-2 ${containerClasses}`}>
+      
+      {/* Info Toast */}
+      {selectedInfo && (
+        <div className="bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-xl border border-slate-200 mb-2 animate-in slide-in-from-bottom-2 fade-in w-full relative">
+          <button 
+            onClick={() => setSelectedInfo(null)}
+            className="absolute top-1 right-1 text-slate-400 hover:text-slate-600 p-1"
+          >
+            <X className="w-3 h-3" />
+          </button>
+          <div className="flex items-center gap-2 mb-1">
+            <span 
+              className="w-3 h-3 rounded-full shadow-sm border border-black/10" 
+              style={{ backgroundColor: CLIMATE_COLORS[selectedInfo.code] }}
+            />
+            <span className="font-bold text-slate-800">{selectedInfo.code}</span>
+          </div>
+          <p className="text-xs text-slate-600 leading-tight">{selectedInfo.title}</p>
+        </div>
+      )}
+
+      {/* Accordion Container */}
+      <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-slate-200 overflow-hidden w-full transition-all duration-300">
+        <div className="p-2 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+          <span>{language === 'zh' ? '图例' : 'Legend'}</span>
+          <Info className="w-3 h-3" />
+        </div>
+        
+        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+          {(Object.keys(CLIMATE_GROUPS) as Array<keyof typeof CLIMATE_GROUPS>).map((key) => (
+            <div key={key} className="border-b border-slate-100 last:border-0">
+              <button 
+                onClick={() => toggleGroup(key)}
+                className={`w-full flex items-center justify-between p-2 text-xs font-medium transition-colors hover:bg-slate-50 ${expandedGroup === key ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'}`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CLIMATE_GROUPS[key].color }}></div>
+                  {GROUP_LABELS[key][language]}
+                </div>
+                {expandedGroup === key ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3 text-slate-400" />}
+              </button>
+
+              {expandedGroup === key && (
+                <div className="bg-slate-50 p-1 grid grid-cols-2 gap-1 animate-in slide-in-from-top-1 duration-200">
+                  {CLIMATE_GROUPS[key].codes.map(code => (
+                    <button
+                      key={code}
+                      onClick={() => handleCodeClick(code)}
+                      className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-left group"
+                    >
+                      <span 
+                        className="w-3 h-3 rounded-sm shadow-sm flex-shrink-0" 
+                        style={{ backgroundColor: CLIMATE_COLORS[code] }} 
+                      />
+                      <span className="text-[10px] font-mono text-slate-600 group-hover:text-slate-900 group-hover:font-bold">{code}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main MapPicker Component ---
 
 export interface MapPoint {
   id: string;
@@ -27,6 +157,11 @@ interface MapPickerProps {
   onDig?: () => void;
   onAnalyzeGuess?: (lat: number, lng: number, name: string) => void; // New callback for review mode
   isFullScreen?: boolean; // New prop for full screen mode
+  
+  // Overlay Control Props
+  activeOverlay?: 'none' | 'climate' | 'precip';
+  onOverlayChange?: (overlay: 'none' | 'climate' | 'precip') => void;
+  showLegend?: boolean; // Default true. If false, Legend is NOT rendered inside map (useful if rendered externally)
 }
 
 // Custom TileLayer to support QuadKeys for Bing Maps
@@ -267,10 +402,16 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   isDigging = false, 
   onDig,
   onAnalyzeGuess,
-  isFullScreen = false
+  isFullScreen = false,
+  activeOverlay: propActiveOverlay,
+  onOverlayChange,
+  showLegend = true
 }) => {
   const { t } = useLanguage();
-  const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
+  const [internalActiveOverlay, setInternalActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
+
+  // Determine which state to use: controlled (prop) or uncontrolled (internal)
+  const activeOverlay = propActiveOverlay !== undefined ? propActiveOverlay : internalActiveOverlay;
 
   const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
     if (e.originalEvent.shiftKey && selectedLocation) {
@@ -348,7 +489,12 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
   // Helper to toggle overlays mutually exclusively
   const toggleOverlay = (type: 'climate' | 'precip') => {
-    setActiveOverlay(current => current === type ? 'none' : type);
+    const nextState = activeOverlay === type ? 'none' : type;
+    if (onOverlayChange) {
+      onOverlayChange(nextState);
+    } else {
+      setInternalActiveOverlay(nextState);
+    }
   };
 
   return (
@@ -651,6 +797,11 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         >
           <img src="./prec_legend_bar.png" alt="Precipitation Legend" style={{ width: '100%', height: 'auto', display: 'block' }} />
         </div>
+      )}
+
+      {/* Climate Legend Overlay (Only if enabled internally) */}
+      {!isMarsMode && activeOverlay === 'climate' && showLegend && (
+        <ClimateLegend />
       )}
 
       {/* Hint Overlay */}

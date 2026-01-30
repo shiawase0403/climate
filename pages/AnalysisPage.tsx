@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPicker } from '../components/MapPicker';
+import { MapPicker, ClimateLegend } from '../components/MapPicker';
 import { ClimateChart } from '../components/ClimateChart';
 import { ClimateTable } from '../components/ClimateTable';
 import { ClassificationCard } from '../components/ClassificationCard';
@@ -54,6 +54,9 @@ export const AnalysisPage: React.FC = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [canFullScreen, setCanFullScreen] = useState(true);
   const [useLegacySource, setUseLegacySource] = useState(false);
+  
+  // Map Overlay State
+  const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
 
   // Screen Width Check for Full Screen Eligibility
   useEffect(() => {
@@ -257,7 +260,17 @@ export const AnalysisPage: React.FC = () => {
             isDigging={isDigging}
             onDig={handleDig}
             isFullScreen={isFullScreen}
+            activeOverlay={activeOverlay}
+            onOverlayChange={setActiveOverlay}
+            showLegend={false}
           />
+          {/* External Legend Rendered Below Map */}
+          {activeOverlay === 'climate' && !isMarsMode && (
+             <div className="mt-4 relative animate-in fade-in slide-in-from-top-2">
+                <ClimateLegend className="w-full relative z-10" />
+             </div>
+          )}
+
           {/* Toggle Full Screen Button */}
           {/* Visible on all screens, but disabled if screen is too small */}
           <button 
