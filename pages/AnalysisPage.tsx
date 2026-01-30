@@ -11,6 +11,7 @@ import { CitySearchBox } from '../components/CitySearchBox';
 import { ExploreMenu } from '../components/ExploreMenu';
 import { CityAnalysisCard } from '../components/CityAnalysisCard';
 import { MobileDataViewer } from '../components/MobileDataViewer';
+import { DraggableCard } from '../components/DraggableCard';
 import { fetchClimateData, fetchClassification } from '../services/climateService';
 import { findNearestCity } from '../services/csvService';
 import { generatePDF } from '../services/pdfService';
@@ -325,10 +326,10 @@ export const AnalysisPage: React.FC = () => {
             isFullScreen={isFullScreen}
             activeOverlay={activeOverlay}
             onOverlayChange={setActiveOverlay}
-            showLegend={false}
+            showLegend={isFullScreen} // Show internal legend in fullscreen mode
           />
-          {/* External Legend Rendered Below Map */}
-          {activeOverlay === 'climate' && !isMarsMode && (
+          {/* External Legend Rendered Below Map (Only in Normal Mode) */}
+          {activeOverlay === 'climate' && !isMarsMode && !isFullScreen && (
              <div className="mt-4 relative animate-in fade-in slide-in-from-top-2">
                 <ClimateLegend className="w-full relative z-10" />
              </div>
@@ -432,8 +433,22 @@ export const AnalysisPage: React.FC = () => {
                 {!isFullScreen && selectedCity && <CityAnalysisCard city={selectedCity} />}
 
                 {/* Classification Card */}
-                {/* In FullScreen: Top Left Overlay. Scaled down on mid-sized screens to fit. */}
-                <div className={isFullScreen ? "absolute top-6 left-6 w-[380px] pointer-events-auto origin-top-left md:scale-90 scale-75" : ""}>
+                {isFullScreen ? (
+                  <DraggableCard title="Climate Classification" initialX={20} initialY={80}>
+                    <div className="w-[380px]">
+                      <ClassificationCard 
+                        classificationData={classification ? classification.data : []} 
+                        lat={selectedLocation.lat} 
+                        lng={selectedLocation.lng}
+                        locationName={locationName} 
+                        onDig={handleDig}
+                        climateData={climateData.data}
+                        isFastMode={!useLegacySource}
+                      />
+                    </div>
+                  </DraggableCard>
+                ) : (
+                  // Normal Mode
                   <ClassificationCard 
                     classificationData={classification ? classification.data : []} 
                     lat={selectedLocation.lat} 
@@ -443,19 +458,21 @@ export const AnalysisPage: React.FC = () => {
                     climateData={climateData.data}
                     isFastMode={!useLegacySource}
                   />
-                </div>
+                )}
                 
-                {/* FullScreen Mode: Floating Chart */}
-                <div className={isFullScreen ? "absolute top-6 right-6 w-[550px] pointer-events-auto bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 origin-top-right scale-75" : "hidden"}>
-                   <ClimateChart 
-                     data={climateData.data} 
-                     locationName={locationName} 
-                     elevation={climateData.results.location.elev}
-                   />
-                </div>
-                
-                {/* Normal Mode: Mobile Carousel, Desktop Stack */}
-                {!isFullScreen && (
+                {/* Climate Chart */}
+                {isFullScreen ? (
+                  <DraggableCard title="Climate Data" initialX={window.innerWidth > 1000 ? window.innerWidth - 650 : 420} initialY={80}>
+                    <div className="w-[600px] bg-white rounded-xl">
+                       <ClimateChart 
+                         data={climateData.data} 
+                         locationName={locationName} 
+                         elevation={climateData.results.location.elev}
+                       />
+                    </div>
+                  </DraggableCard>
+                ) : (
+                  // Normal Mode
                   <MobileDataViewer>
                      <ClimateChart 
                        data={climateData.data} 
