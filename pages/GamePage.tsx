@@ -437,25 +437,53 @@ export const GamePage: React.FC = () => {
 
         {targetCity && !loading && !error && climateData && classification && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <MobileDataViewer>
-               <ClassificationCard 
-                 classificationData={classification.data} 
-                 lat={typeof targetCity.lat === 'string' ? parseFloat(targetCity.lat) : targetCity.lat} 
-                 lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
-                 locationName={`${targetCity.city}, ${targetCity.country}`}
-                 masked={gameStatus === 'playing'}
-                 hintRevealed={hintRevealed}
-                 climateData={climateData.data}
-               />
-               <ClimateChart 
-                 data={climateData.data} 
-                 locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
-               />
-               <ClimateTable 
-                 data={climateData.data} 
-                 locationName={gameStatus === 'playing' ? t.mysteryLocation : `${targetCity.city}`} 
-               />
-             </MobileDataViewer>
+             {gameStatus === 'playing' ? (
+                <MobileDataViewer>
+                   <ClimateChart 
+                     key="game-chart"
+                     data={climateData.data} 
+                     locationName={t.mysteryLocation} 
+                   />
+                   <ClimateTable 
+                     key="game-table"
+                     data={climateData.data} 
+                     locationName={t.mysteryLocation} 
+                   />
+                   <ClassificationCard 
+                     key="game-class"
+                     classificationData={classification.data} 
+                     lat={typeof targetCity.lat === 'string' ? parseFloat(targetCity.lat) : targetCity.lat} 
+                     lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
+                     locationName={`${targetCity.city}, ${targetCity.country}`}
+                     masked={true}
+                     hintRevealed={hintRevealed}
+                     climateData={climateData.data}
+                   />
+                </MobileDataViewer>
+             ) : (
+                <MobileDataViewer>
+                   <ClassificationCard 
+                     key="game-class-revealed"
+                     classificationData={classification.data} 
+                     lat={typeof targetCity.lat === 'string' ? parseFloat(targetCity.lat) : targetCity.lat} 
+                     lng={typeof targetCity.lon === 'string' ? parseFloat(targetCity.lon) : targetCity.lon}
+                     locationName={`${targetCity.city}, ${targetCity.country}`}
+                     masked={false}
+                     hintRevealed={hintRevealed}
+                     climateData={climateData.data}
+                   />
+                   <ClimateChart 
+                     key="game-chart-revealed"
+                     data={climateData.data} 
+                     locationName={`${targetCity.city}`} 
+                   />
+                   <ClimateTable 
+                     key="game-table-revealed"
+                     data={climateData.data} 
+                     locationName={`${targetCity.city}`} 
+                   />
+                </MobileDataViewer>
+             )}
           </div>
         )}
       </div>

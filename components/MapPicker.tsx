@@ -422,7 +422,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   // Construct border/shadow classes based on mode
-  let containerClasses = "w-full overflow-hidden relative z-0 transition-all duration-300";
+  // Note: Removed 'transition-all duration-300' to prevent Leaflet jitter errors during resizing
+  let containerClasses = "w-full overflow-hidden relative z-0";
   
   if (isFullScreen) {
     // Full screen mode style: Fixed covering the viewport
@@ -655,7 +656,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
                     <div className="text-xs">
                       {point.name && <div className="font-bold mb-1">{point.name}</div>}
                       <div className="font-mono text-slate-500">
-                        {Math.abs(point.location.lat).toFixed(2)}°, {Math.abs(point.location.lng).toFixed(2)}°
+                        {typeof point.location.lat === 'number' ? Math.abs(point.location.lat).toFixed(2) : '0.00'}°, {typeof point.location.lng === 'number' ? Math.abs(point.location.lng).toFixed(2) : '0.00'}°
                       </div>
                     </div>
                   </Popup>

@@ -1,19 +1,37 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { Leaf, Sprout, TreeDeciduous } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getVegetationInfo } from '../data/vegetationData';
-import { ClassificationEntry } from '../types';
+import { ClassificationEntry, MonthlyClimateData } from '../types';
+import { getClimateClassification } from '../services/logic';
 
 interface VegetationCardProps {
   classificationData: ClassificationEntry[];
+  climateData?: MonthlyClimateData[];
+  lat?: number;
 }
 
-export const VegetationCard: React.FC<VegetationCardProps> = ({ classificationData }) => {
+export const VegetationCard: React.FC<VegetationCardProps> = ({ classificationData, climateData, lat }) => {
   const { t } = useLanguage();
 
-  // Extract the main code using similar logic to ClassificationCard
-  const mainClass = classificationData.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData[0];
-  const code = mainClass?.code;
+  // Determine the code: prefer API classification, fall back to calculation if available
+  const code = useMemo(() => {
+    // 1. Try API Classification
+    const mainClass = classificationData?.find(c => c.type === 'K\u00f6ppen-Geiger' && c.text) || classificationData?.[0];
+    if (mainClass?.code && mainClass.code !== 'Calculated') {
+      return mainClass.code;
+    }
+
+    // 2. Try Calculation (Fast Mode)
+    if (climateData && climateData.length === 12 && lat !== undefined) {
+      const temps = climateData.map(d => d.temp);
+      const precips = climateData.map(d => d.prec);
+      return getClimateClassification(temps, precips, lat);
+    }
+
+    return null;
+  }, [classificationData, climateData, lat]);
 
   if (!code) return null;
 

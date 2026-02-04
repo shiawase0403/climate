@@ -30,13 +30,9 @@ export const MobileDataViewer: React.FC<MobileDataViewerProps> = ({ children }) 
 
       {/* Mobile View: Button-controlled Carousel */}
       <div className="lg:hidden">
-        {/* Content Area */}
-        <div className="min-h-[400px] mb-4 transition-all duration-300">
-          {childrenArray[currentIndex]}
-        </div>
-
-        {/* Navigation Controls */}
-        <div className="flex items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+        
+        {/* Navigation Controls (Moved to Top) */}
+        <div className="flex items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-slate-200 mb-4">
           <button
             onClick={prev}
             className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors active:scale-95"
@@ -45,17 +41,22 @@ export const MobileDataViewer: React.FC<MobileDataViewerProps> = ({ children }) 
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <div className="flex space-x-2">
-            {childrenArray.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  currentIndex === idx ? 'bg-indigo-600 w-4' : 'bg-slate-300'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
+          <div className="flex flex-col items-center">
+            <div className="flex space-x-2 mb-1">
+              {childrenArray.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    currentIndex === idx ? 'bg-indigo-600 w-4' : 'bg-slate-300'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+            <div className="text-[10px] text-slate-400">
+               {currentIndex + 1} / {total}
+            </div>
           </div>
 
           <button
@@ -66,10 +67,12 @@ export const MobileDataViewer: React.FC<MobileDataViewerProps> = ({ children }) 
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-        
-        <div className="text-center mt-2 text-xs text-slate-400">
-           {currentIndex + 1} / {total}
+
+        {/* Content Area */}
+        <div className="min-h-[400px] mb-4 transition-all duration-300">
+          {childrenArray[currentIndex]}
         </div>
+
       </div>
     </div>
   );

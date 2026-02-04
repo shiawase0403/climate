@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MapPicker, ClimateLegend } from '../components/MapPicker';
 import { ClimateChart } from '../components/ClimateChart';
 import { ClimateTable } from '../components/ClimateTable';
@@ -16,7 +16,8 @@ import { fetchClimateData, fetchClassification } from '../services/climateServic
 import { findNearestCity } from '../services/csvService';
 import { generatePDF } from '../services/pdfService';
 import { GeoLocation, ClimateDataResponse, ClassificationResponse, CityDefinition } from '../types';
-import { Map as MapIcon, Loader2, AlertCircle, Waves, Download, Maximize, Minimize, Settings2, Database } from 'lucide-react';
+import { EXPLORE_DATA } from '../data/cityData';
+import { Map as MapIcon, Loader2, AlertCircle, Waves, Download, Maximize, Minimize, Settings2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
@@ -43,6 +44,7 @@ export const AnalysisPage: React.FC = () => {
   const { isMarsMode, setIsMarsMode, isRetroMode, primaryColor } = useTheme();
   const { showNotification } = useNotification();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [selectedLocation, setSelectedLocation] = useState<GeoLocation | null>(null);
   const [locationName, setLocationName] = useState<string | null>(null);
@@ -65,6 +67,8 @@ export const AnalysisPage: React.FC = () => {
   const latParam = searchParams.get('lat');
   const lngParam = searchParams.get('lng') ?? searchParams.get('lon');
   const isMarsParam = searchParams.get('isMars') === '1';
+  const codeParam = searchParams.get('code');
+  const idParam = searchParams.get('id');
 
   // Sync URL params to State
   useEffect(() => {
@@ -73,42 +77,60 @@ export const AnalysisPage: React.FC = () => {
       setIsMarsMode(isMarsParam);
     }
 
+    // Handle City Explore Route based on code and id
+    if (codeParam && idParam) {
+       const category = EXPLORE_DATA.find(c => c.code === codeParam);
+       const city = category?.cities.find(c => c.id === parseInt(idParam));
+       
+       if (city) {
+          const locationChanged = !selectedLocation || 
+                                Math.abs(selectedLocation.lat - city.lat) > 0.0001 || 
+                                Math.abs(selectedLocation.lng - city.lng) > 0.0001;
+          
+          if (locationChanged) {
+             setSelectedLocation({ lat: city.lat, lng: city.lng });
+             setLocationName(city.name);
+             setSelectedCity(city);
+          }
+          return; // Exit early to respect these params
+       }
+    }
+
+    // Handle Standard Lat/Lng Route
     if (latParam && lngParam) {
       const lat = parseFloat(latParam);
       const lng = parseFloat(lngParam);
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        // Check if we need to update state to avoid loops/redundant fetches
         const locationChanged = !selectedLocation || 
                                 Math.abs(selectedLocation.lat - lat) > 0.0001 || 
                                 Math.abs(selectedLocation.lng - lng) > 0.0001;
         
-        // Update if location changed OR if mode changed (to update name/data)
         if (locationChanged || isMarsParam !== isMarsMode) {
              setSelectedLocation({ lat, lng });
              
-             // If Mars, set default name, else clear to let fetcher find city
              if (isMarsParam) {
                 setLocationName("Mars, The Red Planet");
              } else if (locationChanged) {
-                // Only clear name if location actually changed, otherwise we might wipe a manually set name
-                setLocationName(null);
+                // Only clear if we are not in a valid City Explore route
+                if (!codeParam || !idParam) {
+                  setLocationName(null);
+                  setSelectedCity(null);
+                }
              }
-             
-             // If navigating via URL, we likely don't have the rich city object
-             setSelectedCity(null);
         }
       }
     } else {
       // Clear location if URL params are removed (e.g. back to root)
-      if (selectedLocation) {
+      if (selectedLocation && !codeParam && !idParam) {
         setSelectedLocation(null);
         setLocationName(null);
         setClimateData(null);
         setClassification(null);
+        setSelectedCity(null);
       }
     }
-  }, [latParam, lngParam, isMarsParam, isMarsMode, setIsMarsMode, selectedLocation]);
+  }, [latParam, lngParam, isMarsParam, isMarsMode, setIsMarsMode, selectedLocation, codeParam, idParam]);
 
   // Screen Width Check for Full Screen Eligibility
   useEffect(() => {
@@ -164,20 +186,13 @@ export const AnalysisPage: React.FC = () => {
         setClassification(classRes);
         
         // Handle city name and Antipode logic
-        let cityName = null;
         if (!locationName) {
-           cityName = await findNearestCity(selectedLocation.lat, selectedLocation.lng);
+           const cityName = await findNearestCity(selectedLocation.lat, selectedLocation.lng);
            if (cityName) setLocationName(cityName);
-        } else {
-           cityName = locationName;
         }
 
         if (isAntipodeJump) {
-          if (cityName) {
-            showNotification(`You dug through the earth! Welcome to ${cityName}.`, 'success');
-          } else {
-            showNotification("You dug through the earth! ... Splash! You hit the ocean.", 'ocean');
-          }
+          showNotification("You dug through the earth! ... Splash! You hit the ocean.", 'ocean');
           setIsAntipodeJump(false);
         }
 
@@ -211,8 +226,6 @@ export const AnalysisPage: React.FC = () => {
        params.lat = location.lat.toFixed(4);
        params.lng = location.lng.toFixed(4);
        
-       // If currently in Mars mode and clicking the map (no name implies map click), keep Mars mode.
-       // If location has a name (from search), assume user wants to go to that Earth location.
        if (isMarsMode && !location.name) {
           params.isMars = '1';
        }
@@ -221,15 +234,19 @@ export const AnalysisPage: React.FC = () => {
     setSearchParams(params);
   };
 
-  const handleExploreCitySelect = (city: CityDefinition) => {
-    // Set UI specific state that can't be in URL (Description card)
+  const handleExploreCitySelect = (city: CityDefinition, code?: string) => {
     setSelectedCity(city);
+    setSelectedLocation({ lat: city.lat, lng: city.lng });
+    setLocationName(city.name); 
     
-    // Update URL to trigger location change
-    setSearchParams({
-        lat: city.lat.toFixed(4),
-        lng: city.lng.toFixed(4)
-    });
+    if (code && city.id) {
+       navigate(`/cityexplore?code=${code}&id=${city.id}`);
+    } else {
+       setSearchParams({
+          lat: city.lat.toFixed(4),
+          lng: city.lng.toFixed(4)
+       });
+    }
   };
 
   const handleDig = () => {
@@ -257,12 +274,10 @@ export const AnalysisPage: React.FC = () => {
 
   const handleDownloadReport = async () => {
     if (!selectedLocation || !climateData) return;
-    // For report generation in fast mode, construct a basic classification object
     
     setGeneratingPdf(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      // Ensure we pass a valid object structure even if null
       const classData = classification || { results: {lat: '0', lon: '0', version: ''}, status: 'OK', data: [] };
       await generatePDF(selectedLocation, climateData, classData, language, t, locationName);
     } catch (e) {
@@ -273,7 +288,6 @@ export const AnalysisPage: React.FC = () => {
   };
 
   const hasData = climateData && climateData.data && climateData.data.length > 0;
-  // In Fast mode, we don't require classification object to be present to show data
   const isDataReady = hasData && climateData && (useLegacySource ? classification : true);
 
   // Toggle Body Scroll for FullScreen
@@ -292,7 +306,6 @@ export const AnalysisPage: React.FC = () => {
     <>
       {/* 
         Left Column: Map & Inputs 
-        If FullScreen: Fixed to cover viewport, z-[2000] to sit above footer
       */}
       <div className={isFullScreen ? "fixed inset-0 z-[2000] bg-slate-50 w-screen h-screen" : "lg:col-span-5 lg:sticky lg:top-24 transition-all"}>
         {!isFullScreen && (
@@ -326,17 +339,14 @@ export const AnalysisPage: React.FC = () => {
             isFullScreen={isFullScreen}
             activeOverlay={activeOverlay}
             onOverlayChange={setActiveOverlay}
-            showLegend={isFullScreen} // Show internal legend in fullscreen mode
+            showLegend={isFullScreen}
           />
-          {/* External Legend Rendered Below Map (Only in Normal Mode) */}
           {activeOverlay === 'climate' && !isMarsMode && !isFullScreen && (
              <div className="mt-4 relative animate-in fade-in slide-in-from-top-2">
                 <ClimateLegend className="w-full relative z-10" />
              </div>
           )}
 
-          {/* Toggle Full Screen Button */}
-          {/* Visible on all screens, but disabled if screen is too small */}
           <button 
             onClick={() => canFullScreen && setIsFullScreen(!isFullScreen)}
             disabled={!canFullScreen}
@@ -351,9 +361,9 @@ export const AnalysisPage: React.FC = () => {
 
       {/* 
         Right Column: Data Display 
-        If FullScreen: Fixed overlay (pointer-events-none by default to let clicks pass to map), z-[2010]
       */}
       <div className={isFullScreen ? "fixed inset-0 z-[2010] pointer-events-none p-6" : "lg:col-span-7 transition-all"}>
+        
         {loading && !isFullScreen && (
           <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-2xl border border-slate-100 mb-6">
             <Loader2 className={`w-10 h-10 ${primaryColor} animate-spin mb-4`} />
@@ -480,7 +490,11 @@ export const AnalysisPage: React.FC = () => {
                        elevation={climateData.results.location.elev}
                      />
                      <ClimateTable data={climateData.data} locationName={locationName} />
-                     <VegetationCard classificationData={classification ? classification.data : (isDataReady ? [{type: 'Calculated', code: 'Calculated', short: ''}] : [])} />
+                     <VegetationCard 
+                       classificationData={classification ? classification.data : []}
+                       climateData={climateData.data}
+                       lat={selectedLocation.lat}
+                     />
                   </MobileDataViewer>
                 )}
               </>

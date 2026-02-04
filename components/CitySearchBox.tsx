@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Loader2, X, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -138,7 +139,7 @@ export const CitySearchBox: React.FC<CitySearchBoxProps> = ({ onLocationSelect }
                      {city.country && <span>{city.country}</span>}
                      {city.country && <span className="text-slate-300">•</span>}
                      <span className="font-mono text-[10px] text-slate-400">
-                       {city.lat.toFixed(2)}, {city.lng.toFixed(2)}
+                       {typeof city.lat === 'number' ? city.lat.toFixed(2) : '-'}, {typeof city.lng === 'number' ? city.lng.toFixed(2) : '-'}
                      </span>
                   </div>
                 </div>

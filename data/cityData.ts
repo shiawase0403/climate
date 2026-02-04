@@ -6,6 +6,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带雨林气候 (Tropical Rainforest)',
     cities: [
       {
+        id: 1,
         name: 'Singapore (新加坡)',
         country: 'Singapore',
         lat: 1.2833,
@@ -13,6 +14,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '新加坡位于马来半岛南端，距离赤道仅约137公里，是全球典型的热带雨林气候代表。由于地处赤道无风带，这里受东北季风和西南季风的双重影响，但无论风向如何，经过温暖海洋的气流都带来了极其充沛的水汽。新加坡几乎没有气旋活动（科里奥利力过弱），其降水主要源自午后的热对流雷暴（Sumatra Squalls）。城市化的热岛效应进一步加剧了云层的生成与降水频率。'
       },
       {
+        id: 2,
         name: 'Kuala Lumpur (吉隆坡)',
         country: 'Malaysia',
         lat: 3.1333,
@@ -20,6 +22,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于蒂迪旺沙山脉西侧的巴生谷地。尽管山脉在一定程度上阻挡了部分季风，但吉隆坡依然维持着热带雨林气候特征。其降水高峰通常出现在季风转换期（4月和10月），这种双峰型降水模式是赤道地区太阳直射点每年两次经过该纬度导致赤道低气压带经过的直接体现。'
       },
       {
+        id: 3,
         name: 'Ishigaki (石垣)',
         country: 'Japan',
         lat: 24.3333,
@@ -27,13 +30,15 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '石垣岛是热带雨林气候的一个显著“高纬度异常”。虽然位于北回归线附近的副热带区域；但受强暖流——黑潮（Kuroshio Current）的影响，加之夏季频繁的台风活动和冬季东北季风经过温暖海面形成气团，使得该岛依然能维持热带雨林所需的降水量和温度，突破了纬度的限制。'
       },
       {
+        id: 4,
         name: 'Kampala (坎帕拉)',
         country: 'Uganda',
         lat: 0.3000,
         lng: 32.5667,
-        description: '坎帕拉代表了“高地热带雨林”气候。虽然紧邻赤道，但其平均海拔超过1100米，这使得气温较同纬度的海平面城市（如新加坡）温和。维多利亚湖（Lake Victoria）巨大的水体提供了局地水汽循环，形成的湖陆风效应确保了全年的高湿度 and 降水，使其符合Af标准。'
+        description: '坎帕拉代表了“高地热带雨林”气候。虽然紧邻赤道，但其平均海拔超过1100米，这使得气温较同纬度的海平面城市（如新加坡）温和。维多利亚湖（Lake Victoria）巨大的水体提供了局地水汽循环，形成的湖陆风效应确保了全年的高湿度，但是'
       },
       {
+        id: 5,
         name: 'Honiara (霍尼亚拉)',
         country: 'Solomon Islands',
         lat: -9.4333,
@@ -41,6 +46,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于瓜达尔卡纳尔岛北岸。这里是南太平洋辐合带（SPCZ）活跃的区域。除了季风影响外，热带气旋的生成也为该地区带来了极端的降水事件。作为一个群岛城市，其气候具有极强的海洋性，日温差极小。'
       },
       {
+        id: 6,
         name: 'Apia (阿皮亚)',
         country: 'Samoa',
         lat: -13.8333,
@@ -48,6 +54,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于乌波卢岛北岸，直面盛行的东南信风。虽然处于南半球信风带，但由于海洋广阔且水温高，信风在此处并非带来干燥，而是携带了大量水汽。山脉的阻挡在迎风坡形成了持续的降雨，使阿皮亚保持着典型的雨林气候特征。'
       },
       {
+        id: 7,
         name: 'Paramaribo (帕拉马里博)',
         country: 'Suriname',
         lat: 5.8667,
@@ -55,6 +62,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于南美洲东北部的圭亚那地盾边缘。这里受北大西洋信风带的控制，且由于亚马逊雨林的蒸腾作用提供了背景湿度，使得该区域全年湿润。赤道低气压带的南北移动虽然带来降水波动，但即使在“干季”降水也依然丰富。'
       },      
       {
+        id: 8,
         name: 'Iquitos (伊基托斯)',
         country: 'Peru',
         lat: -3.7406,
@@ -62,6 +70,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于亚马孙雨林腹地降水最多处，盆地三面环山，东南东北信风水汽积聚难以逃逸，森林蒸腾保持湿度，全年恒温，日较差年较差极小，湿度很大，降水超过3000mm。'
       },
       {
+        id: 9,
         name: 'Kisangani (基桑加尼)',
         country: 'Congo(Kinshasa)',
         lat: 0.5230,
@@ -69,6 +78,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于刚果盆地，信风与大西洋西南季风带来水汽在此汇集，降水相比亚马孙地区较少，降水类型为双峰型（太阳直射点移动导致赤道低气压带摆动）。'
       },
       {
+        id: 10,
         name: 'Georgetown (乔治敦)',
         country: 'Guyana',
         lat: 6.8000,
@@ -82,6 +92,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带季风气候 (Tropical Monsoon)',
     cities: [
       {
+        id: 1,
         name: 'Mumbai (孟买)',
         country: 'India',
         lat: 19.0411,
@@ -89,6 +100,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '西高止山脉迎风坡，降水集中的热带季风气候，7月降水量接近1000mm，年降水量超过2500毫米，但是纬度略高，雨季时间仅有4个月左右'
       },
       {
+        id: 2,
         name: 'Hengchun (恒春)',
         country: 'China',
         lat: 22.0039,
@@ -96,6 +108,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '台湾省最南端，海洋调节显著，受到季风和黑潮暖流的影响，夏秋季的西南季风和台风带来极为充沛的降水，冬季处于东北季风背风处，有“落山风”现象，降水相较于台湾省东部略少'
       },
       {
+        id: 3,
         name: 'Wanning (万宁)',
         country: 'China',
         lat: 18.7944,
@@ -103,6 +116,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '海南省东南部，位于夏季风迎风坡，叠加台风影响，降水充沛'
       },
       {
+        id: 4,
         name: 'Malé (马累)',
         country: 'Maldives',
         lat: 4.1667,
@@ -110,6 +124,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于印度洋中心的环礁之上。虽然四面环海，但受南亚季风系统的强烈控制。冬季盛行干燥的东北季风，夏季盛行湿润的西南季风。由于岛屿面积过小，无法形成局地热对流降水，因此降水高度依赖于大尺度季风气流的辐合。'
       },
       {
+        id: 5,
         name: 'Freetown (弗里敦)',
         country: 'Sierra Leone',
         lat: 8.4833,
@@ -117,6 +132,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '弗里敦拥有全球最剧烈的季风降水之一。夏季，来自大西洋的西南季风几乎垂直撞击西非海岸的山地（狮子山），产生惊人的地形雨。而在冬季，来自撒哈拉沙漠的哈马丹风（Harmattan）（来自大陆的信风）虽然被地形削弱，但仍带来明显的干旱期。'
       },
       {
+        id: 6,
         name: 'Malabo (马拉博)',
         country: 'Equatorial Guinea',
         lat: 3.7500,
@@ -124,6 +140,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于比奥科岛北端。该岛也是火山岛，其地理位置使其拦截了随几内亚季风北上的大量水汽。作为非洲最湿润的地区之一，其干季非常短暂，几乎处于Af与Am的临界点。'
       },
       {
+        id: 7,
         name: 'Cairns (凯恩斯)',
         country: 'Australia',
         lat: -16.9167,
@@ -131,6 +148,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '凯恩斯位于昆士兰热带海岸，背靠大分水岭。这里是“信风季风”气候的典范。夏季受热带低压和季风槽影响多雨；冬季盛行东南信风，虽然信风来自海洋，但对于凯恩斯以北地区，信风在经过大堡礁和珊瑚海后携带水汽，在遇到地形抬升时仍能降雨，从而缓解了干季的强度，使其维持雨林景观。'
       },
       {
+        id: 8,
         name: 'Miami (迈阿密)',
         country: 'United States',
         lat: 25.7667,
@@ -138,6 +156,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '迈阿密的气候属于“信风岸”型季风气候。虽然纬度较高，但墨西哥湾暖流（Gulf Stream）的存在使其冬季异常温暖。夏季降水主要源自热力对流和热带波动（包括飓风），冬季则相对干燥，但偶尔受锋面系统扫尾影响，不会完全干透。'
       },
       {
+        id: 9,
         name: 'Recife (累西腓)',
         country: 'Brazil',
         lat: -8.0500,
@@ -145,6 +164,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于巴西东北角的突出部。这里受东风波（Easterly Waves）扰动影响显著，降水集中在南半球的“冬季”（实际上是高日照后的滞后降水期）。信风将大西洋的湿气直接输送至此，使得即便在所谓的干季，空气湿度也极高。'
       },
       {
+        id: 10,
         name: 'Puerto Ayacucho (阿亚库乔港)',
         country: 'Venezuela',
         lat: 5.6500,
@@ -157,7 +177,8 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     code: 'Aw',
     title: '热带稀树草原气候 (Tropical Savanna - Winter Dry)',
     cities: [
- {
+      {
+        id: 1,
         name: 'Bamako (巴马科)',
         country: 'Mali',
         lat: 12.6000,
@@ -165,6 +186,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '深居内陆，无海洋调节，干湿分明，热季（3-5）月盛行撒哈拉吹来的东北信风（哈马丹风），极端炎热干燥，6-9月受北移的赤道低气压带控制，降水较多。'
       },
       {
+        id: 2,
         name: 'Maputo (马普托)',
         country: 'Mozambique',
         lat: -25.9667,
@@ -172,6 +194,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于回归线附近。受厄加勒斯暖流（Agulhas Current）影响，沿岸相对湿润。但冬季受南非高原上的反气旋控制，气流下沉，形成干季。'
       },
       {
+        id: 3,
         name: 'Lagos (拉各斯)',
         country: 'Nigeria',
         lat: 6.4500,
@@ -179,6 +202,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '这是一个特殊的Aw案例。拉各斯距离赤道很近，本应是Af，但由于几内亚湾沿岸存在一股季节性的冷升流，加之海岸线平行于西南季风，减少了抬升，导致在8月份出现一个显著的“小干季”（Little Dry Season），使其年总降水量和分布形态符合Aw标准。'
       },
       {
+        id: 4,
         name: 'Darwin (达尔文)',
         country: 'Australia',
         lat: -12.4500,
@@ -186,6 +210,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '澳大利亚北部的典型代表。冬季，澳大利亚大陆形成强大的高压中心，向外吹出极为干燥的东南信风，达尔文随之进入数月的无雨期，草木枯黄，易发火灾。夏季季风爆发时，降水强度极大。'
       },
       {
+        id: 5,
         name: 'Port of Spain (西班牙港)',
         country: 'Trinidad and Tobago',
         lat: 10.6500,
@@ -193,6 +218,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于飓风带边缘。虽然海洋性强，但受副热带高压季节性南扩影响，前半年（1-5月）有明显的干季，符合Aw特征。'
       },
       {
+        id: 6,
         name: 'Panama City (巴拿马城)',
         country: 'Panama',
         lat: 8.9833,
@@ -200,6 +226,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '巴拿马城位于太平洋一侧。虽然巴拿马地峡狭窄，但中央山脉足以阻挡冬季（北半球）盛行的东北信风中的水汽，导致太平洋一侧出现明显的雨影区干季，而仅80公里外的大西洋一侧（科隆）则是Af气候。'
       },
       {
+        id: 7,
         name: 'Barranquilla (巴兰基亚)',
         country: 'Colombia',
         lat: 10.9500,
@@ -213,6 +240,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带稀树草原气候 (Summer Dry)',
     cities: [
       {
+        id: 1,
         name: 'São Tomé (圣多美)',
         country: 'São Tomé and Príncipe',
         lat: 0.3333,
@@ -220,6 +248,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于赤道几内亚湾。虽然在赤道上，但受本格拉寒流（Benguela Current）北延的影响，且位于喀麦隆火山线的背风侧，导致在南半球冬季（当地旱季）异常干燥，而这个旱季在某些年份会延伸，造成复杂的降水模式。'
       },
       {
+        id: 2,
         name: 'Mombasa (蒙巴萨)',
         country: 'Kenya',
         lat: -4.0500,
@@ -227,6 +256,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '东非海岸的特殊性在于，盛行季风往往平行于海岸线吹拂（冬季东北风，夏季西南风），导致水汽难以登陆抬升。此外，索马里寒流在夏季的出现稳定了大气，抑制了深对流，使得夏季降水反而不如过渡季多。'
       },
       {
+        id: 3,
         name: 'Fortaleza (福塔莱萨)',
         country: 'Brazil',
         lat: -3.7167,
@@ -240,6 +270,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带沙漠气候 (Hot Desert)',
     cities: [
       {
+        id: 1,
         name: 'Doha (多哈)',
         country: 'Qatar',
         lat: 25.2833,
@@ -247,6 +278,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '典型的波斯湾沙漠气候。虽然临海，湿度极高（闷热），但由于高空受副热带高压强力控制，气流下沉增温，极难成云致雨。夏季气温常破45°C，是地球上人类居住环境最恶劣的地区之一。'
       },
       {
+        id: 2,
         name: 'Mecca (麦加)',
         country: 'Saudi Arabia',
         lat: 21.4167,
@@ -254,6 +286,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于内陆山谷中，周围群山环绕导致热量不易散发。作为红海沿岸的腹地，距离海洋的水汽太远，且完全处于哈德莱环流的下沉区，全年几乎无雨。'
       },
       {
+        id: 3,
         name: 'Almería (阿尔梅里亚)',
         country: 'Spain',
         lat: 36.8333,
@@ -261,6 +294,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '欧洲大陆唯一的BWh气候区。位于伊比利亚半岛东南角，内华达山脉（Sierra Nevada）阻挡了来自大西洋的湿润气流，且来自非洲的干热气流常年控制此地，使其成为欧洲的“好莱坞西部片”取景地。'
       },
       {
+        id: 4,
         name: 'Cairo (开罗)',
         country: 'Egypt',
         lat: 30.0333,
@@ -268,6 +302,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '尼罗河三角洲顶端。开罗的存在完全依赖于尼罗河这一客河。虽然地中海气旋偶尔会在冬季带来零星降雨，但撒哈拉沙漠的干燥背景占据绝对主导。'
       },
       {
+        id: 5,
         name: 'Nouakchott (努瓦克肖特)',
         country: 'Mauritania',
         lat: 18.0833,
@@ -275,6 +310,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '沿海沙漠的代表。加那利寒流（Canary Current）流经沿岸，导致多雾但少雨。寒流冷却了下层大气，造成逆温层，阻止了对流雨的形成，即便空气相对湿度较高。'
       },
       {
+        id: 6,
         name: 'Alice Springs (爱丽斯斯普林斯)',
         country: 'Australia',
         lat: -23.7000,
@@ -282,6 +318,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '澳大利亚大陆的地理中心。这里是绝对的大陆性气候，距离任何海洋都超过1000公里。降水完全取决于偶尔深入内陆的热带低压残余。'
       },
       {
+        id: 7,
         name: 'Las Vegas (拉斯维加斯)',
         country: 'United States',
         lat: 36.1667,
@@ -289,6 +326,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于莫哈韦沙漠（Mojave Desert）。其干燥主要归因于雨影效应：西侧巍峨的内华达山脉（Sierra Nevada）拦截了几乎所有来自太平洋的水汽。'
       },
       {
+        id: 8,
         name: 'Lima (利马)',
         country: 'Peru',
         lat: -12.0333,
@@ -302,6 +340,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带沙漠气候 (Cold Desert)',
     cities: [
       {
+        id: 1,
         name: 'Turpan (吐鲁番)',
         country: 'China',
         lat: 42.9500,
@@ -309,6 +348,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于欧亚大陆腹地的吐鲁番盆地，是中国的热极和旱极。盆地地形闭塞，海拔低于海平面，增温效应显著，但冬季受西伯利亚高压控制，气温骤降至冰点以下，年温差极大。'
       },
       {
+        id: 2,
         name: 'Golmud (格尔木)',
         country: 'China',
         lat: 36.4072,
@@ -316,6 +356,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于柴达木盆地，距海极为遥远，地形封闭，水汽几乎无法抵达，高寒干旱。'
       },
       {
+        id: 3,
         name: 'Aqtau (阿克套)',
         country: 'Qazaqstan',
         lat: 43.6525,
@@ -329,6 +370,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热带半干旱气候 (Hot Steppe)',
     cities: [
       {
+        id: 1,
         name: 'New Delhi (新德里)',
         country: 'India',
         lat: 28.5893,
@@ -336,6 +378,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '降水非常集中，雨季多暴雨，干季很长，在暖湿的西南季风到来前会形成热季，气温极易上升至45℃左右，导致其成为地球上最不宜居的城市之一。'
       },
       {
+        id: 2,
         name: 'Alicante (阿利坎特)',
         country: 'Spain',
         lat: 38.3333,
@@ -343,6 +386,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '贝蒂科山脉的雨影区。虽然临海，但降水稀少，且夏季极度干热。'
       },
       {
+        id: 3,
         name: 'Nicosia (尼科西亚)',
         country: 'Cyprus',
         lat: 35.1667,
@@ -350,6 +394,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于岛屿中部的梅萨奥里亚平原。南北两侧的山脉（特罗多斯山和凯里尼亚山）拦截了大部分海风水汽，形成局部干旱中心。'
       },
       {
+        id: 4,
         name: 'Niamey (尼亚美)',
         country: 'Niger',
         lat: 13.5000,
@@ -357,6 +402,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '典型的萨赫勒（Sahel）气候。处于撒哈拉沙漠南缘，生态系统极不稳定，完全依赖夏季短暂的西非季风降雨，干旱年份极易导致荒漠化。'
       },
       {
+        id: 5,
         name: 'Ouagadougou (瓦加杜古)',
         country: 'Burkina Faso',
         lat: 12.3667,
@@ -364,6 +410,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '同属萨赫勒带。降水变率大，蒸发强烈。'
       },
       {
+        id: 6,
         name: 'Monterrey (蒙特雷)',
         country: 'Mexico',
         lat: 25.6667,
@@ -371,6 +418,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于东马德雷山脉的雨影区。虽然靠近墨西哥湾，但地形效应显著减少了降水。'
       },
       {
+        id: 7,
         name: 'Maracaibo (马拉开波)',
         country: 'Venezuela',
         lat: 10.6333,
@@ -378,6 +426,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于马拉开波湖盆地。盆地下沉气流加上强烈的日照蒸发，使得这里异常干热，尽管湖水提供了湿度，但难以降雨。'
       },
       {
+        id: 8,
         name: 'Petrolina (佩特罗里纳)',
         country: 'Brazil',
         lat: -9.3833,
@@ -385,6 +434,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于巴西东北部的“干旱多边形”腹地。大西洋水汽难以到达此地，且该区域大气层结常年稳定。'
       },
       {
+        id: 9,
         name: 'Yuanjiang (元江)',
         country: 'China',
         lat: 23.5961,
@@ -398,6 +448,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带半干旱气候 (Cold Steppe)',
     cities: [
       {
+        id: 1,
         name: 'Astrakhan (阿斯特拉罕)',
         country: 'Russia',
         lat: 46.3500,
@@ -405,6 +456,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于伏尔加河三角洲，里海低地。极端的大陆性气候，冬冷夏热，降水极少，周围是荒漠草原。'
       },
       {
+        id: 2,
         name: 'Zaragoza (萨拉戈萨)',
         country: 'Spain',
         lat: 41.6500,
@@ -412,6 +464,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于埃布罗河谷。北有比利牛斯山，南有伊比利亚系山脉，双重屏障造就了西班牙内陆著名的干旱带。'
       },
       {
+        id: 3,
         name: 'Lanzhou (兰州)',
         country: 'China',
         lat: 36.0611,
@@ -425,6 +478,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '热夏型地中海气候 (Hot-summer Mediterranean)',
     cities: [
       {
+        id: 1,
         name: 'Jerusalem (耶路撒冷)',
         country: 'Israel/Palestine',
         lat: 31.7833,
@@ -432,6 +486,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '夏季受副高控制，完全无雨且酷热；冬季西风槽带来降水，高海拔偶致降雪。'
       },
       {
+        id: 2,
         name: 'Tashkent (塔什干)',
         country: 'Uzbekistan',
         lat: 41.2667,
@@ -439,6 +494,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '大陆性地中海气候。深居中亚内陆，夏季干热源自大陆气团的控制；冬季虽冷，但主要降水仍来自西风带输送的地中海/大西洋水汽残余，故降水形态符合Cs标准。'
       },
       {
+        id: 3,
         name: 'Rome (罗马)',
         country: 'Italy',
         lat: 41.8833,
@@ -446,6 +502,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '地中海气候的模式标本。第勒尼安海调节了极端温度，但夏季依然受到来自北非高压脊的影响，炎热少雨。'
       },
       {
+        id: 4,
         name: 'Split (斯普利特)',
         country: 'Croatia',
         lat: 43.5000,
@@ -453,6 +510,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '亚得里亚海东岸。迪纳拉山脉紧邻海岸，不仅造就了壮丽景观，也通过地形抬升增强了冬季的气旋雨，使其比意大利同纬度地区更湿润。'
       },
       {
+        id: 5,
         name: 'Algiers (阿尔及尔)',
         country: 'Algeria',
         lat: 36.7667,
@@ -460,6 +518,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '北非沿岸。阿特拉斯山脉阻挡了撒哈拉的热浪，使沿海维持Csa气候，而山后即是沙漠。'
       },
       {
+        id: 6,
         name: 'Tangier (丹吉尔)',
         country: 'Morocco',
         lat: 35.7667,
@@ -467,6 +526,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '直布罗陀海峡南岸。大西洋和地中海气候的交汇点，风力强劲。'
       },
       {
+        id: 7,
         name: 'Los Angeles (洛杉矶)',
         country: 'United States',
         lat: 34.0500,
@@ -474,6 +534,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '北美Csa代表。加利福尼亚寒流虽强，但大洛杉矶盆地的地形闭塞效应导致夏季热量聚集（尤其在内陆山谷），使其整体归为Csa而非Csb。'
       },
       {
+        id: 8,
         name: 'Sacramento (萨克拉门托)',
         country: 'United States',
         lat: 38.5667,
@@ -481,6 +542,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '加州中央谷地。虽然纬度比旧金山高，但由于海岸山脉阻挡了海风，夏季酷热难耐，是典型的内陆型Csa。'
       },
       {
+        id: 9,
         name: 'Athens (雅典)',
         country: 'Greece',
         lat: 37.9700,
@@ -488,6 +550,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '更低纬度的Csa，降水模式更为典型'
       },     
       {
+        id: 10,
         name: 'Istanbul (伊斯坦布尔)',
         country: 'Turkey',
         lat: 41.0145,
@@ -495,12 +558,21 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '黑海与海峡的双重海洋调节，夏季相比于雅典更为凉爽湿润，气候更复杂多变'
       },     
       {
+        id: 11,
         name: 'Santiago (圣地亚哥)',
         country: 'Chile',
         lat: -33.4450,
         lng: -70.6444,
         description: '南半球Csa的典型代表，虽有秘鲁寒流流经，但是圣地亚哥处于内陆盆地，夏季相比沿海更加干热，导致沿海为凉夏型地中海气候，而圣地亚哥形成热夏'
-      }    
+      },    
+      {
+        id: 12,
+        name: 'Perth (珀斯)',
+        country: 'Australia',
+        lat: -31.9500,
+        lng: 115.8500,
+        description: '全球季节反差最强烈的地中海气候之一，处于Csa/Csb过渡。夏季受大陆干燥气团控制较炎热，冬季西风带带来的锋面雨则非常集中。'
+      }
     ]
   },
   {
@@ -508,13 +580,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '凉夏型地中海气候 (Warm-summer Mediterranean)',
     cities: [
       {
-        name: 'Perth (珀斯)',
-        country: 'Australia',
-        lat: -31.9500,
-        lng: 115.8500,
-        description: '全球季节反差最强烈的地中海气候之一，处于Csa/Csb过渡。夏季较炎热，冬季西风带带来的锋面雨则非常集中。'
-      },
-      {
+        id: 1,
         name: 'Porto (波尔图)',
         country: 'Portugal',
         lat: 41.1500,
@@ -522,6 +588,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于伊比利亚半岛西北角。直面大西洋，深受加那利寒流前身的影响，夏季凉爽，冬季多雨且潮湿。'
       },
       {
+        id: 2,
         name: 'Cape Town (开普敦)',
         country: 'South Africa',
         lat: -33.9167,
@@ -529,6 +596,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '典型的Csb。本格拉寒流（Benguela Current）极其强劲，不仅带来了丰富的渔业资源，也像天然空调一样冷却了夏季的桌山脚下。'
       },
       {
+        id: 3,
         name: 'San Francisco (旧金山)',
         country: 'United States',
         lat: 37.7667,
@@ -542,6 +610,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚热带季风和亚热带湿润气候 (Humid Subtropical)',
     cities: [
       {
+        id: 1,
         name: 'Changsha (长沙)',
         country: 'China',
         lat: 28.1833,
@@ -549,13 +618,23 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '南支槽与地形锋面： 冬季受西风在青藏高原分流的南支西风槽引导，印度洋暖湿气流与西伯利亚冷空气在湘江流域形成准静止锋，导致持续阴雨和冻雨。夏季受副高控制。'
       },
       {
-        name: 'Buenos Aires (布宜诺斯艾米斯)',
+        id: 2,
+        name: 'Milan (米兰)',
+        country: 'Italy',
+        lat: 45.4752,
+        lng: 9.1908,
+        description: '地中海气候，温带大陆性气候与温带海洋性气候之间的过渡性气候。位于波河平原，阿尔卑斯山脉阻隔了南下冷空气和西风带来的凉爽湿润的气团，大陆性明显，群山环抱中，加上逆温明显，水汽和污染物难以扩散，常有雾霾。春秋季西风带来的降水多，夏季闷热。'
+      },
+      {
+        id: 3,
+        name: 'Buenos Aires (布宜诺斯艾利斯)',
         country: 'Argentina',
         lat: -34.6000,
         lng: -58.3667,
         description: '南大西洋高压与沿岸低压形成强气压梯度，驱动东南风，夏季受大陆热低压吸引，大西洋水汽深入形成对流雨。'
       },
       {
+        id: 4,
         name: 'Sochi (索契)',
         country: 'Russia',
         lat: 43.5833,
@@ -563,6 +642,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '俄罗斯气候最为暖湿的地区，大高加索山脉阻挡寒潮南下，黑海提供冬季热源和水汽，西风控制，地形抬升造成高纬度罕见的暖湿多雨气候。'
       },
       {
+        id: 5,
         name: 'Atlanta (亚特兰大)',
         country: 'United States',
         lat: 33.7500,
@@ -570,6 +650,15 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '典型的亚热带季风性湿润气候，夏季墨西哥湾暖湿气流北上提供不稳定能量，冬季受锋面气旋影响。'
       },
       {
+        id: 6,
+        name: 'Huston (休斯敦)',
+        country: 'United States',
+        lat: 29.7626,
+        lng: -95.3888,
+        description: '夏季漫长闷热，但常有飓风登陆带来狂风暴雨，冬季短暂温和，春秋冷暖交汇剧烈，常有雷暴。'
+      },
+      {
+        id: 7,
         name: 'Taipei (台北)',
         country: 'China',
         lat: 25.0375,
@@ -583,6 +672,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚热带季风和亚热带湿润气候 (Monsoon-influenced Humid Subtropical)',
     cities: [
       {
+        id: 1,
         name: 'Hong Kong (香港)',
         country: 'China',
         lat: 22.2833,
@@ -590,6 +680,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '东亚季风： 冬季受西伯利亚高压控制，盛行干冷季风；夏季受副高及季风槽影响，盛行东南与西南季风，台风叠加增强降水。'
       },
       {
+        id: 2,
         name: 'Islamabad (伊斯兰堡)',
         country: 'Pakistan',
         lat: 33.7000,
@@ -597,6 +688,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '双重降水机制： 夏季受南亚季风迎坡抬升影响致洪；冬季受西风带中的西方扰动（Western Disturbances）影响，从阿拉伯海输送水汽产生降雨。'
       },
       {
+        id: 3,
         name: 'Pretoria (比勒陀利亚)',
         country: 'South Africa',
         lat: -25.7500,
@@ -604,6 +696,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '副热带高压带摆动： 冬季卡拉哈里高压控制导致强下沉逆温，天气晴干；夏季高压南移，印度洋湿空气流入形成热雷雨。'
       },
       {
+        id: 4,
         name: 'Córdoba (科尔多瓦)',
         country: 'Argentina',
         lat: -31.4167,
@@ -617,6 +710,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带海洋性气候 (Oceanic)',
     cities: [
       {
+        id: 1,
         name: 'London (伦敦)',
         country: 'United Kingdom',
         lat: 51.5000,
@@ -624,6 +718,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '典型北大西洋暖流与西风： 洋流释放热量，温暖西风长驱直入，锋面气旋路径维持常年降水。'
       },
       {
+        id: 2,
         name: 'Melbourne (墨尔本)',
         country: 'Australia',
         lat: -37.8167,
@@ -631,6 +726,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '南大洋西风带： 处于极地冷锋与大陆热气团交界处。西风带冷锋扫过带来降水降温，内陆高压带来干热，天气极度多变。'
       },
       {
+        id: 3,
         name: 'Vancouver (温哥华)',
         country: 'Canada',
         lat: 49.2500,
@@ -638,6 +734,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '阿留申低压与地形： 冬季阿留申低压引导气旋向东移动撞击海岸山脉，地形抬升致暴雨；夏季北太平洋高压北扩阻挡风暴轴，形成相对干季，但是仍有西风带来的阵性降水。'
       },
       {
+        id: 4,
         name: 'Wellington (惠灵顿)',
         country: 'New Zealand',
         lat: -41.2833,
@@ -645,6 +742,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '西风带与狭管效应： 位于40°S-50°S西风带核心，库克海峡地形加速西风，带来持续强风和地形雨。'
       },
       {
+        id: 5,
         name: 'Bogotá (波哥大)',
         country: 'Colombia',
         lat: 4.6000,
@@ -658,6 +756,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚热带高原季风气候 (Subtropical Highland)',
     cities: [
       {
+        id: 1,
         name: 'Kunming (昆明)',
         country: 'China',
         lat: 25.0333,
@@ -665,6 +764,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '著名“春城”，冬季位于昆明准静止锋暖区，晴暖干燥；夏季受西南季风影响多雨。高海拔调节夏季气温。'
       },
       {
+        id: 2,
         name: 'Mexico City (墨西哥城)',
         country: 'Mexico',
         lat: 19.4333,
@@ -672,6 +772,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '北美季风与盆地效应： 夏季热低压吸引海湾水汽，地形抬升致雷雨；冬季副高控制，盆地地形导致冷空气沉积和逆温，阻碍降水产生。'
       },
       {
+        id: 3,
         name: 'Addis Ababa (亚的斯亚贝巴)',
         country: 'Ethiopia',
         lat: 9.0333,
@@ -679,6 +780,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '赤道低气压季节性迁移： 赤道低气压带北移，叠加海拔较高，带来大雨季，高原地形冷却热带气团。'
       },
       {
+        id: 4,
         name: 'Antananarivo (塔那那利佛)',
         country: 'Madagascar',
         lat: -18.9203,
@@ -686,6 +788,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于马达加斯加岛的中部高原上，气候凉爽，夏季受赤道低气压带和热带气旋影响多雨，冬季信风难以渗透，温和少雨。'
       },
       {
+        id: 5,
         name: 'Salta (萨尔塔)',
         country: 'Argentina',
         lat: -24.7833,
@@ -699,11 +802,20 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带海洋性气候(副极地型) (Subpolar Oceanic)',
     cities: [
       {
+        id: 1,
         name: 'Reykjavík (雷克雅未克)',
         country: 'Iceland',
         lat: 64.1333,
         lng: -21.9333,
         description: '北大西洋暖流维持冬季不冻，冰岛低压驱动气旋活动带来频繁风暴。纬度高，低太阳高度角导致凉夏。'
+      },
+      {
+        id: 2,
+        name: 'Tórshavn (托尔斯港)',
+        country: 'Faroe Islands(Denmark)',
+        lat: 62.0054,
+        lng: -6.7806,
+        description: '全年凉湿，终年大风，多有锋面气旋，被称为“雾岛”。'
       }
     ]
   },
@@ -712,6 +824,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '冷夏高原季风气候 (Cold Subtropical Highland)',
     cities: [
       {
+        id: 1,
         name: 'Puno (普诺)',
         country: 'Peru',
         lat: -15.8333,
@@ -725,6 +838,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '冷夏型地中海气候 (Cool-summer Mediterranean)',
     cities: [
       {
+        id: 1,
         name: 'Balmaceda (巴尔马赛达)',
         country: 'Chile',
         lat: -45.60,
@@ -738,6 +852,15 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带大陆性湿润气候 (Hot-summer Humid Continental)',
     cities: [
       {
+        id: 1,
+        name: 'New York (纽约)',
+        country: 'United States',
+        lat: 40.7696,
+        lng: -73.9744,
+        description: '冬冷夏热，降水充沛均匀（>1000mm），冬季多风暴，夏季多对流性降水和飓风残余带来的降水。'
+      },
+      {
+        id: 2,
         name: 'Almaty (阿拉木图)',
         country: 'Kazakhstan',
         lat: 43.2333,
@@ -745,6 +868,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '阿拉木图位于中亚腹地，天山山脉北麓。作为内陆城市，阿拉木图的大陆性极强。夏季受大陆热低压控制，炎热干燥。冬季则受蒙古高压延伸部分影响，虽有山脉阻挡部分寒流，但气温仍低于0℃。其降水主要来自西风带受地形抬升形成的降水，分布相对均匀。'
       },
       {
+        id: 3,
         name: 'Minneapolis (明尼阿波利斯)',
         country: 'United States',
         lat: 44.9820,
@@ -752,11 +876,12 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '明尼阿波利斯是Dfa气候中温差最大的城市之一。由于深居北美大陆腹地，缺乏水体调节（除了众多小湖泊），它直面来自加拿大的极地涡旋。冬季严寒，但夏季来自墨西哥湾的暖湿气流又能使其变得炎热潮湿。'
       },
       {
+        id: 4,
         name: 'Chicago (芝加哥)',
         country: 'United States',
         lat: 41.8820,
         lng: -87.6278,
-        description: '芝加哥的Dfa气候深受五大湖影响。虽然夏季炎热，但湖风（Lake Breeze）常在下午调节气温。冬季寒冷，且常伴随大风。降水全年丰富且均匀，来自气旋系统带来的锋面雨。'
+        description: '芝加哥的Dfa气候深受五大湖影响。虽然夏季炎热，但湖风（Lake Breeze）常在下午调节气温。冬季寒冷，“大湖效应导致”多大风暴雪。降水全年丰富且均匀，来自气旋系统带来的锋面雨。'
       }
     ]
   },
@@ -765,6 +890,23 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带大陆性湿润气候 (Warm-summer Humid Continental)',
     cities: [
       {
+        id: 1,
+        name: 'Warsaw (华沙)',
+        country: 'Poland',
+        lat: 52.2394,
+        lng: 21.0180,
+        description: '温带海洋性气候向大陆性过渡，冬季海洋调节弱，受西伯利亚大陆性气团影响大，年温差较西欧大。'
+      }, 
+      {
+        id: 2,
+        name: 'Toronto (多伦多)',
+        country: 'Canada',
+        lat: 43.6902,
+        lng: -79.4188,
+        description: '北美中部，多种性质气团交锋主战场，天气多变，但四季分明，冬季受大湖效应影响多暴雪，夏季湖水调节，气候温和湿润。'
+      },
+      {
+        id: 3,
         name: 'Kushiro (钏路)',
         country: 'Japan',
         lat: 42.9850,
@@ -772,6 +914,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于北海道东南部太平洋沿岸。与同纬度的札幌（Dfa）不同，钏路受寒流（亲潮）影响显著。夏季海雾弥漫，气温凉爽，最热月均温常年在20℃以下，因此属于Dfb。冬季则寒冷干燥。'
       },
       {
+        id: 4,
         name: 'Novosibirsk (新西伯利亚)',
         country: 'Russia',
         lat: 55.0500,
@@ -779,6 +922,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '俄罗斯西伯利亚地区最大的城市。深居亚欧大陆腹地，新西伯利亚展现了极端的Dfb特征。冬季受西伯利亚高压控制，严寒漫长；夏季虽然较短，但大陆性加热使得白天气温较高，暖季长度刚满足4个月以上10℃的标准。'
       },
       {
+        id: 5,
         name: 'Moscow (莫斯科)',
         country: 'Russia',
         lat: 55.7558,
@@ -786,6 +930,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '莫斯科是Dfb气候的教科书式代表。受大西洋暖湿气流的影响比西伯利亚强，因此冬季虽冷但极端低温较少。夏季温暖舒适，降水分布均匀，夏季略多。'
       },
       {
+        id: 6,
         name: 'Altay (阿勒泰)',
         country: 'China',
         lat: 47.8234,
@@ -793,6 +938,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '大陆性较强的Dfb，西风带的剩余水汽和北冰洋南下的气旋遇到阿尔泰山的地形抬升，成为新疆的“湿岛”，山坡降水可有400mm左右。'
       },
       {
+        id: 7,
         name: 'Saint Petersburg (圣彼得堡)',
         country: 'Russia',
         lat: 59.9375,
@@ -800,13 +946,15 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '俄罗斯第二大城市，波罗的海沿岸。纬度接近60°N，属于高纬度Dfb。受波罗的海调节，冬季比同纬度内陆温暖，夏季凉爽湿润。'
       },
       {
+        id: 8,
         name: 'Kyiv (基辅)',
         country: 'Ukraine',
         lat: 50.4500,
         lng: 30.5233,
-        description: '基辅位于Dfb与Dfa的过渡带，近年来随着气候变暖有向Dfa转变的趋势，但传统上归为Dfb。夏季温暖，冬季积雪期长，降水适中且全年有雨/雪。'
+        description: '基辅位于Dfb与Dfa的过渡带，近年来随着气候变暖有向Dfa转变的趋势。夏季温暖，冬季积雪期长，降水适中且全年有雨雪。'
       },
       {
+        id: 9,
         name: 'Oslo (奥斯陆)',
         country: 'Norway',
         lat: 59.9133,
@@ -814,6 +962,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '挪威首都，位于奥斯陆峡湾深处。虽然斯堪的纳维亚半岛沿岸多为Cfb（温带海洋性气候），但奥斯陆因地形阻挡，冬季气温较低，属于Dfb。夏季温和宜人，拥有超长的日照时间。'
       },
       {
+        id: 10,
         name: 'Edmonton (埃德蒙顿)',
         country: 'Canada',
         lat: 53.546,
@@ -827,6 +976,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带季风气候 (Monsoon-influenced Hot-summer Continental)',
     cities: [
       {
+        id: 1,
         name: 'Beijing (北京)',
         country: 'China',
         lat: 39.9000,
@@ -834,6 +984,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '中国首都，华北平原北端。北京是Dwa气候的典型代表。夏季受东南季风控制，高温多雨；冬季受西北季风控制，寒冷干燥多风。'
       },
       {
+        id: 2,
         name: 'Harbin (哈尔滨)',
         country: 'China',
         lat: 45.7575,
@@ -841,6 +992,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '黑龙江省省会，冰雪之城。哈尔滨的冬季极其漫长寒冷，但夏季却短暂而炎热，满足Dwa标准。降水极度集中在夏季，符合季风指标。'
       },
       {
+        id: 3,
         name: 'Pyongyang (平壤)',
         country: 'North Korea',
         lat: 39.0167,
@@ -848,6 +1000,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '朝鲜首都，大同江畔。平壤位于朝鲜半岛西北部，季风特征显著。夏季高温多雨，冬季寒冷干燥，属于标准的Dwa气候。'
       },
       {
+        id: 4,
         name: 'Seoul (首尔)',
         country: 'South Korea',
         lat: 37.5600,
@@ -861,6 +1014,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带季风气候 (Monsoon-influenced Warm-summer Continental)',
     cities: [
       {
+        id: 1,
         name: 'Heihe (黑河)',
         country: 'China',
         lat: 50.2400,
@@ -868,6 +1022,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于中俄边境，黑龙江畔。纬度高达50度，夏季凉爽，最热月均温难以达到22℃，且夏季降水丰沛；冬季严寒干燥，完全符合Dwb特征。'
       },
       {
+        id: 2,
         name: 'Vladivostok (海参崴)',
         country: 'Russia',
         lat: 43.1150,
@@ -881,6 +1036,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带大陆性气候(冬雨型) (Hot-summer Mediterranean Continental)',
     cities: [
       {
+        id: 1,
         name: 'Hakkâri (哈卡里)',
         country: 'Turkey',
         lat: 37.577,
@@ -888,6 +1044,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '土耳其东南部多山地区。位于安纳托利亚高原东部，海拔高。冬季严寒多雪，夏季炎热干燥，典型的Dsa气候。'
       },
       {
+        id: 2,
         name: 'Kabul (喀布尔)',
         country: 'Afghanistan',
         lat: 34.5458,
@@ -901,6 +1058,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '温带大陆性气候(冬雨型) (Warm-summer Mediterranean Continental)',
     cities: [
       {
+        id: 1,
         name: 'Sivas (锡瓦斯)',
         country: 'Turkey',
         lat: 39.69,
@@ -914,6 +1072,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚寒带针叶林气候 (Subarctic)',
     cities: [
       {
+        id: 1,
         name: 'Arkhangelsk (阿尔汉格尔斯克)',
         country: 'Russia',
         lat: 64.5431,
@@ -921,6 +1080,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '白海港口，受海洋微弱调节。这是分布最广的亚寒带气候，覆盖了大部分加拿大和俄罗斯西伯利亚。'
       },
       {
+        id: 2,
         name: 'Tromsø (特罗姆瑟)',
         country: 'Norway',
         lat: 69.6500,
@@ -928,6 +1088,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '位于北极圈内，受北大西洋暖流影响，冬季相对温和但夏季凉爽。'
       },
       {
+        id: 3,
         name: 'Samedan (萨梅丹)',
         country: 'Switzerland',
         lat: 46.5333,
@@ -935,6 +1096,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '阿尔卑斯山高海拔谷地，夏季凉爽。'
       },
       {
+        id: 4,
         name: 'Labrador City (拉布拉多城)',
         country: 'Canada',
         lat: 52.9500,
@@ -942,6 +1104,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '加拿大纽芬兰与拉布拉多省西部矿业城市。'
       },
       {
+        id: 5,
         name: 'Murmansk (摩尔曼斯克)',
         country: 'Russia',
         lat: 68.9400,
@@ -955,6 +1118,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚寒带针叶林气候（冬季极寒型） (Extremely Cold Subarctic)',
     cities: [
       {
+        id: 1,
         name: 'Yakutsk (雅库茨克)',
         country: 'Russia',
         lat: 62.0300,
@@ -962,6 +1126,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '建在永久冻土上的最大城市，冬夏温差极大。最冷月气温极低。'
       },
       {
+        id: 2,
         name: 'Verkhoyansk (上扬斯克)',
         country: 'Russia',
         lat: 67.5500,
@@ -975,6 +1140,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚寒带针叶林气候 (Monsoon-influenced Subarctic)',
     cities: [
       {
+        id: 1,
         name: 'Yushu (玉树)',
         country: 'China',
         lat: 33.0000,
@@ -988,6 +1154,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚寒带针叶林气候（冬季极寒型） (Extremely Cold Monsoon Subarctic)',
     cities: [
       {
+        id: 1,
         name: 'Oymyakon (奥伊米亚康)',
         country: 'Russia',
         lat: 63.4608,
@@ -1001,6 +1168,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '亚寒带针叶林气候 (Dry-summer Subarctic)',
     cities: [
       {
+        id: 1,
         name: 'Anchorage (安克雷奇)',
         country: 'United States',
         lat: 61.2167,
@@ -1008,6 +1176,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '阿拉斯加最大城市，受沿海山脉雨影影响，降水呈夏末秋初多、春夏少的模式。'
       },
       {
+        id: 2,
         name: 'Whitehorse (白马城)',
         country: 'Canada',
         lat: 60.7333,
@@ -1021,6 +1190,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '苔原气候 (Tundra)',
     cities: [
        {
+        id: 1,
         name: 'Kilimanjaro (乞力马扎罗山)',
         country: 'Tanzania',
         lat: -3.0706,
@@ -1028,6 +1198,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '赤道附近的火山，海拔5893米，山顶有永久积雪'
       },
       {
+        id: 2,
         name: 'Macquarie Island (麦夸里岛)',
         country: 'Australia',
         lat: -54.5000,
@@ -1035,6 +1206,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '南大洋上的孤岛，典型的海洋性极地气候。'
       },
       {
+        id: 3,
         name: 'Mt. Fuji (富士山顶)',
         country: 'Japan',
         lat: 35.3608,
@@ -1042,6 +1214,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '低纬度高海拔地区的高山苔原。'
       },
       {
+        id: 4,
         name: 'Ben Nevis (本尼维斯山顶)',
         country: 'UK',
         lat: 56.7969,
@@ -1049,6 +1222,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '低纬度高海拔地区的高山苔原。'
       },
       {
+        id: 5,
         name: 'Nuuk (努克)',
         country: 'Greenland',
         lat: 64.1813,
@@ -1062,6 +1236,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     title: '冰原气候 (Ice Cap)',
     cities: [
       {
+        id: 1,
         name: 'Mt. Rainier (瑞尼尔山顶)',
         country: 'United States',
         lat: 46.8517,
@@ -1069,6 +1244,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         description: '低纬度高海拔地区的高山冰原。'
       },
       {
+        id: 2,
         name: 'Kunlun Station (昆仑站)',
         country: 'China',
         lat: -80.4172,

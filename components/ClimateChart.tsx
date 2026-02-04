@@ -92,6 +92,7 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({ data, locationName, 
           <Tooltip 
             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
             formatter={(value: number, name: string) => {
+              if (value === null || value === undefined) return ['-', name];
               if (name === t.temp) return [`${value.toFixed(1)}°C`, name];
               if (name === t.precip) return [`${value.toFixed(1)}mm`, name];
               // Fallback if names don't match exactly (e.g. initial render vs update)

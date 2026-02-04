@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Compass } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -16,7 +17,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({ onLocationSelect, 
 
   // Update inputs when map selection changes
   useEffect(() => {
-    if (selectedLocation) {
+    if (selectedLocation && typeof selectedLocation.lat === 'number' && typeof selectedLocation.lng === 'number') {
       setLat(selectedLocation.lat.toFixed(4));
       setLng(selectedLocation.lng.toFixed(4));
     }

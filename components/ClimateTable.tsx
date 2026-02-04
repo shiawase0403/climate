@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MonthlyClimateData } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -17,8 +16,8 @@ export const ClimateTable: React.FC<ClimateTableProps> = ({ data, locationName }
   }
 
   // Calculations for averages/sums
-  const totalPrecip = data.reduce((acc, curr) => acc + curr.prec, 0);
-  const avgTemp = data.reduce((acc, curr) => acc + curr.temp, 0) / data.length;
+  const totalPrecip = data.reduce((acc, curr) => acc + (curr.prec || 0), 0);
+  const avgTemp = data.reduce((acc, curr) => acc + (curr.temp || 0), 0) / data.length;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -48,7 +47,9 @@ export const ClimateTable: React.FC<ClimateTableProps> = ({ data, locationName }
                 </td>
                 <td className="px-3 sm:px-6 py-2 sm:py-3 text-right whitespace-nowrap">
                   <div className="flex flex-col items-end">
-                    <span className="text-sm text-slate-800 font-medium">{row.temp.toFixed(1)}</span>
+                    <span className="text-sm text-slate-800 font-medium">
+                      {typeof row.temp === 'number' ? row.temp.toFixed(1) : '-'}
+                    </span>
                     {(row.tempmax !== undefined && row.tempmin !== undefined) && (
                       <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                         <span className="flex items-center" title="Min"><ArrowDown className="w-2.5 h-2.5 mr-0.5" />{row.tempmin.toFixed(1)}</span>
@@ -59,7 +60,7 @@ export const ClimateTable: React.FC<ClimateTableProps> = ({ data, locationName }
                   </div>
                 </td>
                 <td className="px-3 sm:px-6 py-2 sm:py-3 text-sm text-slate-600 text-right whitespace-nowrap">
-                  {row.prec.toFixed(1)}
+                  {typeof row.prec === 'number' ? row.prec.toFixed(1) : '-'}
                 </td>
               </tr>
             ))}

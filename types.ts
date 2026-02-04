@@ -56,6 +56,7 @@ export interface ComparisonPoint {
 
 // Explore Feature Types
 export interface CityDefinition {
+  id?: number;
   name: string;
   country: string;
   lat: number;

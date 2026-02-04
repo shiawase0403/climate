@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Compass, ChevronDown, ChevronRight, MapPin, X } from 'lucide-react';
@@ -6,7 +7,7 @@ import { CityDefinition } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ExploreMenuProps {
-  onSelectCity: (city: CityDefinition) => void;
+  onSelectCity: (city: CityDefinition, code?: string) => void;
 }
 
 const CLIMATE_COLORS: Record<string, string> = {
@@ -78,8 +79,8 @@ export const ExploreMenu: React.FC<ExploreMenuProps> = ({ onSelectCity }) => {
     setExpandedCategory(expandedCategory === code ? null : code);
   };
 
-  const handleCityClick = (city: CityDefinition) => {
-    onSelectCity(city);
+  const handleCityClick = (city: CityDefinition, code: string) => {
+    onSelectCity(city, code);
     setIsOpen(false);
   };
 
@@ -145,7 +146,7 @@ export const ExploreMenu: React.FC<ExploreMenuProps> = ({ onSelectCity }) => {
                     {category.cities.map((city) => (
                       <button
                         key={city.name}
-                        onClick={() => handleCityClick(city)}
+                        onClick={() => handleCityClick(city, category.code)}
                         className="w-full p-3 pl-4 flex items-start space-x-3 hover:bg-white transition-colors text-left group"
                       >
                         <MapPin className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 mt-0.5" />

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<AnalysisPage />} />
+              <Route path="cityexplore" element={<AnalysisPage />} />
               <Route path="compare" element={<ComparePage />} />
               <Route path="game" element={<GamePage />} />
               <Route path="pvp" element={<PvpPage />} />
