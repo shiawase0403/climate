@@ -227,6 +227,14 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       },
       {
         id: 7,
+        name: 'Brasilia (巴西利亚)',
+        country: 'Brazil',
+        lat: -15.7820,
+        lng: -47.9309,
+        description: '降水模式为典型的热带稀树草原气候，受赤道辐合带和干燥信风交替控制，但是该城市位于海拔1000多米的巴西高原上，故全年凉爽，蒸发量不如一般的Aw大，形成森林草原共存的植被。'
+      },
+      {
+        id: 8,
         name: 'Barranquilla (巴兰基亚)',
         country: 'Colombia',
         lat: 10.9500,
@@ -664,6 +672,14 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: 25.0375,
         lng: 121.5625,
         description: '夏季受东南季风和台风影响，冬季有冷湿的偏北风带来阴雨'
+      },
+      {
+        id: 8,
+        name: 'Sao Paulo (圣保罗)',
+        country: 'Brazil',
+        lat: -23.5955,
+        lng: -46.6205,
+        description: '距离大西洋仅70km的悬崖高原上，全年受大西洋吹来的温和湿润的东南信风影响，冬季温暖，夏季相对凉爽，降水充沛。'
       }
     ]
   },
@@ -702,6 +718,14 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         lat: -31.4167,
         lng: -64.1833,
         description: '季风边缘与雨影： 夏季南美低空急流输送亚马逊水汽；冬季受西风控制，处于安第斯山脉背风坡，形成干季。'
+      },
+      {
+        id: 5,
+        name: 'Medog (墨脱)',
+        country: 'China',
+        lat: 29.3239,
+        lng: 95.2922,
+        description: '四季温暖，降水极多，终年云雾缭绕，夏季西南季风深入河谷带来大量降水，冬季河谷温暖如春，同时该县海拔落差极大，垂直带谱完整。虽为亚热带气候，但是极佳的水热条件导致谷底有热带季雨林生长。'
       }
     ]
   },
@@ -803,19 +827,19 @@ export const EXPLORE_DATA: ClimateCategory[] = [
     cities: [
       {
         id: 1,
-        name: 'Reykjavík (雷克雅未克)',
-        country: 'Iceland',
-        lat: 64.1333,
-        lng: -21.9333,
-        description: '北大西洋暖流维持冬季不冻，冰岛低压驱动气旋活动带来频繁风暴。纬度高，低太阳高度角导致凉夏。'
-      },
-      {
-        id: 2,
         name: 'Tórshavn (托尔斯港)',
         country: 'Faroe Islands(Denmark)',
         lat: 62.0054,
         lng: -6.7806,
         description: '全年凉湿，终年大风，多有锋面气旋，被称为“雾岛”。'
+      },
+      {
+        id: 2,
+        name: 'Stanley (斯坦利港)',
+        country: 'Falkland Islands(Argentina)',
+        lat: -51.6952,
+        lng: -57.8458,
+        description: '在咆哮西风带控制下，寒流围绕，终年大风，阴冷，多雨雪，温差很小，植被难以生长，以苔原、草地、灌木为主。'
       }
     ]
   },
@@ -981,7 +1005,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
         country: 'China',
         lat: 39.9000,
         lng: 116.4000,
-        description: '中国首都，华北平原北端。北京是Dwa气候的典型代表。夏季受东南季风控制，高温多雨；冬季受西北季风控制，寒冷干燥多风。'
+        description: '中国首都，华北平原北端。北京是Dwa气候的典型代表。夏季受东南季风和锋面雨带控制，高温多雨；冬季受西北季风控制，寒冷干燥多风。'
       },
       {
         id: 2,
@@ -1011,7 +1035,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dwb',
-    title: '温带季风气候 (Monsoon-influenced Warm-summer Continental)',
+    title: '温带季风气候（凉夏） (Monsoon-influenced Warm-summer Continental)',
     cities: [
       {
         id: 1,
@@ -1069,7 +1093,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dfc',
-    title: '亚寒带针叶林气候 (Subarctic)',
+    title: '亚寒带针叶林气候 （全年湿润）(Subarctic)',
     cities: [
       {
         id: 1,
@@ -1137,7 +1161,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dwc',
-    title: '亚寒带针叶林气候 (Monsoon-influenced Subarctic)',
+    title: '亚寒带针叶林气候（季风-夏雨型） (Monsoon-influenced Subarctic)',
     cities: [
       {
         id: 1,
@@ -1165,7 +1189,7 @@ export const EXPLORE_DATA: ClimateCategory[] = [
   },
   {
     code: 'Dsc',
-    title: '亚寒带针叶林气候 (Dry-summer Subarctic)',
+    title: '亚寒带针叶林气候（冬雨型） (Dry-summer Subarctic)',
     cities: [
       {
         id: 1,
@@ -1207,22 +1231,6 @@ export const EXPLORE_DATA: ClimateCategory[] = [
       },
       {
         id: 3,
-        name: 'Mt. Fuji (富士山顶)',
-        country: 'Japan',
-        lat: 35.3608,
-        lng: 138.7275,
-        description: '低纬度高海拔地区的高山苔原。'
-      },
-      {
-        id: 4,
-        name: 'Ben Nevis (本尼维斯山顶)',
-        country: 'UK',
-        lat: 56.7969,
-        lng: -5.0036,
-        description: '低纬度高海拔地区的高山苔原。'
-      },
-      {
-        id: 5,
         name: 'Nuuk (努克)',
         country: 'Greenland',
         lat: 64.1813,

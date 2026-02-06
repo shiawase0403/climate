@@ -9,9 +9,10 @@ import { ClimateTable } from './ClimateTable';
 import { MapPicker, MapPoint } from './MapPicker';
 import { ClassificationCard } from './ClassificationCard';
 import { MobileDataViewer } from './MobileDataViewer';
+import { ShopModal } from './ShopModal';
 import { fetchClimateData, fetchClassification } from '../services/climateService';
 import { PvpPlayer, ClimateDataResponse, ClassificationResponse, GeoLocation, PvpRoundResult, PvpGameResult, MatchReviewData, MatchReviewDetail, RankingEntry, UserHistoryEntry, UserRankInfo } from '../types';
-import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, CheckCircle, RotateCcw, History, Search, Calendar, MapPin, Crown, TrendingUp, TrendingDown, Eye, Star, Info } from 'lucide-react';
+import { Loader2, User, Play, LogIn, Users, Timer, Trophy, ArrowRight, Swords, Heart, AlertCircle, X, RefreshCw, LogOut, UserPlus, DoorOpen, RotateCcw, History, Search, TrendingUp, TrendingDown, Eye, Star, ShoppingBag, Coins } from 'lucide-react';
 
 type PvpState = 'login' | 'lobby' | 'waiting' | 'countdown' | 'playing' | 'round_result' | 'game_over' | 'review';
 
@@ -68,6 +69,9 @@ export const PvpGame: React.FC = () => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [leaderboard, setLeaderboard] = useState<RankingEntry[]>([]);
   
+  // Shop State
+  const [showShopModal, setShowShopModal] = useState(false);
+
   // History State
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [userHistory, setUserHistory] = useState<UserHistoryEntry[]>([]);
@@ -86,7 +90,7 @@ export const PvpGame: React.FC = () => {
   // Round Data
   const [currentClimate, setCurrentClimate] = useState<ClimateDataResponse | null>(null);
   const [userGuess, setUserGuess] = useState<GeoLocation | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [roundResult, setRoundResult] = useState<PvpRoundResult | null>(null);
   const [gameResult, setGameResult] = useState<PvpGameResult[] | null>(null);
 
@@ -357,6 +361,8 @@ export const PvpGame: React.FC = () => {
       
       setGameResult(normalizedResults);
       setStatusInfo(null);
+      // Fetch latest user rank/points after game
+      fetchUserRank();
     });
 
     return () => {
@@ -497,10 +503,6 @@ export const PvpGame: React.FC = () => {
         setShowHistoryModal(false);
       } else {
         showToast("Failed to fetch match details. Match may not be archived yet.", 'error');
-        // If failed and we are in URL mode, maybe go back
-        if (paramMatchId) {
-             // Optional: redirect to lobby after timeout?
-        }
       }
     } catch (e) {
       console.error(e);
@@ -718,6 +720,10 @@ export const PvpGame: React.FC = () => {
     setMatchReviewData(null);
   };
 
+  const updatePoints = (newPoints: number) => {
+    setUserRankInfo(prev => prev ? { ...prev, points: newPoints } : null);
+  };
+
   const renderLogin = () => (
     <div className="flex items-center justify-center min-h-[500px]">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
@@ -866,16 +872,23 @@ export const PvpGame: React.FC = () => {
              <div className="w-px h-10 bg-slate-200"></div>
              <div className="text-center">
                 <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
-                  <Trophy className="w-3 h-3" /> Rank
+                  <Coins className="w-3 h-3" /> Points
                 </div>
                 <div className="text-2xl font-black text-amber-500 flex items-center justify-center gap-0.5">
-                   <span className="text-sm opacity-50">#</span>{userRankInfo?.rank ?? '-'}
+                   {userRankInfo?.points ?? '---'}
                 </div>
              </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
+          <div className="flex items-center space-x-3 w-full md:w-auto justify-end flex-wrap gap-y-2">
+             <button
+               onClick={() => setShowShopModal(true)}
+               className="flex items-center space-x-2 px-5 py-2.5 bg-amber-50 border border-amber-200 text-amber-700 hover:text-amber-800 hover:bg-amber-100 rounded-xl font-bold transition-all shadow-sm"
+             >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Shop</span>
+             </button>
              <button 
                onClick={fetchHistory} 
                className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 rounded-xl font-bold transition-all shadow-sm group"
@@ -1645,6 +1658,17 @@ export const PvpGame: React.FC = () => {
       )}
       
       {renderHistoryModal()}
+
+      {showShopModal && currentUser && (
+        <ShopModal 
+          isOpen={showShopModal} 
+          onClose={() => setShowShopModal(false)}
+          userId={userRankInfo?.id ?? currentUser.id}
+          password={password}
+          currentPoints={userRankInfo?.points || 0}
+          onUpdatePoints={updatePoints}
+        />
+      )}
 
       {gameState === 'login' && renderLogin()}
       {gameState === 'lobby' && renderLobby()}

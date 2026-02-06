@@ -155,6 +155,7 @@ export interface UserRankInfo {
   username: string;
   rating: number;
   rank: number;
+  points?: number;
 }
 
 export interface UserHistoryEntry {
@@ -194,4 +195,24 @@ export interface MatchReviewData {
   start_time: string;
   end_time: string;
   details: MatchReviewDetail[];
+}
+
+// Shop Types
+export interface ShopTitle {
+  id: string | number;
+  name: string;
+  cost: number;
+  color: string;
+}
+
+export interface UserTitle {
+  name: string;
+  color: string;
+  acquired_at: string;
+}
+
+export interface PointLog {
+  change_amount: number;
+  reason: string;
+  created_at: string;
 }

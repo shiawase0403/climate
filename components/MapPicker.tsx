@@ -45,21 +45,44 @@ const getClimateTitle = (code: string) => {
 
 // --- Sub-components ---
 
-export const ClimateLegend: React.FC<{ className?: string }> = ({ className }) => {
+interface ClimateLegendProps {
+  className?: string;
+  activeCode?: string | null;
+  onCodeClick?: (code: string | null) => void;
+}
+
+export const ClimateLegend: React.FC<ClimateLegendProps> = ({ className, activeCode, onCodeClick }) => {
   const { t, language } = useLanguage();
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [selectedInfo, setSelectedInfo] = useState<{code: string, title: string} | null>(null);
 
   const toggleGroup = (groupKey: string) => {
     setExpandedGroup(curr => curr === groupKey ? null : groupKey);
-    setSelectedInfo(null); // Close info when switching groups
+    // Don't close selected info when switching groups, user might still want to see it
   };
 
   const handleCodeClick = (code: string) => {
+    // Show info toast
     setSelectedInfo({
       code,
       title: getClimateTitle(code)
     });
+
+    // Handle selection toggle
+    if (onCodeClick) {
+      if (activeCode === code) {
+        onCodeClick(null); // Deselect if already active
+      } else {
+        onCodeClick(code);
+      }
+    }
+  };
+
+  const handleCloseInfo = () => {
+    setSelectedInfo(null);
+    if (onCodeClick) {
+      onCodeClick(null); // Restore to whole map layer
+    }
   };
 
   // Default to absolute positioning if no className provided
@@ -72,7 +95,7 @@ export const ClimateLegend: React.FC<{ className?: string }> = ({ className }) =
       {selectedInfo && (
         <div className="bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-xl border border-slate-200 mb-2 animate-in slide-in-from-bottom-2 fade-in w-full relative">
           <button 
-            onClick={() => setSelectedInfo(null)}
+            onClick={handleCloseInfo}
             className="absolute top-1 right-1 text-slate-400 hover:text-slate-600 p-1"
           >
             <X className="w-3 h-3" />
@@ -111,19 +134,28 @@ export const ClimateLegend: React.FC<{ className?: string }> = ({ className }) =
 
               {expandedGroup === key && (
                 <div className="bg-slate-50 p-1 grid grid-cols-2 gap-1 animate-in slide-in-from-top-1 duration-200">
-                  {CLIMATE_GROUPS[key].codes.map(code => (
-                    <button
-                      key={code}
-                      onClick={() => handleCodeClick(code)}
-                      className="flex items-center gap-1.5 p-1.5 rounded hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-left group"
-                    >
-                      <span 
-                        className="w-3 h-3 rounded-sm shadow-sm flex-shrink-0" 
-                        style={{ backgroundColor: CLIMATE_COLORS[code] }} 
-                      />
-                      <span className="text-[10px] font-mono text-slate-600 group-hover:text-slate-900 group-hover:font-bold">{code}</span>
-                    </button>
-                  ))}
+                  {CLIMATE_GROUPS[key].codes.map(code => {
+                    const isActive = activeCode === code;
+                    return (
+                      <button
+                        key={code}
+                        onClick={() => handleCodeClick(code)}
+                        className={`flex items-center gap-1.5 p-1.5 rounded transition-all text-left group border ${
+                          isActive 
+                            ? 'bg-indigo-600 text-white shadow-md border-indigo-700' 
+                            : 'hover:bg-white hover:shadow-sm border-transparent hover:border-slate-200'
+                        }`}
+                      >
+                        <span 
+                          className={`w-3 h-3 rounded-sm shadow-sm flex-shrink-0 ${isActive ? 'border-white border' : ''}`}
+                          style={{ backgroundColor: CLIMATE_COLORS[code] }} 
+                        />
+                        <span className={`text-[10px] font-mono ${isActive ? 'text-white font-bold' : 'text-slate-600 group-hover:text-slate-900 group-hover:font-bold'}`}>
+                          {code}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -162,6 +194,10 @@ interface MapPickerProps {
   activeOverlay?: 'none' | 'climate' | 'precip';
   onOverlayChange?: (overlay: 'none' | 'climate' | 'precip') => void;
   showLegend?: boolean; // Default true. If false, Legend is NOT rendered inside map (useful if rendered externally)
+  
+  // Specific Climate Layer Props
+  activeClimateCode?: string | null;
+  onClimateCodeChange?: (code: string | null) => void;
 }
 
 // Custom TileLayer to support QuadKeys for Bing Maps
@@ -405,13 +441,17 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   isFullScreen = false,
   activeOverlay: propActiveOverlay,
   onOverlayChange,
-  showLegend = true
+  showLegend = true,
+  activeClimateCode: propActiveClimateCode,
+  onClimateCodeChange
 }) => {
   const { t } = useLanguage();
   const [internalActiveOverlay, setInternalActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
+  const [internalActiveClimateCode, setInternalActiveClimateCode] = useState<string | null>(null);
 
   // Determine which state to use: controlled (prop) or uncontrolled (internal)
   const activeOverlay = propActiveOverlay !== undefined ? propActiveOverlay : internalActiveOverlay;
+  const activeClimateCode = propActiveClimateCode !== undefined ? propActiveClimateCode : internalActiveClimateCode;
 
   const handleMarkerDblClick = (e: L.LeafletMouseEvent) => {
     if (e.originalEvent.shiftKey && selectedLocation) {
@@ -422,15 +462,11 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   // Construct border/shadow classes based on mode
-  // Note: Removed 'transition-all duration-300' to prevent Leaflet jitter errors during resizing
   let containerClasses = "w-full overflow-hidden relative z-0";
   
   if (isFullScreen) {
-    // Full screen mode style: Fixed covering the viewport
-    // Z-Index must be high enough to cover layout (header/footer)
     containerClasses += " fixed inset-0 h-screen w-screen z-[2000] rounded-none border-0";
   } else {
-    // Normal mode style
     containerClasses += " h-[400px] rounded-xl shadow-lg border";
     
     if (mode === 'review') {
@@ -495,6 +531,19 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       onOverlayChange(nextState);
     } else {
       setInternalActiveOverlay(nextState);
+    }
+    
+    // Reset specific climate code when switching main layers internally
+    if (!onClimateCodeChange && nextState !== 'climate') {
+      setInternalActiveClimateCode(null);
+    }
+  };
+
+  const handleClimateCodeChange = (code: string | null) => {
+    if (onClimateCodeChange) {
+      onClimateCodeChange(code);
+    } else {
+      setInternalActiveClimateCode(code);
     }
   };
 
@@ -607,12 +656,22 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
         {/* Active Overlay (Rendered outside LayersControl to manage exclusivity via state) */}
         {!isMarsMode && activeOverlay === 'climate' && (
-           <TileLayer 
-              url="https://climate.hywiki.org/static/maptiles/koeppen/{z}/{x}/{y}.png" 
-              maxNativeZoom={7}
-              opacity={0.6}
-              zIndex={500}
-           />
+           activeClimateCode ? (
+             <TileLayer 
+                key={`climate-${activeClimateCode}`} // Key forces re-render when code changes
+                url={`https://climate.hywiki.org/static/maptiles/koeppen-types/${activeClimateCode}/{z}/{x}/{y}.png`} 
+                maxNativeZoom={7}
+                opacity={0.8}
+                zIndex={500}
+             />
+           ) : (
+             <TileLayer 
+                url="https://climate.hywiki.org/static/maptiles/koeppen/{z}/{x}/{y}.png" 
+                maxNativeZoom={7}
+                opacity={0.6}
+                zIndex={500}
+             />
+           )
         )}
         {!isMarsMode && activeOverlay === 'precip' && (
            <TileLayer 
@@ -802,7 +861,10 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
       {/* Climate Legend Overlay (Only if enabled internally) */}
       {!isMarsMode && activeOverlay === 'climate' && showLegend && (
-        <ClimateLegend />
+        <ClimateLegend 
+          activeCode={activeClimateCode}
+          onCodeClick={handleClimateCodeChange}
+        />
       )}
 
       {/* Hint Overlay */}

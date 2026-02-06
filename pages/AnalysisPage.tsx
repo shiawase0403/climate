@@ -62,6 +62,15 @@ export const AnalysisPage: React.FC = () => {
   
   // Map Overlay State
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
+  const [activeClimateCode, setActiveClimateCode] = useState<string | null>(null);
+
+  // Helper to handle overlay switching (reset active code if leaving climate mode)
+  const handleOverlayChange = (overlay: 'none' | 'climate' | 'precip') => {
+    setActiveOverlay(overlay);
+    if (overlay !== 'climate') {
+      setActiveClimateCode(null);
+    }
+  };
 
   // Extract params to variables for stable dependency usage
   const latParam = searchParams.get('lat');
@@ -338,12 +347,18 @@ export const AnalysisPage: React.FC = () => {
             onDig={handleDig}
             isFullScreen={isFullScreen}
             activeOverlay={activeOverlay}
-            onOverlayChange={setActiveOverlay}
+            onOverlayChange={handleOverlayChange}
             showLegend={isFullScreen}
+            activeClimateCode={activeClimateCode}
+            onClimateCodeChange={setActiveClimateCode}
           />
           {activeOverlay === 'climate' && !isMarsMode && !isFullScreen && (
              <div className="mt-4 relative animate-in fade-in slide-in-from-top-2">
-                <ClimateLegend className="w-full relative z-10" />
+                <ClimateLegend 
+                  className="w-full relative z-10" 
+                  activeCode={activeClimateCode}
+                  onCodeClick={setActiveClimateCode}
+                />
              </div>
           )}
 

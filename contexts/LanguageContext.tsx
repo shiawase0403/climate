@@ -157,6 +157,22 @@ export interface Translations {
   pvpBackToLobby: string;
   pvpHP: string;
   pvpScore: string;
+  // Shop
+  shop: {
+    title: string;
+    balance: string;
+    tabs: {
+      items: string;
+      inventory: string;
+      records: string;
+    };
+    buy: string;
+    owned: string;
+    price: string;
+    purchaseSuccess: string;
+    confirmBuy: string;
+    noPoints: string;
+  };
   // Specific Descriptions
   climateDescriptions: Record<string, string>;
   // Footer Notice
@@ -336,6 +352,21 @@ export const translations: Record<Language, Translations> = {
     pvpBackToLobby: "Back to Lobby",
     pvpHP: "HP",
     pvpScore: "Score",
+    shop: {
+      title: "Points Shop",
+      balance: "Points Balance",
+      tabs: {
+        items: "Titles",
+        inventory: "My Collection",
+        records: "Point History"
+      },
+      buy: "Purchase",
+      owned: "Owned",
+      price: "Cost",
+      purchaseSuccess: "Successfully purchased title!",
+      confirmBuy: "Buy {item} for {cost} points?",
+      noPoints: "Insufficient points"
+    },
     climateDescriptions: {
       "Af": "Tropical rainforest climate",
       "Am": "Tropical monsoon climate",
@@ -543,6 +574,21 @@ export const translations: Record<Language, Translations> = {
     pvpBackToLobby: "返回大厅",
     pvpHP: "生命值",
     pvpScore: "分数",
+    shop: {
+      title: "积分商店",
+      balance: "当前积分",
+      tabs: {
+        items: "头衔列表",
+        inventory: "我的收藏",
+        records: "积分记录"
+      },
+      buy: "购买",
+      owned: "已拥有",
+      price: "价格",
+      purchaseSuccess: "购买成功！",
+      confirmBuy: "确认消耗 {cost} 积分购买 {item} 吗？",
+      noPoints: "积分不足"
+    },
     climateDescriptions: {
       "Af": "分布于赤道两侧，以及海洋信风的迎风坡",
       "Am": "在柯本气候分类法中位于热带雨林两侧，属于过渡型，与课内定义不同。",
