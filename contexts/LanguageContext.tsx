@@ -61,6 +61,14 @@ export interface Translations {
     climateLayer: string; // New overlay
     precipLayer: string; // New overlay
   };
+  // Velocity Layer
+  velocity: {
+    title: string;
+    wind: string;
+    current: string;
+    none: string;
+    month: string;
+  };
   // City Search
   searchCity: string;
   searchCityPlaceholder: string;
@@ -263,6 +271,13 @@ export const translations: Record<Language, Translations> = {
       bingStreet: "Bing Street (CN)",
       climateLayer: "Climate Overlay",
       precipLayer: "Precipitation Overlay"
+    },
+    velocity: {
+      title: "Atmosphere & Ocean",
+      wind: "Wind",
+      current: "Ocean Current",
+      none: "None",
+      month: "Month"
     },
     searchCity: "City Search",
     searchCityPlaceholder: "Enter city name...",
@@ -485,6 +500,13 @@ export const translations: Record<Language, Translations> = {
       bingStreet: "必应街道 (Bing CN)",
       climateLayer: "气候分类覆盖层",
       precipLayer: "降水量覆盖层"
+    },
+    velocity: {
+      title: "大气与海洋",
+      wind: "风场 (2022)",
+      current: "洋流 (2025)",
+      none: "无",
+      month: "月份"
     },
     searchCity: "城市搜索",
     searchCityPlaceholder: "输入城市名称...",

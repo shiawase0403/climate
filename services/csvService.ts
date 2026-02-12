@@ -1,7 +1,10 @@
+
 import { CitySearchResult, RandomCityResponse } from '../types';
 
 // API endpoint provided by the user
-const API_BASE_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=1&name=';
+const API_BASE_URL_DEFAULT = 'https://api-forward.hywiki.org/climate/cities/?mode=1&name=';
+const API_BASE_URL_CITY = 'https://api-forward.hywiki.org/climate/cities/?mode=1.1&name=';
+const API_BASE_URL_COUNTRY = 'https://api-forward.hywiki.org/climate/cities/?mode=1.2&name=';
 const API_NEAREST_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=2';
 const API_RANDOM_URL = 'https://api-forward.hywiki.org/climate/cities/?mode=3';
 
@@ -39,11 +42,17 @@ const FALLBACK_CITIES: RandomCityResponse[] = [
   { city: 'New Delhi', lat: 28.6139, lon: 77.2090, country: 'India' }
 ];
 
-export const searchCities = async (query: string): Promise<CitySearchResult[]> => {
+export type SearchMode = 'default' | 'city' | 'country';
+
+export const searchCities = async (query: string, mode: SearchMode = 'default', limit: number = 0): Promise<CitySearchResult[]> => {
   if (!query || query.trim().length < 2) return [];
 
+  let baseUrl = API_BASE_URL_DEFAULT;
+  if (mode === 'city') baseUrl = API_BASE_URL_CITY;
+  if (mode === 'country') baseUrl = API_BASE_URL_COUNTRY;
+
   try {
-    const url = `${API_BASE_URL}${encodeURIComponent(query.trim())}`;
+    const url = `${baseUrl}${encodeURIComponent(query.trim())}`;
     
     // Attempt fetch
     const response = await fetch(url);
@@ -51,7 +60,7 @@ export const searchCities = async (query: string): Promise<CitySearchResult[]> =
     if (response.ok) {
       const data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
-        return data.map((item: any) => ({
+        let results = data.map((item: any) => ({
           city: item.city || item.name,
           city_ascii: item.city_ascii || item.name_ascii || item.city || item.name,
           lat: typeof item.lat === 'string' ? parseFloat(item.lat) : item.lat,
@@ -61,6 +70,11 @@ export const searchCities = async (query: string): Promise<CitySearchResult[]> =
           country: item.country || '',
           count: item.count !== undefined ? parseInt(item.count) : 0
         })).filter((item) => item.city && !isNaN(item.lat) && !isNaN(item.lng));
+
+        if (limit > 0) {
+          results = results.slice(0, limit);
+        }
+        return results;
       }
     }
   } catch (error) {
@@ -69,9 +83,7 @@ export const searchCities = async (query: string): Promise<CitySearchResult[]> =
 
   // Fallback local search if API fails or returns empty
   const lowerQuery = query.toLowerCase();
-  return FALLBACK_CITIES
-    .filter(c => c.city.toLowerCase().includes(lowerQuery) || c.country.toLowerCase().includes(lowerQuery))
-    .map(c => ({
+  let fallbackResults = FALLBACK_CITIES.map(c => ({
       city: c.city,
       city_ascii: c.city,
       lat: typeof c.lat === 'string' ? parseFloat(c.lat) : c.lat,
@@ -79,6 +91,20 @@ export const searchCities = async (query: string): Promise<CitySearchResult[]> =
       country: c.country,
       count: 0
     }));
+
+  if (mode === 'city') {
+    fallbackResults = fallbackResults.filter(c => c.city.toLowerCase().includes(lowerQuery));
+  } else if (mode === 'country') {
+    fallbackResults = fallbackResults.filter(c => c.country.toLowerCase().includes(lowerQuery));
+  } else {
+    fallbackResults = fallbackResults.filter(c => c.city.toLowerCase().includes(lowerQuery) || c.country.toLowerCase().includes(lowerQuery));
+  }
+
+  if (limit > 0) {
+    fallbackResults = fallbackResults.slice(0, limit);
+  }
+
+  return fallbackResults;
 };
 
 export const findNearestCity = async (lat: number, lng: number): Promise<string | null> => {

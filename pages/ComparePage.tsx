@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { MapPicker, MapPoint } from '../components/MapPicker';
 import { ComparisonChart } from '../components/ComparisonChart';
 import { CitySearchBox } from '../components/CitySearchBox';
@@ -9,6 +10,7 @@ import { GeoLocation, ComparisonPoint } from '../types';
 import { Map as MapIcon, Loader2, AlertCircle, Download, SplitSquareHorizontal, Import, Trash2, X, PlayCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { getRandomTip } from '../data/tips';
 
 const PALETTE = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 const GAME_API_BASE = 'https://climate-game.hywiki.org/API';
@@ -22,13 +24,20 @@ export const ComparePage: React.FC = () => {
   const [importRound, setImportRound] = useState(1);
   const [importLoading, setImportLoading] = useState(false);
   const [importProgress, setImportProgress] = useState<{ current: number, total: number } | null>(null);
+  const [loadingTip, setLoadingTip] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
+  useEffect(() => {
+    if (importLoading) {
+      setLoadingTip(getRandomTip());
+    }
+  }, [importLoading]);
+
   const handleComparisonLocationSelect = async (location: GeoLocation) => {
-    if (comparePoints.length >= 5) return;
+    if (comparePoints.length >= 6) return;
     setLoading(true);
     setError(null);
 
@@ -203,13 +212,16 @@ export const ComparePage: React.FC = () => {
           </div>
           
           {importLoading ? (
-            <div className="w-full bg-slate-100 rounded-lg overflow-hidden h-9 relative">
+            <div className="w-full bg-slate-100 rounded-lg overflow-hidden h-9 relative group">
                <div 
                  className="absolute top-0 left-0 h-full bg-indigo-500 transition-all duration-300 ease-out"
                  style={{ width: `${importProgress ? (importProgress.current / importProgress.total) * 100 : 0}%` }}
                ></div>
-               <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-700 z-10">
+               <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-700 z-10 transition-opacity group-hover:opacity-0">
                   {importProgress ? t.importFetching.replace('{current}', String(importProgress.current)).replace('{total}', String(importProgress.total)) : t.importInitializing}
+               </div>
+               <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-slate-700 z-10 opacity-0 group-hover:opacity-100 transition-opacity italic">
+                  {loadingTip}
                </div>
             </div>
           ) : (
@@ -256,9 +268,9 @@ export const ComparePage: React.FC = () => {
               ))}
             </ul>
           )}
-          {comparePoints.length >= 5 && !importLoading && (
+          {comparePoints.length >= 6 && !importLoading && (
             <div className="mt-3 text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1.5" /> {t.maxPoints}
+              <AlertCircle className="w-3 h-3 mr-1.5" /> {t.maxPoints.replace('5', '6')}
             </div>
           )}
           <div className="mt-4 border-t border-slate-100 pt-3">

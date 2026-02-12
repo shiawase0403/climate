@@ -5,7 +5,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { TutorialModal } from '../components/TutorialModal';
-import { CloudRain, Rocket, MousePointerClick, SplitSquareHorizontal, Gamepad2, Swords, Languages, BookOpen, HelpCircle, Waves, CheckCircle, X, AlertCircle, ChevronDown, Menu } from 'lucide-react';
+import { CloudRain, Rocket, MousePointerClick, SplitSquareHorizontal, Gamepad2, Swords, Languages, BookOpen, HelpCircle, Waves, CheckCircle, X, AlertCircle, ChevronDown, Menu, Lightbulb } from 'lucide-react';
+import { getRandomTip } from '../data/tips';
 
 // Footer Notice Component (Moved here)
 const NoticeFooter: React.FC<{ onOpenTutorial: () => void; isChallengeMode: boolean }> = ({ onOpenTutorial, isChallengeMode }) => {
@@ -73,13 +74,23 @@ const NoticeFooter: React.FC<{ onOpenTutorial: () => void; isChallengeMode: bool
 
 const AboutFooter: React.FC = () => {
   const { t } = useLanguage();
+  const [tip, setTip] = useState('');
+
+  useEffect(() => {
+    setTip(getRandomTip());
+  }, []);
+
   return (
     <div className="mt-8 py-6 border-t border-slate-200 text-center">
       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">{t.aboutUs.title}</h3>
-      <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-8 text-sm text-slate-500 font-medium">
+      <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-8 text-sm text-slate-500 font-medium mb-4">
         <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-indigo-400 mr-2"></span>{t.aboutUs.design}</span>
         <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>{t.aboutUs.geo}</span>
         <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-400 mr-2"></span>{t.aboutUs.server}</span>
+      </div>
+      <div className="text-xs text-slate-400 italic bg-slate-100/50 inline-flex items-center px-4 py-1.5 rounded-full max-w-full overflow-hidden">
+        <Lightbulb className="w-3 h-3 mr-1.5 text-amber-400 flex-shrink-0" />
+        <span className="truncate">{tip}</span>
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import { Map as MapIcon, Loader2, AlertCircle, Waves, Download, Maximize, Minimi
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
+import { getRandomTip } from '../data/tips';
 
 // Mars Mock Data
 const generateMarsData = (): ClimateDataResponse => ({
@@ -59,6 +60,7 @@ export const AnalysisPage: React.FC = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [canFullScreen, setCanFullScreen] = useState(true);
   const [useLegacySource, setUseLegacySource] = useState(false);
+  const [loadingTip, setLoadingTip] = useState('');
   
   // Map Overlay State
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
@@ -174,6 +176,7 @@ export const AnalysisPage: React.FC = () => {
       setLoading(true);
       setError(null);
       setClimateData(null);
+      setLoadingTip(getRandomTip());
       // Don't reset classification immediately if switching modes to avoid flash, but we handle it below
       if (useLegacySource) setClassification(null); 
 
@@ -383,6 +386,7 @@ export const AnalysisPage: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-2xl border border-slate-100 mb-6">
             <Loader2 className={`w-10 h-10 ${primaryColor} animate-spin mb-4`} />
             <p className="text-slate-600 font-medium">{t.loading}</p>
+            <p className="text-xs text-slate-400 mt-2 italic max-w-xs text-center">{loadingTip}</p>
           </div>
         )}
 

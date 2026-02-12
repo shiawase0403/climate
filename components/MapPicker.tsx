@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, ScaleControl, Popup, AttributionControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { Shovel, Search, Layers, ChevronDown, ChevronRight, Info, X } from 'lucide-react';
+import { Shovel, Search, Layers, ChevronDown, ChevronRight, Info, X, Wind, Waves } from 'lucide-react';
 import { GeoLocation, MatchReviewDetail } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { EXPLORE_DATA } from '../data/cityData';
@@ -164,6 +164,88 @@ export const ClimateLegend: React.FC<ClimateLegendProps> = ({ className, activeC
       </div>
     </div>
   );
+};
+
+// --- Velocity Layer Component ---
+
+interface VelocityLayerProps {
+  type: 'wind' | 'current' | 'none';
+  month: number;
+}
+
+const VelocityLayer: React.FC<VelocityLayerProps> = ({ type, month }) => {
+  const map = useMap();
+  const layerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (type === 'none') {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+        layerRef.current = null;
+      }
+      return;
+    }
+
+    const loadData = async () => {
+      try {
+        const year = type === 'wind' ? 2022 : 2025;
+        // Use user's URL structure
+        const url = `http://climate.hywiki.org/static/velocity/${type}/${year}/${month}.json`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to load velocity data");
+        const data = await response.json();
+
+        if (layerRef.current) {
+          map.removeLayer(layerRef.current);
+        }
+
+        if ((window as any).L && (window as any).L.velocityLayer) {
+          const isWind = type === 'wind';
+          layerRef.current = (window as any).L.velocityLayer({
+            displayValues: true,
+            displayOptions: {
+              velocityType: isWind ? 'Wind' : 'Ocean Current',
+              position: 'bottomright',
+              emptyString: 'No data',
+              angleConvention: 'bearingCW',
+              displayEmptyString: 'No data',
+              speedUnit: 'm/s'
+            },
+            data: data,
+            maxVelocity: isWind ? 25 : 2.0, // Scale differently for wind vs current
+            velocityScale: isWind ? 0.005 : 0.1, // Wind moves fast so smaller scale to look good
+            colorScale: isWind ? [
+              "rgb(36,104, 180)", "rgb(60,157, 194)", "rgb(128,205,193 )", 
+              "rgb(151,218,168 )", "rgb(198,231,181)", "rgb(238,247,217)", 
+              "rgb(255,238,159)", "rgb(252,217,125)", "rgb(255,182,100)", 
+              "rgb(252,150,75)", "rgb(250,112,52)", "rgb(245,64,32)", 
+              "rgb(237,45,28)", "rgb(220,24,32)", "rgb(180,0,35)"
+            ] : [
+              "rgb(36,104, 180)", "rgb(60,157, 194)", "rgb(128,205,193 )",
+              "rgb(151,218,168 )", "rgb(198,231,181)", "rgb(238,247,217)",
+              "rgb(255,238,159)", "rgb(252,217,125)", "rgb(255,182,100)"
+            ],
+            lineWidth: isWind ? 2 : 2
+          });
+          
+          layerRef.current.addTo(map);
+        }
+      } catch (e) {
+        console.error("Velocity layer error:", e);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+      }
+    };
+  }, [type, month, map]);
+
+  return null;
 };
 
 // --- Main MapPicker Component ---
@@ -448,6 +530,10 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   const { t } = useLanguage();
   const [internalActiveOverlay, setInternalActiveOverlay] = useState<'none' | 'climate' | 'precip'>('none');
   const [internalActiveClimateCode, setInternalActiveClimateCode] = useState<string | null>(null);
+  
+  // Velocity Layer State
+  const [velocityType, setVelocityType] = useState<'none' | 'wind' | 'current'>('none');
+  const [velocityMonth, setVelocityMonth] = useState<number>(1);
 
   // Determine which state to use: controlled (prop) or uncontrolled (internal)
   const activeOverlay = propActiveOverlay !== undefined ? propActiveOverlay : internalActiveOverlay;
@@ -549,9 +635,57 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
   return (
     <div className={containerClasses}>
+      {/* Velocity Control Panel - Only for single/compare modes */}
+      {!isMarsMode && (mode === 'single' || mode === 'compare') && (
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-b-xl shadow-md border-b border-x border-slate-300 flex items-center gap-4 transition-all">
+           <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase text-slate-500">{t.velocity.title}</span>
+              <div className="flex bg-slate-100 rounded-lg p-0.5">
+                 <button 
+                   onClick={() => setVelocityType('none')}
+                   className={`px-3 py-1 text-xs rounded-md transition-colors font-medium ${velocityType === 'none' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                 >
+                   {t.velocity.none}
+                 </button>
+                 <button 
+                   onClick={() => setVelocityType('wind')}
+                   className={`px-3 py-1 text-xs rounded-md transition-colors font-medium flex items-center gap-1 ${velocityType === 'wind' ? 'bg-indigo-500 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
+                 >
+                   <Wind className="w-3 h-3" />
+                   {t.velocity.wind}
+                 </button>
+                 <button 
+                   onClick={() => setVelocityType('current')}
+                   className={`px-3 py-1 text-xs rounded-md transition-colors font-medium flex items-center gap-1 ${velocityType === 'current' ? 'bg-blue-500 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
+                 >
+                   <Waves className="w-3 h-3" />
+                   {t.velocity.current}
+                 </button>
+              </div>
+           </div>
+           
+           {velocityType !== 'none' && (
+             <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
+                <span className="text-xs font-bold uppercase text-slate-500">{t.velocity.month}</span>
+                <div className="flex items-center gap-2">
+                   <input 
+                     type="range" 
+                     min="1" 
+                     max="12" 
+                     value={velocityMonth} 
+                     onChange={(e) => setVelocityMonth(parseInt(e.target.value))}
+                     className="w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                   />
+                   <span className="text-xs font-mono font-bold w-4 text-center">{velocityMonth}</span>
+                </div>
+             </div>
+           )}
+        </div>
+      )}
+
       {/* Custom Overlay Controls - Only show in single/compare modes and when not on Mars */}
       {!isMarsMode && (mode === 'single' || mode === 'compare') && (
-        <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-2">
+        <div className="absolute top-16 left-3 z-[1000] flex flex-col gap-2">
           <div className="bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-md border border-slate-300 flex flex-col gap-1">
             <div className="text-[10px] font-bold text-slate-500 px-1 uppercase tracking-wider flex items-center">
               <Layers className="w-3 h-3 mr-1" /> Overlays
@@ -681,6 +815,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
               zIndex={500}
            />
         )}
+
+        {!isMarsMode && <VelocityLayer type={velocityType} month={velocityMonth} />}
 
         <ScaleControl position="bottomleft" />
         
